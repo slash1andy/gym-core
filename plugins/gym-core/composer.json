@@ -1,0 +1,49 @@
+{
+	"name": "haanpaa-martial-arts/gym-core",
+	"description": "Core functionality for the Haanpaa Martial Arts WooCommerce site.",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.0"
+	},
+	"require-dev": {
+		"wp-coding-standards/wpcs": "^3.0",
+		"phpcompatibility/phpcompatibility-wp": "*",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpunit/phpunit": "^10.0",
+		"phpstan/phpstan": "^1.10",
+		"szepeviktor/phpstan-wordpress": "^1.3",
+		"brain/monkey": "^2.6",
+		"mockery/mockery": "^1.6"
+	},
+	"autoload": {
+		"psr-4": {
+			"Gym_Core\\": "src/"
+		}
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"Gym_Core\\Tests\\": "tests/"
+		}
+	},
+	"scripts": {
+		"lint": "phpcs --standard=phpcs.xml.dist",
+		"lint-fix": "phpcbf --standard=phpcs.xml.dist",
+		"phpstan": "phpstan analyse --no-progress --memory-limit=512M",
+		"test-unit": "phpunit --testsuite unit",
+		"test-integration": "phpunit --testsuite integration",
+		"test-all": [
+			"@lint",
+			"@phpstan",
+			"@test-unit"
+		]
+	},
+	"config": {
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"sort-packages": true
+	},
+	"minimum-stability": "stable",
+	"prefer-stable": true
+}

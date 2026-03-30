@@ -36,7 +36,7 @@ what you see so the human can intervene.
 IMPORTANT — UPDATE THIS PLAYBOOK FILE WHEN YOU FINISH:
 After completing your extraction, you MUST update this playbook file
 (docs/planning/cowork-migration-playbooks.md) in the monorepo at:
-~/Local Sites/hma-core/
+~/Local Sites/hma-core/  (monorepo root — gym-core plugin is at plugins/gym-core/)
 
 For the playbook you just ran, add a "## Completed Run" section at the end of
 that playbook's block with:

@@ -4,7 +4,7 @@ Custom WordPress/WooCommerce stack for [Haanpaa Martial Arts](https://haanpaafig
 
 ## Plugins
 
-### [`plugins/hma-core/`](plugins/hma-core/)
+### [`plugins/gym-core/`](plugins/gym-core/)
 The operational backbone — multi-location support, membership integration, class scheduling, belt rank tracking, attendance/check-in, gamification, Twilio SMS, and REST API for AI agents.
 
 **Status:** Milestone 1.1 (Locations) complete. See [MILESTONES.md](MILESTONES.md) for the full roadmap.
@@ -35,8 +35,8 @@ AI chat interface for the WordPress admin dashboard. Four agent personas (Sales,
 ## Getting Started
 
 ```bash
-# Install hma-core dependencies
-cd plugins/hma-core && composer install
+# Install gym-core dependencies
+cd plugins/gym-core && composer install
 
 # Run quality checks
 composer test-all

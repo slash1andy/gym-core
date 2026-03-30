@@ -20,10 +20,10 @@ haanpaa/                           # Monorepo root
 ├── README.md                      # Project overview for humans
 ├── MILESTONES.md                  # Implementation tracker (7 milestones)
 ├── plugins/                       # WordPress plugins
-│   ├── hma-core/                  # Gym management plugin (WooCommerce extension)
-│   │   ├── hma-core.php           # Main plugin file
+│   ├── gym-core/                  # Gym management plugin (WooCommerce extension)
+│   │   ├── gym-core.php           # Main plugin file
 │   │   ├── PROJECT_BRIEF.md       # Plugin-level feature specs
-│   │   ├── src/                   # PHP source (PSR-4: HMA_Core\)
+│   │   ├── src/                   # PHP source (PSR-4: Gym_Core\)
 │   │   ├── assets/                # CSS + JS
 │   │   ├── tests/                 # PHPUnit
 │   │   ├── composer.json          # Plugin dependencies
@@ -39,6 +39,7 @@ haanpaa/                           # Monorepo root
     │   ├── gym-core-project-brief.md
     │   ├── systems-consolidation-proposal.md
     │   ├── data-migration-guide.md
+    │   ├── cowork-migration-playbooks.md
     │   ├── future-features-plan.md
     │   └── wp7-woo-ai-future-features-plan.md
     └── architecture/              # Technical architecture decisions
@@ -49,10 +50,10 @@ haanpaa/                           # Monorepo root
 
 **Milestone 1.1 (Locations) complete.** Everything else is scaffolded or planned.
 
-### hma-core plugin — what's built
+### gym-core plugin — what's built
 - Plugin scaffold (activation, deactivation, uninstall, PSR-4 autoloading)
 - HPOS + Cart/Checkout Blocks compatibility
-- `hma_location` taxonomy with Rockford/Beloit terms
+- `gym_location` taxonomy with Rockford/Beloit terms
 - Location state management (cookies + user meta)
 - Product query filtering, order location recording
 - WooCommerce Blocks + Store API integration
@@ -83,7 +84,7 @@ See `MILESTONES.md` at repo root. In dependency order:
 | Document | What it answers |
 |----------|-----------------|
 | `MILESTONES.md` | What do I build next? (master roadmap with acceptance criteria) |
-| `plugins/hma-core/PROJECT_BRIEF.md` | What does the gym plugin do? |
+| `plugins/gym-core/PROJECT_BRIEF.md` | What does the gym plugin do? |
 | `plugins/hma-ai-chat/SETUP_GUIDE.md` | How does the AI chat plugin work? |
 | `docs/planning/data-migration-guide.md` | How do we migrate data from Spark/GHL/Wix/USAePay? |
 | `docs/planning/cowork-migration-playbooks.md` | AI agent prompts for extracting data from legacy platform UIs |
@@ -109,14 +110,14 @@ See `MILESTONES.md` at repo root. In dependency order:
 4. **No jQuery** — Vanilla JS for frontend assets
 5. **Dependency injection** — Constructor injection
 6. **Security first** — Sanitize input, escape output, `$wpdb->prepare()`, capability checks
-7. **Prefixes** — `hma_` / `HMA_CORE_` for hma-core; `hma_ai_chat_` / `HMA_AI_CHAT_` for hma-ai-chat
+7. **Prefixes** — `gym_` / `GYM_CORE_` for gym-core; `hma_ai_chat_` / `HMA_AI_CHAT_` for hma-ai-chat
 
 ## Commands
 
-All commands run from within the plugin directory (e.g., `cd plugins/hma-core`):
+All commands run from within the plugin directory (e.g., `cd plugins/gym-core`):
 
 ```bash
-# hma-core
+# gym-core
 composer lint          # PHPCS
 composer lint-fix      # PHPCBF auto-fix
 composer phpstan       # PHPStan level 6

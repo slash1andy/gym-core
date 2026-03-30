@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<ruleset name="Gym Core">
+	<description>PHP_CodeSniffer configuration for the Gym Core WooCommerce plugin.</description>
+
+	<!-- Files and directories to check. -->
+	<file>gym-core.php</file>
+	<file>uninstall.php</file>
+	<file>src/</file>
+
+	<!-- Exclusions. -->
+	<exclude-pattern>*/vendor/*</exclude-pattern>
+	<exclude-pattern>*/node_modules/*</exclude-pattern>
+	<exclude-pattern>*/tests/*</exclude-pattern>
+	<exclude-pattern>*/assets/*</exclude-pattern>
+	<exclude-pattern>phpstan-bootstrap.php</exclude-pattern>
+
+	<!--
+		PSR-4 autoloaded classes in src/ use PascalCase filenames (e.g. Plugin.php),
+		which intentionally conflicts with WordPress's class-foo.php convention.
+		Suppress the filename sniffs for this directory only.
+	-->
+	<rule ref="WordPress.Files.FileName">
+		<exclude-pattern>*/src/*</exclude-pattern>
+	</rule>
+
+	<!--
+		uninstall.php contains commented-out code stubs (SQL DROP TABLE lines).
+		These are not prose comments and should not be required to end with punctuation.
+	-->
+	<rule ref="Squiz.Commenting.InlineComment.InvalidEndChar">
+		<exclude-pattern>uninstall.php</exclude-pattern>
+	</rule>
+
+	<!-- WordPress Coding Standards. -->
+	<rule ref="WordPress-Extra"/>
+	<rule ref="WordPress-Docs"/>
+
+	<!-- Enforce the correct text domain on all i18n functions. -->
+	<rule ref="WordPress.WP.I18n">
+		<properties>
+			<property name="text_domain" type="array">
+				<element value="gym-core"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Restrict to PHP 8.0+ syntax only. -->
+	<config name="testVersion" value="8.0-"/>
+
+	<!-- Minimum supported WordPress version. -->
+	<config name="minimum_supported_wp_version" value="7.0"/>
+
+	<!-- Output formatting. -->
+	<arg name="basepath" value="."/>
+	<arg name="extensions" value="php"/>
+	<arg name="colors"/>
+	<arg value="sp"/>
+</ruleset>

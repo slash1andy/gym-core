@@ -231,7 +231,7 @@ foreach ( $contacts as $contact ) {
 | **WordPress users** | All members as WP users | "Import Users from CSV with Meta" plugin or WP-CLI script | M3.1 |
 | **WooCommerce Memberships** | Membership plan assignments | Programmatic — link WP users to membership plans based on Spark membership tier | M3.1 |
 | **WooCommerce Subscriptions** | Active recurring billing | CSV importer (`woocommerce-subscriptions-importer-exporter`) — see format below | M3.1 |
-| **hma-core** | Class schedule data | Create from CoWork Playbook 3 CSV output (or script import into `gym_class` CPT) | M3.3 |
+| **gym-core** | Class schedule data | Create from CoWork Playbook 3 CSV output (or script import into `gym_class` CPT) | M3.3 |
 
 #### WooCommerce Subscriptions CSV Format
 
@@ -273,7 +273,7 @@ jane@example.com,wc-active,2025-01-10 00:00:00,2026-04-10 00:00:00,month,1,produ
 #### Bulk Import Script Architecture
 
 ```bash
-# Recommended WP-CLI commands for hma-core
+# Recommended WP-CLI commands for gym-core
 wp hma import users         --file=members.csv          # WP users + meta
 wp hma import belt-ranks    --file=belt-ranks.csv       # gym_ranks + gym_rank_history
 wp hma import attendance    --file=attendance.csv        # gym_attendance
@@ -328,7 +328,7 @@ No data migration needed. This milestone wires `hma-ai-chat` into live WooCommer
 |-------------|------|--------|----------------|
 | **Jetpack VideoPress** | Training videos | Upload via WordPress media library (VideoPress handles hosting) | M7.1 |
 | **WooCommerce Memberships** | Video content gating | Assign membership restriction rules to video posts/pages | M7.1 |
-| **hma-core custom tables** | Any remaining Spark data (historical attendance, notes) | WP-CLI import scripts | M7.2 |
+| **gym-core custom tables** | Any remaining Spark data (historical attendance, notes) | WP-CLI import scripts | M7.2 |
 
 ---
 
