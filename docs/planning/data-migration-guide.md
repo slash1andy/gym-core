@@ -335,14 +335,29 @@ No data migration needed. This milestone wires `hma-ai-chat` into live WooCommer
 ## Migration Timeline & Sequencing
 
 ```
-PHASE 1: EXPORT EVERYTHING (do this first, before building anything)
-├── Week 1: Export Spark (members, attendance, ranks, billing, notes)
-├── Week 1: Export GHL (contacts, conversations, deals, document automations)
-├── Week 1: Crawl Wix site (Screaming Frog) + export blog/contacts
-├── Week 1: Export USAePay (transactions, customers, recurring profiles)
-├── Week 1: Download Vimeo videos
-├── Week 1: Contact data@sparkmembership.com for full data dump
-└── Week 1: Review Pitbull Processing contract for ETF
+PHASE 1: BULK EXPORTS + DATA DUMP REQUEST (Week 1 — do before building)
+├── Day 1: Email data@sparkmembership.com — request full dump (notes, SMS, ranks, attendance)
+├── Day 1: Request USAePay PAN export for Stripe migration (~4 week lead time)
+├── Day 1: Review Pitbull Processing contract for ETF
+├── Day 1-2: Self-service CSV exports from Spark UI (members, attendance, ranks, billing)
+├── Day 1-2: Self-service CSV exports from GHL (contacts, deals)
+├── Day 1-2: Install GHL "Export Conversations" marketplace app — export SMS/email history
+├── Day 1-2: Export USAePay (transactions, customers, recurring profiles) from merchant console
+├── Day 2-3: Wix blog XML export + Screaming Frog URL crawl
+└── Day 3: Download Vimeo videos
+
+PHASE 1B: COWORK SCRAPING (fills gaps that CSV exports can't cover)
+├── PB1: Spark membership plan structure (config data, no export exists)
+├── PB2: Spark POS product catalog (no export exists)
+├── PB3: Spark class schedule structure (config data)
+├── PB4: Spark belt rank definitions (config data)
+├── PB6: GHL automation workflows (no export exists — document every step)
+├── PB7: GHL forms (no export exists)
+├── PB8: GHL pipelines (no export exists)
+├── PB9: Wix page content (no bulk export — scrape from live site)
+├── PB10: Wix media (no bulk download)
+├── PB5: Spark member notes (ONLY if data dump doesn't include them)
+└── PB11: Spark member portal feature audit
 
 PHASE 2: CLEAN & PREPARE (while building M1)
 ├── Week 2-3: Deduplicate + clean GHL contacts
@@ -350,7 +365,7 @@ PHASE 2: CLEAN & PREPARE (while building M1)
 ├── Week 2-3: Normalize phone numbers (E.164), dates (UTC), locations
 ├── Week 2-3: Map Spark membership tiers → WooCommerce product IDs
 ├── Week 2-3: Build Wix URL → WordPress URL redirect map
-├── Week 2-3: Document all GHL automations for AutomateWoo rebuild
+├── Week 2-3: Rebuild GHL automations in AutomateWoo (from PB6 JSON)
 └── Week 2-3: Set up Twilio account + A2P 10DLC registration
 
 PHASE 3: IMPORT (aligned to milestones)
