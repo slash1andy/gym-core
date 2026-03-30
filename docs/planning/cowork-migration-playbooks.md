@@ -32,6 +32,31 @@ filenames.
 
 If you hit a login wall, permission error, or unexpected UI state, stop and describe
 what you see so the human can intervene.
+
+IMPORTANT — UPDATE THIS PLAYBOOK FILE WHEN YOU FINISH:
+After completing your extraction, you MUST update this playbook file
+(docs/planning/cowork-migration-playbooks.md) in the monorepo at:
+~/Local Sites/hma-core/
+
+For the playbook you just ran, add a "## Completed Run" section at the end of
+that playbook's block with:
+1. The date you ran it
+2. The EXACT navigation path you used (click-by-click) — the UI may differ
+   from what was guessed in the original instructions. Correct the instructions
+   above if they were wrong.
+3. Any fields, sections, or data you found that were NOT listed in the original
+   playbook — add them to the capture list
+4. Any fields listed in the original playbook that did NOT exist in the actual UI
+   — note these so future agents don't waste time looking for them
+5. The exact structure of the output file(s) you produced — column names, data
+   types, sample row. This becomes the canonical schema for downstream import
+   scripts.
+6. Record count (how many items were captured)
+7. Any issues, surprises, or blockers encountered
+
+This feedback loop means each playbook gets more accurate after every run.
+Later agents and import scripts can rely on the documented schema rather than
+guessing at the export format.
 ```
 
 ---
@@ -634,3 +659,70 @@ Recommended sequence — run these in the order data is needed by the milestones
 4. **Keep the platforms alive.** Do NOT cancel any subscription until all playbooks are complete and verified. Export files from GHL expire in 30 days.
 
 5. **Run playbooks early.** Phase 1 (export everything) should happen in the first week, even if you won't need the data for months. Platforms can change their UI, lock accounts, or deprecate features.
+
+---
+
+## The Feedback Loop: How Playbooks Evolve
+
+This file is a **living document**. Every time a CoWork agent runs a playbook, it updates this file with what it actually found. This creates a compounding accuracy loop:
+
+### What the agent adds after each run
+
+Each completed playbook gets a `### Completed Run — {date}` section appended with:
+
+1. **Corrected navigation path** — The exact clicks used (the original instructions are best-guesses based on research; the real UI may differ). The agent corrects the `NAVIGATE TO` instructions for the next run.
+2. **Schema discovery** — The exact columns, data types, and sample values from the output files. This becomes the **canonical schema** that downstream import scripts (WP-CLI `wp hma import`, Jetpack CRM DAL scripts, WC Subscriptions CSV importer) use directly. No guessing at column names or formats.
+3. **Fields added** — Things found in the UI that weren't listed in the original playbook.
+4. **Fields removed** — Things listed in the original playbook that don't exist in the actual UI.
+5. **Gotchas** — Rate limits, pagination quirks, session timeouts, fields that render differently than expected.
+6. **Record counts** — How much data was captured (used for validation in the import step).
+
+### How downstream agents use the feedback
+
+When a later agent (e.g., one building the `wp hma import belt-ranks` CLI command) reads this file, it finds:
+- The **exact CSV column names** from the completed Playbook 4 run
+- The **data types and sample values** so it can write the correct `$wpdb->prepare()` format strings
+- The **record count** so it knows expected input size for batch sizing
+- Any **data quirks** (e.g., "Spark exports dates as MM/DD/YYYY, not ISO 8601") that inform cleaning logic
+
+This means the import scripts can be written with confidence rather than speculation about what the export data looks like.
+
+### Example of a completed run annotation
+
+```markdown
+### Completed Run — 2026-04-15
+
+**Navigation path (corrected):**
+Spark Dashboard > Settings (gear icon, top-right) > Membership Plans > View All
+
+**Schema produced (`spark-membership-plans.csv`):**
+| Column | Type | Example |
+|--------|------|---------|
+| plan_name | string | "Adult BJJ Monthly" |
+| price | decimal | 149.00 |
+| billing_frequency | string | "monthly" |
+| signup_fee | decimal | 50.00 |
+| trial_days | int | 7 |
+| contract_months | int | 12 |
+| locations | string | "rockford,beloit" |
+| programs_included | string | "Adult BJJ,Open Mat" |
+| status | string | "active" |
+| notes | string | "Includes gi rental first month" |
+
+**Fields added (not in original instructions):**
+- `auto_renew` (boolean) — whether the plan auto-renews after contract term
+- `cancellation_fee` (decimal) — early cancellation penalty amount
+- `family_discount_pct` (int) — percentage discount for additional family members
+
+**Fields not found:**
+- `trial_days` — Spark doesn't have a trial period field per plan; trials are
+  handled as a separate "Trial Membership" plan type
+
+**Record count:** 14 plans (8 active, 6 archived)
+
+**Gotchas:**
+- The plan list paginates at 10 items; had to click "Next" to see the remaining 4
+- Archived plans are hidden by default; toggled "Show Archived" filter to reveal them
+- Location assignment is not on the plan detail page — it's under a separate
+  "Location Access" tab within each plan
+```
