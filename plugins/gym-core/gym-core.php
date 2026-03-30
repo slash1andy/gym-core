@@ -106,5 +106,8 @@ add_action(
 		}
 
 		Gym_Core\Plugin::instance()->init();
+
+		// Register WP-CLI commands when running in CLI mode.
+		Gym_Core\CLI\ImportCommand::register();
 	}
 );
