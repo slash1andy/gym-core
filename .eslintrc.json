@@ -1,0 +1,23 @@
+{
+	"extends": [
+		"plugin:@wordpress/eslint-plugin/recommended"
+	],
+	"env": {
+		"browser": true,
+		"es2022": true
+	},
+	"parserOptions": {
+		"ecmaVersion": 2022,
+		"sourceType": "module"
+	},
+	"rules": {
+		"no-console": "warn",
+		"no-unused-vars": "error",
+		"@wordpress/no-unsafe-wp-apis": "warn"
+	},
+	"ignorePatterns": [
+		"vendor/",
+		"node_modules/",
+		"assets/js/dist/"
+	]
+}
