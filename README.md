@@ -21,6 +21,7 @@ AI chat interface for the WordPress admin dashboard. Four agent personas (Sales,
 | [MILESTONES.md](MILESTONES.md) | Implementation tracker — 7 milestones with acceptance criteria |
 | [docs/planning/](docs/planning/) | Business cases, feature plans, project briefs |
 | [docs/planning/data-migration-guide.md](docs/planning/data-migration-guide.md) | Complete data migration plan (Spark, GHL, Wix, USAePay) |
+| [docs/planning/cowork-migration-playbooks.md](docs/planning/cowork-migration-playbooks.md) | AI agent playbooks for extracting data from legacy UIs |
 | [docs/architecture/](docs/architecture/) | AI architecture decisions |
 
 ## Requirements

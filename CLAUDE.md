@@ -86,6 +86,7 @@ See `MILESTONES.md` at repo root. In dependency order:
 | `plugins/hma-core/PROJECT_BRIEF.md` | What does the gym plugin do? |
 | `plugins/hma-ai-chat/SETUP_GUIDE.md` | How does the AI chat plugin work? |
 | `docs/planning/data-migration-guide.md` | How do we migrate data from Spark/GHL/Wix/USAePay? |
+| `docs/planning/cowork-migration-playbooks.md` | AI agent prompts for extracting data from legacy platform UIs |
 | `docs/planning/systems-consolidation-proposal.md` | Why is this migration happening? |
 | `docs/architecture/ai-architecture-paperclip.md` | How do the AI agents work? |
 | `docs/planning/future-features-plan.md` | What does WP 7.0 unlock for this project? |
