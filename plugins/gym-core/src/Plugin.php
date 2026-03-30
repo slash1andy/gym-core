@@ -33,6 +33,34 @@ final class Plugin {
 	private ?Location\Manager $location_manager = null;
 
 	/**
+	 * Attendance store — shared instance for DI.
+	 *
+	 * @var Attendance\AttendanceStore|null
+	 */
+	private ?Attendance\AttendanceStore $attendance_store = null;
+
+	/**
+	 * Rank store — shared instance for DI.
+	 *
+	 * @var Rank\RankStore|null
+	 */
+	private ?Rank\RankStore $rank_store = null;
+
+	/**
+	 * Check-in validator — shared instance for DI.
+	 *
+	 * @var Attendance\CheckInValidator|null
+	 */
+	private ?Attendance\CheckInValidator $checkin_validator = null;
+
+	/**
+	 * Promotion eligibility engine — shared instance for DI.
+	 *
+	 * @var Attendance\PromotionEligibility|null
+	 */
+	private ?Attendance\PromotionEligibility $promotion_eligibility = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -64,6 +92,7 @@ final class Plugin {
 		$this->register_api_modules();
 
 		$this->register_schedule_modules();
+		$this->register_attendance_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -134,6 +163,23 @@ final class Plugin {
 		}
 
 		return $this->location_manager;
+	 * Registers the attendance and promotion eligibility modules.
+	 *
+	 * Makes store instances available for dependency injection into
+	 * REST API endpoints and admin dashboards.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @return void
+	 */
+	private function register_attendance_modules(): void {
+		// Stores are instantiated here and available for injection.
+		// They don't register hooks themselves — they're consumed by
+		// REST endpoints, admin pages, and the gamification engine.
+		$this->attendance_store        = new Attendance\AttendanceStore();
+		$this->rank_store              = new Rank\RankStore();
+		$this->checkin_validator       = new Attendance\CheckInValidator( $this->attendance_store );
+		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store );
 	}
 
 	/**

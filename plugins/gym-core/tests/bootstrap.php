@@ -34,6 +34,9 @@ define( 'MINUTE_IN_SECONDS', 60 );
 define( 'COOKIEPATH',   '/' );
 define( 'COOKIE_DOMAIN', '' );
 
+// Stub WP_Error for unit tests.
+require_once __DIR__ . '/stubs/WP_Error.php';
+
 // Stub the WooCommerce Blocks IntegrationInterface so BlockIntegration.php
 // can be autoloaded in unit tests without the WC Blocks package installed.
 if ( ! interface_exists( 'Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface' ) ) {
