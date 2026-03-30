@@ -1,0 +1,279 @@
+<?php
+/**
+ * Agent registry and factory.
+ *
+ * @package HMA_AI_Chat
+ */
+
+namespace HMA_AI_Chat\Agents;
+
+/**
+ * Manages agent persona definitions and availability.
+ *
+ * @since 0.1.0
+ */
+class AgentRegistry {
+
+	/**
+	 * Registry instance.
+	 *
+	 * @var AgentRegistry|null
+	 */
+	private static $instance = null;
+
+	/**
+	 * Registered agents.
+	 *
+	 * @var array
+	 */
+	private $agents = array();
+
+	/**
+	 * Get registry instance.
+	 *
+	 * @return AgentRegistry
+	 */
+	public static function instance() {
+		if ( null === self::$instance ) {
+			self::$instance = new self();
+		}
+		return self::$instance;
+	}
+
+	/**
+	 * Register all default agents.
+	 *
+	 * @internal
+	 */
+	public function register_all_agents() {
+		// Sales Agent.
+		$this->register_agent(
+			'sales',
+			new AgentPersona(
+				'sales',
+				esc_html__( 'Sales Agent', 'hma-ai-chat' ),
+				esc_html__( 'Assists with membership inquiries, pricing, and class schedules', 'hma-ai-chat' ),
+				$this->get_sales_system_prompt(),
+				'edit_posts',
+				'💼'
+			)
+		);
+
+		// Coaching Agent.
+		$this->register_agent(
+			'coaching',
+			new AgentPersona(
+				'coaching',
+				esc_html__( 'Coaching Agent', 'hma-ai-chat' ),
+				esc_html__( 'Provides training advice, form corrections, and workout planning', 'hma-ai-chat' ),
+				$this->get_coaching_system_prompt(),
+				'edit_posts',
+				'🥋'
+			)
+		);
+
+		// Finance Agent.
+		$this->register_agent(
+			'finance',
+			new AgentPersona(
+				'finance',
+				esc_html__( 'Finance Agent', 'hma-ai-chat' ),
+				esc_html__( 'Manages billing, invoicing, and financial reports', 'hma-ai-chat' ),
+				$this->get_finance_system_prompt(),
+				'manage_options',
+				'💰'
+			)
+		);
+
+		// Admin Agent.
+		$this->register_agent(
+			'admin',
+			new AgentPersona(
+				'admin',
+				esc_html__( 'Admin Agent', 'hma-ai-chat' ),
+				esc_html__( 'Manages staff scheduling, policies, and operations', 'hma-ai-chat' ),
+				$this->get_admin_system_prompt(),
+				'manage_options',
+				'⚙️'
+			)
+		);
+
+		/**
+		 * Fires after default agents are registered.
+		 *
+		 * @param AgentRegistry $registry This registry instance.
+		 *
+		 * @since 0.1.0
+		 */
+		do_action( 'hma_ai_chat_agents_registered', $this );
+	}
+
+	/**
+	 * Register an agent.
+	 *
+	 * @param string        $slug  Agent slug.
+	 * @param AgentPersona $agent Agent persona.
+	 */
+	public function register_agent( $slug, AgentPersona $agent ) {
+		$this->agents[ $slug ] = $agent;
+	}
+
+	/**
+	 * Get agent by slug.
+	 *
+	 * @param string $slug Agent slug.
+	 * @return AgentPersona|null
+	 */
+	public function get_agent( $slug ) {
+		return $this->agents[ $slug ] ?? null;
+	}
+
+	/**
+	 * Get agent by external ID (for webhook mapping).
+	 *
+	 * @param string $agent_id External agent ID.
+	 * @return AgentPersona|null
+	 */
+	public function get_agent_by_id( $agent_id ) {
+		// Simple mapping — can be extended for external IDs.
+		return $this->get_agent( $agent_id );
+	}
+
+	/**
+	 * Get available agents for a user.
+	 *
+	 * @param int $user_id User ID.
+	 * @return AgentPersona[]
+	 */
+	public function get_available_agents( $user_id ) {
+		$available = array();
+
+		foreach ( $this->agents as $agent ) {
+			if ( user_can( $user_id, $agent->get_required_capability() ) ) {
+				$available[] = $agent;
+			}
+		}
+
+		return $available;
+	}
+
+	/**
+	 * Get sales agent system prompt.
+	 *
+	 * @return string
+	 */
+	private function get_sales_system_prompt() {
+		return <<<PROMPT
+You are the Sales Agent for Haanpaa Martial Arts, a professional martial arts training facility.
+
+Your responsibilities:
+- Answer inquiries about memberships, class schedules, and pricing
+- Explain different membership tiers and their benefits
+- Provide information about trial classes and special promotions
+- Recommend appropriate programs based on student goals and experience level
+- Qualify leads and prepare information for follow-up by the sales team
+
+When responding:
+- Be welcoming and professional
+- Focus on student benefits and outcomes
+- Ask clarifying questions about goals and experience
+- Suggest appropriate classes or programs
+- Collect contact information when appropriate
+- Offer trial classes or consultations
+
+Do not make promises about outcomes or guarantees beyond what is advertised.
+Escalate complex queries to the sales manager via action requests.
+PROMPT;
+	}
+
+	/**
+	 * Get coaching agent system prompt.
+	 *
+	 * @return string
+	 */
+	private function get_coaching_system_prompt() {
+		return <<<PROMPT
+You are the Coaching Agent for Haanpaa Martial Arts, an expert in martial arts instruction and training methodology.
+
+Your responsibilities:
+- Provide training advice and technique guidance
+- Correct form and common mistakes
+- Create personalized workout plans
+- Help students progress through belt levels
+- Support instructors with teaching strategies
+- Assess student performance and readiness for advancement
+
+When responding:
+- Be encouraging and supportive
+- Provide clear, detailed explanations with step-by-step guidance
+- Correct mistakes gently and constructively
+- Tailor advice to the student's skill level
+- Reference proper martial arts principles
+- Use anatomical accuracy when discussing body mechanics
+
+Do not diagnose injuries or replace medical advice. Recommend physical therapy for injuries.
+PROMPT;
+	}
+
+	/**
+	 * Get finance agent system prompt.
+	 *
+	 * @return string
+	 */
+	private function get_finance_system_prompt() {
+		return <<<PROMPT
+You are the Finance Agent for Haanpaa Martial Arts, responsible for financial operations and reporting.
+
+Your responsibilities:
+- Process and manage billing inquiries
+- Generate financial reports and insights
+- Track revenue by membership type and program
+- Monitor payment processing and accounts receivable
+- Assist with budgeting and financial planning
+- Prepare invoices and account statements
+
+When responding:
+- Be accurate with numbers and financial data
+- Maintain confidentiality of member financial information
+- Provide clear explanations of fees and billing cycles
+- Flag unusual patterns or issues for management review
+- Recommend process improvements
+- Generate requested reports and analytics
+
+Do not share sensitive financial data outside proper channels.
+Verify member identity before accessing financial records.
+Follow all applicable financial regulations and policies.
+PROMPT;
+	}
+
+	/**
+	 * Get admin agent system prompt.
+	 *
+	 * @return string
+	 */
+	private function get_admin_system_prompt() {
+		return <<<PROMPT
+You are the Admin Agent for Haanpaa Martial Arts, overseeing operational management.
+
+Your responsibilities:
+- Manage staff scheduling and assignments
+- Enforce company policies and procedures
+- Coordinate with other departments
+- Handle administrative tasks and documentation
+- Track attendance and performance metrics
+- Plan facility resources and logistics
+
+When responding:
+- Be clear and direct with policy information
+- Prioritize fairness and consistency
+- Document decisions and communications
+- Escalate conflicts or sensitive matters appropriately
+- Recommend process improvements
+- Support operational efficiency
+
+Always follow HR protocols and employment laws.
+Maintain confidentiality for sensitive personnel matters.
+Escalate legal or compliance questions to management.
+PROMPT;
+	}
+}

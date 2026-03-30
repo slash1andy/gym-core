@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<ruleset name="HMA AI Chat">
+	<description>Coding standards for the HMA AI Chat plugin.</description>
+
+	<!-- Scan these paths -->
+	<file>./hma-ai-chat.php</file>
+	<file>./uninstall.php</file>
+	<file>./src</file>
+
+	<!-- Exclude paths -->
+	<exclude-pattern>./vendor/*</exclude-pattern>
+	<exclude-pattern>./node_modules/*</exclude-pattern>
+	<exclude-pattern>./assets/build/*</exclude-pattern>
+
+	<!-- Show progress and use colours -->
+	<arg value="ps"/>
+	<arg name="colors"/>
+
+	<!-- Check for cross-version support for PHP 8.0+. -->
+	<config name="testVersion" value="8.0-"/>
+
+	<!-- WordPress standards -->
+	<rule ref="WordPress-Extra">
+		<!-- Allow short array syntax. -->
+		<exclude name="Generic.Arrays.DisallowShortArraySyntax"/>
+	</rule>
+
+	<rule ref="WordPress-Docs"/>
+
+	<!-- WooCommerce sniffs -->
+	<rule ref="WooCommerce-Sniffs"/>
+
+	<!-- Text domain -->
+	<config name="text_domain" value="hma-ai-chat"/>
+
+	<!-- Prefixes -->
+	<rule ref="WordPress.NamingConventions.PrefixAllGlobals">
+		<properties>
+			<property name="prefixes" type="array">
+				<element value="hma_ai_chat"/>
+				<element value="HMA_AI_Chat"/>
+			</property>
+		</properties>
+	</rule>
+
+	<!-- Minimum WP version -->
+	<config name="minimum_wp_version" value="7.0"/>
+</ruleset>

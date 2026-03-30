@@ -1,0 +1,15 @@
+parameters:
+    level: 7
+    paths:
+        - src
+        - hma-ai-chat.php
+        - uninstall.php
+    excludePaths:
+        - vendor
+        - node_modules
+        - assets/build
+    checkMissingIterableValueType: false
+    treatPhpDocTypesAsCertain: false
+
+includes:
+    - vendor/szepeviktor/phpstan-wordpress/extension.neon

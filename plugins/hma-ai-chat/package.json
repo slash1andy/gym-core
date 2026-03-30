@@ -1,0 +1,16 @@
+{
+  "name": "hma-ai-chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@wordpress/eslint-plugin": "^17.13.0",
+    "eslint": "^8.57.1"
+  }
+}
