@@ -25,6 +25,14 @@ final class Plugin {
 	private static ?Plugin $instance = null;
 
 	/**
+	 * Shared Location Manager — one instance per request so the in-memory
+	 * location cache is consistent across the location module and REST API.
+	 *
+	 * @var Location\Manager|null
+	 */
+	private ?Location\Manager $location_manager = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -53,6 +61,7 @@ final class Plugin {
 		$this->load_textdomain();
 		$this->register_admin_modules();
 		$this->register_location_modules();
+		$this->register_api_modules();
 
 		$this->register_schedule_modules();
 
@@ -93,6 +102,41 @@ final class Plugin {
 	}
 
 	/**
+	 * Registers REST API controllers.
+	 *
+	 * Each controller hooks into rest_api_init to register its routes, so this
+	 * method is safe to call on every request — route registration is deferred
+	 * until WordPress fires rest_api_init.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	private function register_api_modules(): void {
+		$location_controller = new API\LocationController( $this->get_location_manager() );
+		$location_controller->register_hooks();
+	}
+
+	/**
+	 * Returns the shared Location Manager instance, creating it on first call.
+	 *
+	 * Using a single Manager per request ensures the in-memory location cache
+	 * is consistent whether the location is read by the frontend modules or the
+	 * REST API controller.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return Location\Manager
+	 */
+	private function get_location_manager(): Location\Manager {
+		if ( null === $this->location_manager ) {
+			$this->location_manager = new Location\Manager();
+		}
+
+		return $this->location_manager;
+	}
+
+	/**
 	 * Bootstraps all location-related modules.
 	 *
 	 * Registers the taxonomy, manager AJAX handler, product filter, order
@@ -108,7 +152,7 @@ final class Plugin {
 		$taxonomy = new Location\Taxonomy();
 		$taxonomy->register_hooks();
 
-		$manager = new Location\Manager();
+		$manager = $this->get_location_manager();
 		$manager->register_hooks();
 
 		$product_filter = new Location\ProductFilter( $manager );

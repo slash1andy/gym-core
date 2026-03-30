@@ -1,0 +1,285 @@
+<?php
+/**
+ * Abstract base REST API controller.
+ *
+ * @package Gym_Core\API
+ */
+
+declare( strict_types=1 );
+
+namespace Gym_Core\API;
+
+/**
+ * Shared foundation for all Gym Core REST controllers.
+ *
+ * Provides:
+ * - Hook registration (rest_api_init → register_routes)
+ * - Reusable permission callbacks (public, authenticated, manage_woocommerce)
+ * - Consistent JSON envelope: { success, data, meta? }
+ * - Pagination meta builder and route arg definitions
+ * - Transient-based rate limiting utility (for future SMS endpoints)
+ *
+ * Subclasses must implement register_routes() and set $this->rest_base.
+ */
+abstract class BaseController extends \WP_REST_Controller {
+
+	/**
+	 * REST namespace shared by all Gym Core endpoints.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	const REST_NAMESPACE = 'gym/v1';
+
+	/**
+	 * Default maximum requests allowed within a single rate-limit window.
+	 *
+	 * @since 1.0.0
+	 * @var int
+	 */
+	const RATE_LIMIT_MAX = 60;
+
+	/**
+	 * Default rate-limit window in seconds.
+	 *
+	 * @since 1.0.0
+	 * @var int
+	 */
+	const RATE_LIMIT_WINDOW = 60;
+
+	/**
+	 * Sets the REST namespace used by all subclasses.
+	 */
+	public function __construct() {
+		$this->namespace = self::REST_NAMESPACE;
+	}
+
+	/**
+	 * Registers the rest_api_init hook so routes are declared at the correct
+	 * point in the WordPress boot sequence.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	public function register_hooks(): void {
+		add_action( 'rest_api_init', array( $this, 'register_routes' ) );
+	}
+
+	/**
+	 * Registers all REST routes for this controller.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return void
+	 */
+	abstract public function register_routes(): void;
+
+	// -------------------------------------------------------------------------
+	// Permission callbacks
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Permission callback for publicly accessible endpoints.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WP_REST_Request $request The REST request object.
+	 * @return true
+	 */
+	public function permissions_public( \WP_REST_Request $request ): bool {
+		return true;
+	}
+
+	/**
+	 * Permission callback for endpoints that require a logged-in user.
+	 *
+	 * Returns a WP_Error with status 401 rather than bare false so that REST
+	 * clients receive the semantically correct HTTP status code.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WP_REST_Request $request The REST request object.
+	 * @return true|\WP_Error True when authenticated; WP_Error(401) otherwise.
+	 */
+	public function permissions_authenticated( \WP_REST_Request $request ): bool|\WP_Error {
+		if ( ! is_user_logged_in() ) {
+			return new \WP_Error(
+				'rest_not_logged_in',
+				__( 'Authentication required.', 'gym-core' ),
+				array( 'status' => 401 )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Permission callback for endpoints that require WooCommerce management access.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param \WP_REST_Request $request The REST request object.
+	 * @return true|\WP_Error True when the user has manage_woocommerce; WP_Error otherwise.
+	 */
+	public function permissions_manage( \WP_REST_Request $request ): bool|\WP_Error {
+		if ( ! current_user_can( 'manage_woocommerce' ) ) {
+			return new \WP_Error(
+				'rest_forbidden',
+				__( 'You do not have permission to perform this action.', 'gym-core' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		return true;
+	}
+
+	// -------------------------------------------------------------------------
+	// Response formatting
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Builds a standardised success response.
+	 *
+	 * Envelope: { "success": true, "data": <mixed>[, "meta": { ... }] }
+	 *
+	 * The meta key is omitted entirely when null to keep responses lean.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param mixed                    $data   Response payload.
+	 * @param array<string,mixed>|null $meta   Optional metadata (e.g. pagination).
+	 * @param int                      $status HTTP status code (default 200).
+	 * @return \WP_REST_Response
+	 */
+	protected function success_response( mixed $data, ?array $meta = null, int $status = 200 ): \WP_REST_Response {
+		$body = array(
+			'success' => true,
+			'data'    => $data,
+		);
+
+		if ( null !== $meta ) {
+			$body['meta'] = $meta;
+		}
+
+		return new \WP_REST_Response( $body, $status );
+	}
+
+	/**
+	 * Builds a WP_Error for REST error responses.
+	 *
+	 * The error data array must carry a `status` key so WordPress maps the
+	 * error to the correct HTTP response code.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $code    Machine-readable error code (snake_case).
+	 * @param string $message Human-readable error message (translatable).
+	 * @param int    $status  HTTP status code (default 400).
+	 * @return \WP_Error
+	 */
+	protected function error_response( string $code, string $message, int $status = 400 ): \WP_Error {
+		return new \WP_Error( $code, $message, array( 'status' => $status ) );
+	}
+
+	// -------------------------------------------------------------------------
+	// Pagination helpers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Builds a pagination meta array for use with success_response().
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param int $total       Total number of matching items across all pages.
+	 * @param int $total_pages Total number of pages.
+	 * @param int $page        Current page number (1-based).
+	 * @param int $per_page    Number of items per page.
+	 * @return array<string, array<string, int>>
+	 */
+	protected function pagination_meta( int $total, int $total_pages, int $page, int $per_page ): array {
+		return array(
+			'pagination' => array(
+				'total'       => $total,
+				'total_pages' => $total_pages,
+				'page'        => $page,
+				'per_page'    => $per_page,
+			),
+		);
+	}
+
+	/**
+	 * Returns standard page/per_page route argument definitions.
+	 *
+	 * Merge these into your register_rest_route() args array on any endpoint
+	 * that returns a paged collection.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	protected function pagination_route_args(): array {
+		return array(
+			'page'     => array(
+				'description'       => __( 'Current page of the collection.', 'gym-core' ),
+				'type'              => 'integer',
+				'default'           => 1,
+				'minimum'           => 1,
+				'sanitize_callback' => 'absint',
+				'validate_callback' => 'rest_validate_request_arg',
+			),
+			'per_page' => array(
+				'description'       => __( 'Maximum number of items to return per page.', 'gym-core' ),
+				'type'              => 'integer',
+				'default'           => 10,
+				'minimum'           => 1,
+				'maximum'           => 100,
+				'sanitize_callback' => 'absint',
+				'validate_callback' => 'rest_validate_request_arg',
+			),
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Rate limiting
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Checks and increments a transient-based rate-limit counter.
+	 *
+	 * Returns true when the caller is within the allowed budget, false when the
+	 * limit has been reached. The counter resets after $window seconds.
+	 *
+	 * Intended for use before high-cost or side-effecting operations such as
+	 * outbound SMS messages. For single-server or object-cache deployments this
+	 * is sufficient; for multi-process high-frequency endpoints prefer an atomic
+	 * Redis INCR counter.
+	 *
+	 * @since 1.0.0
+	 *
+	 * @param string $key    Unique bucket identifier (e.g. 'sms_' . $user_id).
+	 * @param int    $max    Maximum requests allowed within the window.
+	 * @param int    $window Time window in seconds.
+	 * @return bool True if within limit; false if the limit is exceeded.
+	 */
+	protected function check_rate_limit(
+		string $key,
+		int $max = self::RATE_LIMIT_MAX,
+		int $window = self::RATE_LIMIT_WINDOW
+	): bool {
+		$transient_key = 'gym_rl_' . substr( md5( $key ), 0, 16 );
+		$count         = (int) get_transient( $transient_key );
+
+		if ( $count >= $max ) {
+			return false;
+		}
+
+		// First hit: create the transient so the window starts now.
+		// Subsequent hits: increment and re-set (preserving remaining TTL is
+		// not possible with WP transients, so the window slides on each call —
+		// acceptable for the intended SMS use case).
+		set_transient( $transient_key, $count + 1, $window );
+
+		return true;
+	}
+}

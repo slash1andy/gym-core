@@ -39,3 +39,7 @@ define( 'COOKIE_DOMAIN', '' );
 if ( ! interface_exists( 'Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface' ) ) {
 	require_once __DIR__ . '/stubs/IntegrationInterface.php';
 }
+
+// Stub WordPress and WooCommerce classes used by the API module so that
+// controllers can be autoloaded and tested without a full WP/WC install.
+require_once __DIR__ . '/stubs/wordpress-classes.php';
