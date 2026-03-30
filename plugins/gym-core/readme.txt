@@ -1,5 +1,5 @@
 === Gym Core ===
-Contributors: haanpaafighthouse
+Contributors: andrewwikel
 Tags: martial arts, woocommerce, membership, class schedule, belt tracking
 Requires at least: 7.0
 Tested up to: 7.0

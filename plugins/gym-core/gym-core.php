@@ -1,14 +1,14 @@
 <?php
 /**
  * Plugin Name:       Gym Core
- * Plugin URI:        https://haanpaafighthouse.com
+ * Plugin URI:        https://www.teamhaanpaa.com/
  * Description:       Core functionality for Haanpaa Martial Arts — multi-location support, membership integration, class scheduling, belt rank tracking, attendance/check-in, gamification (badges & streaks), Twilio SMS, and REST API endpoints for AI agents.
  * Version:           1.0.0
  * Requires at least: 7.0
  * Requires PHP:      8.0
  * Requires Plugins:  woocommerce
- * Author:            Haanpaa Martial Arts
- * Author URI:        https://haanpaafighthouse.com
+ * Author:            Andrew Wikel
+ * Author URI:        https://www.teamhaanpaa.com/
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       gym-core

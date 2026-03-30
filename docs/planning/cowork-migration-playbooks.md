@@ -440,7 +440,7 @@ OUTPUT: Save as ~/hma-migration/exports/ghl-pipelines.json with structure:
 **Estimated time:** 30-60 minutes
 
 ```
-TASK: Extract all page content from the current Wix website (haanpaafighthouse.com
+TASK: Extract all page content from the current Wix website (www.teamhaanpaa.com
 or whatever the current domain is).
 
 NAVIGATE TO: The live Wix website (public-facing pages, not Wix editor)
@@ -486,7 +486,7 @@ one markdown file per page:
 
 Each file should have frontmatter:
 ---
-source_url: https://haanpaafighthouse.com/about
+source_url: https://www.teamhaanpaa.com/about
 meta_title: "About Haanpaa Martial Arts"
 meta_description: "Learn about our gym..."
 images:
