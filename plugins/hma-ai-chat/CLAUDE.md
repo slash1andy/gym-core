@@ -1,4 +1,4 @@
-# HMA AI Chat — Plugin Agent Context
+# HMA AI Chat (Gandalf) — Plugin Agent Context
 
 > Agent context specific to the hma-ai-chat plugin. For monorepo-level context, see the root `CLAUDE.md`.
 
@@ -8,6 +8,7 @@
 |-------|-------|
 | Slug | `hma-ai-chat` |
 | Name | HMA AI Chat |
+| Staff-facing name | **Gandalf** |
 | Namespace | `HMA_AI_Chat` |
 | Text Domain | `hma-ai-chat` |
 | Constant Prefix | `HMA_AI_CHAT_` |
@@ -17,7 +18,7 @@
 
 ## What This Plugin Does
 
-AI chat interface in the WordPress admin dashboard for Haanpaa Martial Arts staff. Built on WordPress 7.0's WP AI Client (`wp_ai_client_prompt()`). Four agent personas (Sales, Coaching, Finance, Admin) with role-based access control.
+**Gandalf** is the AI assistant for Haanpaa Martial Arts staff. Built as a WordPress admin chat interface on WordPress 7.0's WP AI Client (`wp_ai_client_prompt()`). Four agent personas (Sales, Coaching, Finance, Admin) with role-based access control. Staff interact with "Gandalf" — the technical plugin slug `hma-ai-chat` is internal only.
 
 **Two-layer architecture** (see `docs/architecture/ai-architecture-paperclip.md`):
 - **Layer 1 (this plugin)**: Interactive chat — staff selects an agent, sends messages, gets AI responses
