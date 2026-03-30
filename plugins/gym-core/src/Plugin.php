@@ -54,6 +54,8 @@ final class Plugin {
 		$this->register_admin_modules();
 		$this->register_location_modules();
 
+		$this->register_schedule_modules();
+
 		/**
 		 * Fires after Gym Core has finished loading.
 		 *
@@ -76,6 +78,18 @@ final class Plugin {
 			$settings = new Admin\Settings();
 			$settings->register_hooks();
 		}
+	}
+
+	/**
+	 * Registers the class schedule module.
+	 *
+	 * @since 1.2.0
+	 *
+	 * @return void
+	 */
+	private function register_schedule_modules(): void {
+		$class_post_type = new Schedule\ClassPostType();
+		$class_post_type->register_hooks();
 	}
 
 	/**
