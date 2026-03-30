@@ -227,6 +227,46 @@ Take screenshots of the rank configuration screens:
 ~/hma-migration/screenshots/spark-ranks-*.png
 ```
 
+### Completed Run — 2026-03-30
+
+**Method:** Manual input from gym owner (Andrew Wikel), not UI extraction.
+Belt ranks were provided directly rather than scraped from Spark, as Andrew knows
+the exact rank structure. IBJJF promotion rules enriched from web search.
+
+**Schema produced (`spark-belt-ranks.json`):**
+| Field | Type | Example |
+|-------|------|---------|
+| programs[].name | string | "Adult BJJ" |
+| programs[].stripes_per_belt | int/null | 4 |
+| programs[].age_requirement | string/null | "16+" |
+| programs[].transition_rule | string/null | "At age 16, eligible for adult White, Blue, or Purple belt..." |
+| programs[].ranks[].order | int | 1 |
+| programs[].ranks[].name | string | "White Belt" |
+| programs[].ranks[].color | string/null | "white" |
+| programs[].ranks[].min_time_months_before_next | int/null | 24 |
+
+**Programs found:** Adult BJJ, Kids BJJ, Muay Thai / Kickboxing
+
+**Record counts:**
+- Adult BJJ: 5 ranks (White → Black), 4 stripes per belt
+- Kids BJJ: 13 ranks (White → Green-Black), 4 stripes per belt
+- Muay Thai / Kickboxing: 2 levels (Level 1, Level 2), no stripes
+
+**Additional context captured:**
+- IBJJF minimum time requirements per adult belt (blue: 24mo, purple: 18mo, brown: 12mo)
+- Kids transition rule: at age 16, eligible for adult White, Blue, or Purple based on experience
+- Black belt minimum age: 19
+- World Champion exception: no minimum time at blue/purple/brown for adult World Champions
+
+**Fields not found (not applicable — manual input):** N/A
+
+**Gotchas:**
+- Spark may store rank data differently than the IBJJF standard — the extension prompt
+  (PB4 in spark-extraction-prompt.md) will cross-reference what Spark actually has configured
+- Andrew confirmed kids belts are called "Grey-White" not "Gray/White" — use hyphenated format
+
+**Output file:** `Gym Revamp/spark-belt-ranks.json`
+
 ---
 
 ## Playbook 5: Spark Member Notes Extraction
