@@ -1,6 +1,6 @@
 # Haanpaa Martial Arts — Monorepo
 
-Custom WordPress/WooCommerce stack for [Haanpaa Martial Arts](https://haanpaafighthouse.com) (Rockford, IL + Beloit, WI). Replaces Spark Membership, GoHighLevel, Wix, and USAePay with a consolidated WordPress 7.0 ecosystem.
+Custom WordPress/WooCommerce stack for [Haanpaa Martial Arts](https://www.teamhaanpaa.com/) (Rockford, IL + Beloit, WI). Replaces Spark Membership, GoHighLevel, Wix, and USAePay with a consolidated WordPress 7.0 ecosystem.
 
 ## Plugins
 

@@ -227,6 +227,46 @@ Take screenshots of the rank configuration screens:
 ~/hma-migration/screenshots/spark-ranks-*.png
 ```
 
+### Completed Run — 2026-03-30
+
+**Method:** Manual input from gym owner (Andrew Wikel), not UI extraction.
+Belt ranks were provided directly rather than scraped from Spark, as Andrew knows
+the exact rank structure. IBJJF promotion rules enriched from web search.
+
+**Schema produced (`spark-belt-ranks.json`):**
+| Field | Type | Example |
+|-------|------|---------|
+| programs[].name | string | "Adult BJJ" |
+| programs[].stripes_per_belt | int/null | 4 |
+| programs[].age_requirement | string/null | "16+" |
+| programs[].transition_rule | string/null | "At age 16, eligible for adult White, Blue, or Purple belt..." |
+| programs[].ranks[].order | int | 1 |
+| programs[].ranks[].name | string | "White Belt" |
+| programs[].ranks[].color | string/null | "white" |
+| programs[].ranks[].min_time_months_before_next | int/null | 24 |
+
+**Programs found:** Adult BJJ, Kids BJJ, Muay Thai / Kickboxing
+
+**Record counts:**
+- Adult BJJ: 5 ranks (White → Black), 4 stripes per belt
+- Kids BJJ: 13 ranks (White → Green-Black), 4 stripes per belt
+- Muay Thai / Kickboxing: 2 levels (Level 1, Level 2), no stripes
+
+**Additional context captured:**
+- IBJJF minimum time requirements per adult belt (blue: 24mo, purple: 18mo, brown: 12mo)
+- Kids transition rule: at age 16, eligible for adult White, Blue, or Purple based on experience
+- Black belt minimum age: 19
+- World Champion exception: no minimum time at blue/purple/brown for adult World Champions
+
+**Fields not found (not applicable — manual input):** N/A
+
+**Gotchas:**
+- Spark may store rank data differently than the IBJJF standard — the extension prompt
+  (PB4 in spark-extraction-prompt.md) will cross-reference what Spark actually has configured
+- Andrew confirmed kids belts are called "Grey-White" not "Gray/White" — use hyphenated format
+
+**Output file:** `Gym Revamp/spark-belt-ranks.json`
+
 ---
 
 ## Playbook 5: Spark Member Notes Extraction
@@ -440,7 +480,7 @@ OUTPUT: Save as ~/hma-migration/exports/ghl-pipelines.json with structure:
 **Estimated time:** 30-60 minutes
 
 ```
-TASK: Extract all page content from the current Wix website (haanpaafighthouse.com
+TASK: Extract all page content from the current Wix website (www.teamhaanpaa.com
 or whatever the current domain is).
 
 NAVIGATE TO: The live Wix website (public-facing pages, not Wix editor)
@@ -486,7 +526,7 @@ one markdown file per page:
 
 Each file should have frontmatter:
 ---
-source_url: https://haanpaafighthouse.com/about
+source_url: https://www.teamhaanpaa.com/about
 meta_title: "About Haanpaa Martial Arts"
 meta_description: "Learn about our gym..."
 images:
@@ -627,6 +667,41 @@ document each one manually in the CSV format above.
 
 ---
 
+## Data Source Hierarchy: Dump First, Scrape the Gaps
+
+**Do NOT scrape what you can export or request in bulk.**
+
+### Step 1 — Bulk exports (self-service CSV from each platform's UI)
+Spark, GHL, and USAePay all have CSV export buttons for record data (members, contacts, transactions, attendance). Use those first — they're faster and more complete than scraping.
+
+### Step 2 — Request a full data dump from Spark
+Email `data@sparkmembership.com` and request everything: members, notes, SMS history, belt rank history per member, attendance, billing. This may take days, so **send this request immediately**.
+
+### Step 3 — CoWork playbooks fill the gaps
+These playbooks exist for data that has **no export path** — configuration and structure data that only exists in the admin UI:
+
+| Playbook | Why it can't be exported | Always needed? |
+|----------|------------------------|----------------|
+| **PB1: Membership Plan Structure** | Spark has no plan export (names, prices, billing cycles) | **Yes — always** |
+| **PB2: POS Product Catalog** | No export function in Spark POS settings | **Yes — always** |
+| **PB3: Class Schedule Structure** | Configuration data, not exportable records | **Yes — always** |
+| **PB4: Belt Rank Definitions** | Configuration data (rank names, order, thresholds) | **Yes — always** |
+| **PB5: Member Notes** | No bulk export — **only if data dump doesn't include notes** | **Fallback only** |
+| **PB6: GHL Automations** | No export at all (126-vote feature request still open) | **Yes — always** |
+| **PB7: GHL Forms** | No export | **Yes — always** |
+| **PB8: GHL Pipelines** | No export | **Yes — always** |
+| **PB9: Wix Page Content** | No bulk page export (blog XML only) | **Yes — always** |
+| **PB10: Wix Media** | No bulk download | **Yes — always** |
+| **PB11: Spark Member Portal** | Feature audit, not data extraction | **Yes — always** |
+| **PB12: USAePay Recurring Profiles** | May have CSV export — scrape only if console lacks it | **Check first** |
+
+### When to skip a playbook
+- **PB5 (Member Notes)**: Skip if the Spark data dump includes notes
+- **PB12 (USAePay)**: Skip the scraping if the merchant console offers CSV export for recurring profiles (try the export button first)
+- Any playbook where the data dump or CSV export covers the same data
+
+---
+
 ## Playbook Execution Order
 
 Recommended sequence — run these in the order data is needed by the milestones:
@@ -637,28 +712,30 @@ Recommended sequence — run these in the order data is needed by the milestones
 | 2 | **PB2: Spark POS Products** | M1.4 | No — can do later |
 | 3 | **PB9: Wix Page Content** | M1.7 | Yes — can't build the site without content |
 | 4 | **PB10: Wix Media Download** | M1.7 | Yes — can't build the site without images |
-| 5 | **PB12: USAePay Recurring Profiles** | M1.9 | Yes — needed for subscription import |
-| 6 | **PB5: Spark Member Notes** | M2.2 | Depends on data dump response |
-| 7 | **PB6: GHL Automations** | M2.5 | Yes — can't rebuild workflows without this |
-| 8 | **PB7: GHL Forms** | M2.7 | Yes — can't rebuild forms without this |
-| 9 | **PB8: GHL Pipelines** | M2.6 | Yes — can't configure CRM pipeline without this |
-| 10 | **PB3: Spark Class Schedule** | M3.3 | Yes — can't create class CPT entries without this |
-| 11 | **PB11: Spark Member Portal** | M3.2 | Helpful but not blocking |
-| 12 | **PB4: Spark Belt Rank Defs** | M4.1 | Yes — can't build rank system without this |
+| 5 | **PB12: USAePay Recurring Profiles** | M1.9 | Yes — needed for subscription import (try CSV export first) |
+| 6 | **PB6: GHL Automations** | M2.5 | Yes — can't rebuild workflows without this |
+| 7 | **PB7: GHL Forms** | M2.7 | Yes — can't rebuild forms without this |
+| 8 | **PB8: GHL Pipelines** | M2.6 | Yes — can't configure CRM pipeline without this |
+| 9 | **PB3: Spark Class Schedule** | M3.3 | Yes — can't create class CPT entries without this |
+| 10 | **PB11: Spark Member Portal** | M3.2 | Helpful but not blocking |
+| 11 | **PB4: Spark Belt Rank Defs** | M4.1 | Yes — can't build rank system without this |
+| 12 | **PB5: Spark Member Notes** | M2.2 | **Only if data dump doesn't include notes** |
 
 ---
 
 ## Tips for Running These Playbooks
 
-1. **Batch sessions by platform.** Log into Spark, run PB1 + PB2 + PB3 + PB4 + PB5 + PB11 in one session. Log into GHL, run PB6 + PB7 + PB8. Then Wix (PB9 + PB10), then USAePay (PB12).
+1. **Batch sessions by platform.** Log into Spark, run PB1 + PB2 + PB3 + PB4 + PB11 in one session. Log into GHL, run PB6 + PB7 + PB8. Then Wix (PB9 + PB10), then USAePay (PB12).
 
-2. **Verify outputs.** After each playbook, spot-check the output file. Open the CSV/JSON, confirm the data looks right, count the records.
+2. **Export CSVs first, scrape second.** Before running a CoWork playbook, check if the platform has a self-service CSV export for that data. Only scrape what can't be exported.
 
-3. **Save screenshots as backup.** Even if the structured data capture works perfectly, screenshots are insurance against missed fields.
+3. **Verify outputs.** After each playbook, spot-check the output file. Open the CSV/JSON, confirm the data looks right, count the records.
 
-4. **Keep the platforms alive.** Do NOT cancel any subscription until all playbooks are complete and verified. Export files from GHL expire in 30 days.
+4. **Save screenshots as backup.** Even if the structured data capture works perfectly, screenshots are insurance against missed fields.
 
-5. **Run playbooks early.** Phase 1 (export everything) should happen in the first week, even if you won't need the data for months. Platforms can change their UI, lock accounts, or deprecate features.
+5. **Keep the platforms alive.** Do NOT cancel any subscription until all playbooks are complete and verified. Export files from GHL expire in 30 days.
+
+6. **Run playbooks early.** Phase 1 (export everything) should happen in the first week, even if you won't need the data for months. Platforms can change their UI, lock accounts, or deprecate features.
 
 ---
 
