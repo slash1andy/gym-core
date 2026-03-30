@@ -1,0 +1,491 @@
+<?php
+/**
+ * WooCommerce settings tab for Gym Core.
+ *
+ * Adds a "Gym Core" tab under WooCommerce > Settings with sections for
+ * each module: General, Locations, Schedule, Ranks, Attendance, Gamification,
+ * SMS, and API.
+ *
+ * @package Gym_Core
+ * @since   1.1.0
+ */
+
+declare( strict_types=1 );
+
+namespace Gym_Core\Admin;
+
+/**
+ * Registers and renders the Gym Core settings tab in WooCommerce.
+ */
+final class Settings {
+
+	/**
+	 * Tab identifier.
+	 *
+	 * @var string
+	 */
+	private const TAB_ID = 'gym_core';
+
+	/**
+	 * Registers hooks for the settings tab.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	public function register_hooks(): void {
+		add_filter( 'woocommerce_settings_tabs_array', array( $this, 'add_settings_tab' ), 50 );
+		add_action( 'woocommerce_settings_' . self::TAB_ID, array( $this, 'render_settings' ) );
+		add_action( 'woocommerce_update_options_' . self::TAB_ID, array( $this, 'save_settings' ) );
+		add_action( 'woocommerce_sections_' . self::TAB_ID, array( $this, 'render_sections' ) );
+	}
+
+	/**
+	 * Adds the Gym Core tab to the WooCommerce settings tabs array.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param array<string, string> $tabs Existing settings tabs.
+	 * @return array<string, string>
+	 */
+	public function add_settings_tab( array $tabs ): array {
+		$tabs[ self::TAB_ID ] = __( 'Gym Core', 'gym-core' );
+		return $tabs;
+	}
+
+	/**
+	 * Returns the available sections for this tab.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return array<string, string> Section slug => label.
+	 */
+	private function get_sections(): array {
+		return array(
+			''             => __( 'General', 'gym-core' ),
+			'locations'    => __( 'Locations', 'gym-core' ),
+			'schedule'     => __( 'Schedule', 'gym-core' ),
+			'ranks'        => __( 'Ranks', 'gym-core' ),
+			'attendance'   => __( 'Attendance', 'gym-core' ),
+			'gamification' => __( 'Gamification', 'gym-core' ),
+			'sms'          => __( 'SMS', 'gym-core' ),
+			'api'          => __( 'API', 'gym-core' ),
+		);
+	}
+
+	/**
+	 * Renders the section navigation links.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	public function render_sections(): void {
+		global $current_section;
+
+		$sections = $this->get_sections();
+
+		if ( count( $sections ) <= 1 ) {
+			return;
+		}
+
+		echo '<ul class="subsubsub">';
+
+		$links = array();
+		foreach ( $sections as $id => $label ) {
+			$url     = admin_url( 'admin.php?page=wc-settings&tab=' . self::TAB_ID . '&section=' . $id );
+			$class   = ( $current_section === $id ) ? 'current' : '';
+			$links[] = sprintf(
+				'<li><a href="%s" class="%s">%s</a></li>',
+				esc_url( $url ),
+				esc_attr( $class ),
+				esc_html( $label )
+			);
+		}
+
+		echo wp_kses_post( implode( ' | ', $links ) );
+		echo '</ul><br class="clear" />';
+	}
+
+	/**
+	 * Renders the settings fields for the current section.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	public function render_settings(): void {
+		global $current_section;
+
+		$settings = $this->get_settings_for_section( $current_section );
+		\WC_Admin_Settings::output_fields( $settings );
+	}
+
+	/**
+	 * Saves the settings for the current section.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	public function save_settings(): void {
+		global $current_section;
+
+		$settings = $this->get_settings_for_section( $current_section );
+		\WC_Admin_Settings::save_fields( $settings );
+	}
+
+	/**
+	 * Returns the settings fields for a given section.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param string $section Section slug.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_settings_for_section( string $section ): array {
+		switch ( $section ) {
+			case 'locations':
+				return $this->get_locations_settings();
+			case 'schedule':
+				return $this->get_schedule_settings();
+			case 'ranks':
+				return $this->get_ranks_settings();
+			case 'attendance':
+				return $this->get_attendance_settings();
+			case 'gamification':
+				return $this->get_gamification_settings();
+			case 'sms':
+				return $this->get_sms_settings();
+			case 'api':
+				return $this->get_api_settings();
+			default:
+				return $this->get_general_settings();
+		}
+	}
+
+	/**
+	 * General settings — module toggles and global config.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_general_settings(): array {
+		return array(
+			array(
+				'title' => __( 'General Settings', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_general_options',
+			),
+			array(
+				'title'   => __( 'Gamification', 'gym-core' ),
+				'desc'    => __( 'Enable badges, streaks, and achievement tracking', 'gym-core' ),
+				'id'      => 'gym_core_gamification_enabled',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'   => __( 'SMS Notifications', 'gym-core' ),
+				'desc'    => __( 'Enable Twilio SMS integration', 'gym-core' ),
+				'id'      => 'gym_core_sms_enabled',
+				'default' => 'no',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'   => __( 'REST API', 'gym-core' ),
+				'desc'    => __( 'Enable gym/v1 REST API endpoints for AI agents', 'gym-core' ),
+				'id'      => 'gym_core_api_enabled',
+				'default' => 'no',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_general_options',
+			),
+		);
+	}
+
+	/**
+	 * Location settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_locations_settings(): array {
+		return array(
+			array(
+				'title' => __( 'Location Settings', 'gym-core' ),
+				'desc'  => __( 'Configure multi-location behavior. Locations are managed as taxonomy terms under Products > Gym Locations.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_location_options',
+			),
+			array(
+				'title'   => __( 'Require Location Selection', 'gym-core' ),
+				'desc'    => __( 'Show location selector banner until visitor picks a location', 'gym-core' ),
+				'id'      => 'gym_core_require_location',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'   => __( 'Filter Products by Location', 'gym-core' ),
+				'desc'    => __( 'Only show products assigned to the selected location', 'gym-core' ),
+				'id'      => 'gym_core_filter_products_by_location',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_location_options',
+			),
+		);
+	}
+
+	/**
+	 * Schedule settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_schedule_settings(): array {
+		return array(
+			array(
+				'title' => __( 'Class Schedule Settings', 'gym-core' ),
+				'desc'  => __( 'Configure class scheduling behavior.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_schedule_options',
+			),
+			array(
+				'title'             => __( 'Default Class Capacity', 'gym-core' ),
+				'desc'              => __( 'Maximum students per class (can be overridden per class)', 'gym-core' ),
+				'id'                => 'gym_core_default_class_capacity',
+				'default'           => '30',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '1',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'   => __( 'Enable Waitlist', 'gym-core' ),
+				'desc'    => __( 'Allow students to join a waitlist when class is full', 'gym-core' ),
+				'id'      => 'gym_core_waitlist_enabled',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'   => __( 'iCal Feed', 'gym-core' ),
+				'desc'    => __( 'Enable iCal feed for members to subscribe to the class schedule', 'gym-core' ),
+				'id'      => 'gym_core_ical_enabled',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_schedule_options',
+			),
+		);
+	}
+
+	/**
+	 * Belt rank settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_ranks_settings(): array {
+		return array(
+			array(
+				'title' => __( 'Belt Rank Settings', 'gym-core' ),
+				'desc'  => __( 'Configure belt rank tracking and promotion rules.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_ranks_options',
+			),
+			array(
+				'title'   => __( 'Require Coach Recommendation', 'gym-core' ),
+				'desc'    => __( 'Promotions require a coach recommendation before instructor approval', 'gym-core' ),
+				'id'      => 'gym_core_require_coach_recommendation',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'   => __( 'Notify on Promotion', 'gym-core' ),
+				'desc'    => __( 'Send SMS and email notification when a member is promoted', 'gym-core' ),
+				'id'      => 'gym_core_notify_on_promotion',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_ranks_options',
+			),
+		);
+	}
+
+	/**
+	 * Attendance settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_attendance_settings(): array {
+		return array(
+			array(
+				'title' => __( 'Attendance & Check-In Settings', 'gym-core' ),
+				'desc'  => __( 'Configure the check-in kiosk and attendance tracking.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_attendance_options',
+			),
+			array(
+				'title'   => __( 'Check-In Methods', 'gym-core' ),
+				'desc'    => __( 'Allowed check-in methods on the kiosk', 'gym-core' ),
+				'id'      => 'gym_core_checkin_methods',
+				'default' => array( 'qr', 'search', 'manual' ),
+				'type'    => 'multiselect',
+				'options' => array(
+					'qr'     => __( 'QR Code Scan', 'gym-core' ),
+					'search' => __( 'Name Search', 'gym-core' ),
+					'manual' => __( 'Manual (Staff)', 'gym-core' ),
+				),
+				'class'   => 'wc-enhanced-select',
+			),
+			array(
+				'title'             => __( 'Kiosk Auto-Logout', 'gym-core' ),
+				'desc'              => __( 'Seconds of inactivity before kiosk resets', 'gym-core' ),
+				'id'                => 'gym_core_kiosk_timeout',
+				'default'           => '10',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '5',
+					'max'  => '60',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'   => __( 'Prevent Duplicate Check-Ins', 'gym-core' ),
+				'desc'    => __( 'Block a member from checking into the same class twice in one day', 'gym-core' ),
+				'id'      => 'gym_core_prevent_duplicate_checkin',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_attendance_options',
+			),
+		);
+	}
+
+	/**
+	 * Gamification settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_gamification_settings(): array {
+		return array(
+			array(
+				'title' => __( 'Gamification Settings', 'gym-core' ),
+				'desc'  => __( 'Configure badges, streaks, and achievement tracking.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_gamification_options',
+			),
+			array(
+				'title'             => __( 'Streak Freeze Allowance', 'gym-core' ),
+				'desc'              => __( 'Number of streak freezes per quarter (0 to disable)', 'gym-core' ),
+				'id'                => 'gym_core_streak_freezes_per_quarter',
+				'default'           => '1',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'max'  => '4',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'   => __( 'Notify on Badge Earned', 'gym-core' ),
+				'desc'    => __( 'Send SMS and email when a member earns a badge', 'gym-core' ),
+				'id'      => 'gym_core_notify_on_badge',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_gamification_options',
+			),
+		);
+	}
+
+	/**
+	 * SMS / Twilio settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_sms_settings(): array {
+		return array(
+			array(
+				'title' => __( 'Twilio SMS Settings', 'gym-core' ),
+				'desc'  => __( 'Configure Twilio credentials for SMS notifications. Credentials are stored encrypted.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_sms_options',
+			),
+			array(
+				'title'       => __( 'Twilio Account SID', 'gym-core' ),
+				'id'          => 'gym_core_twilio_account_sid',
+				'default'     => '',
+				'type'        => 'text',
+				'placeholder' => 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+			),
+			array(
+				'title'       => __( 'Twilio Auth Token', 'gym-core' ),
+				'id'          => 'gym_core_twilio_auth_token',
+				'default'     => '',
+				'type'        => 'password',
+				'placeholder' => __( 'Auth token (hidden after save)', 'gym-core' ),
+			),
+			array(
+				'title'       => __( 'Twilio Phone Number', 'gym-core' ),
+				'desc'        => __( 'The Twilio phone number to send SMS from (E.164 format)', 'gym-core' ),
+				'id'          => 'gym_core_twilio_phone_number',
+				'default'     => '',
+				'type'        => 'text',
+				'placeholder' => '+1XXXXXXXXXX',
+			),
+			array(
+				'title'             => __( 'Rate Limit', 'gym-core' ),
+				'desc'              => __( 'Maximum SMS per contact per hour', 'gym-core' ),
+				'id'                => 'gym_core_sms_rate_limit',
+				'default'           => '1',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '1',
+					'max'  => '10',
+					'step' => '1',
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_sms_options',
+			),
+		);
+	}
+
+	/**
+	 * REST API settings.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_api_settings(): array {
+		return array(
+			array(
+				'title' => __( 'REST API Settings', 'gym-core' ),
+				'desc'  => __( 'Configure the gym/v1 REST API endpoints used by AI agents (Gandalf).', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_api_options',
+			),
+			array(
+				'title'   => __( 'Require Authentication', 'gym-core' ),
+				'desc'    => __( 'Require Application Password or JWT for all API requests', 'gym-core' ),
+				'id'      => 'gym_core_api_require_auth',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_api_options',
+			),
+		);
+	}
+}

@@ -51,6 +51,7 @@ final class Plugin {
 	 */
 	public function init(): void {
 		$this->load_textdomain();
+		$this->register_admin_modules();
 		$this->register_location_modules();
 
 		/**
@@ -61,6 +62,20 @@ final class Plugin {
 		 * @since 1.0.0
 		 */
 		do_action( 'gym_core_loaded' );
+	}
+
+	/**
+	 * Registers admin modules (settings pages, user profile fields).
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	private function register_admin_modules(): void {
+		if ( is_admin() ) {
+			$settings = new Admin\Settings();
+			$settings->register_hooks();
+		}
 	}
 
 	/**

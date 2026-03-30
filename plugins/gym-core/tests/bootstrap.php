@@ -9,8 +9,6 @@
  * @package Gym_Core\Tests
  */
 
-declare( strict_types=1 );
-
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
 // Stub constants so classes that reference them can be loaded without WordPress.
@@ -38,16 +36,6 @@ define( 'COOKIE_DOMAIN', '' );
 
 // Stub the WooCommerce Blocks IntegrationInterface so BlockIntegration.php
 // can be autoloaded in unit tests without the WC Blocks package installed.
-if ( ! interface_exists( \Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface::class ) ) {
-	// phpcs:disable
-	namespace Automattic\WooCommerce\Blocks\Integrations {
-		interface IntegrationInterface {
-			public function get_name(): string;
-			public function initialize(): void;
-			public function get_script_handles(): array;
-			public function get_editor_script_handles(): array;
-			public function get_script_data(): array;
-		}
-	}
-	// phpcs:enable
+if ( ! interface_exists( 'Automattic\WooCommerce\Blocks\Integrations\IntegrationInterface' ) ) {
+	require_once __DIR__ . '/stubs/IntegrationInterface.php';
 }

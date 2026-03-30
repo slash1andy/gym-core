@@ -29,6 +29,7 @@ final class Activator {
 		}
 
 		self::check_requirements();
+		Data\TableManager::maybe_create_tables();
 		self::set_defaults();
 		self::schedule_events();
 		self::seed_location_terms();
