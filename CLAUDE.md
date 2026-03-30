@@ -38,6 +38,7 @@ haanpaa/                           # Monorepo root
     ├── planning/                  # Business cases, feature plans
     │   ├── gym-core-project-brief.md
     │   ├── systems-consolidation-proposal.md
+    │   ├── data-migration-guide.md
     │   ├── future-features-plan.md
     │   └── wp7-woo-ai-future-features-plan.md
     └── architecture/              # Technical architecture decisions
@@ -84,6 +85,7 @@ See `MILESTONES.md` at repo root. In dependency order:
 | `MILESTONES.md` | What do I build next? (master roadmap with acceptance criteria) |
 | `plugins/hma-core/PROJECT_BRIEF.md` | What does the gym plugin do? |
 | `plugins/hma-ai-chat/SETUP_GUIDE.md` | How does the AI chat plugin work? |
+| `docs/planning/data-migration-guide.md` | How do we migrate data from Spark/GHL/Wix/USAePay? |
 | `docs/planning/systems-consolidation-proposal.md` | Why is this migration happening? |
 | `docs/architecture/ai-architecture-paperclip.md` | How do the AI agents work? |
 | `docs/planning/future-features-plan.md` | What does WP 7.0 unlock for this project? |
