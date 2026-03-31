@@ -145,6 +145,44 @@ final class Plugin {
 	private function register_api_modules(): void {
 		$location_controller = new API\LocationController( $this->get_location_manager() );
 		$location_controller->register_hooks();
+
+		$schedule_controller = new API\ClassScheduleController();
+		$schedule_controller->register_hooks();
+
+		// Controllers that need the data stores initialized in register_attendance_modules().
+		// Deferred to gym_core_loaded so stores are available.
+		add_action(
+			'gym_core_loaded',
+			function (): void {
+				$rank_controller = new API\RankController( $this->rank_store, $this->attendance_store );
+				$rank_controller->register_hooks();
+
+				$attendance_controller = new API\AttendanceController( $this->attendance_store, $this->checkin_validator );
+				$attendance_controller->register_hooks();
+
+				$promotion_controller = new API\PromotionController( $this->promotion_eligibility );
+				$promotion_controller->register_hooks();
+
+				// SMS controller.
+				if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
+					$twilio_client  = new SMS\TwilioClient();
+					$sms_controller = new API\SMSController( $twilio_client );
+					$sms_controller->register_hooks();
+
+					$inbound_handler = new SMS\InboundHandler( $twilio_client );
+					$inbound_handler->register_hooks();
+				}
+
+				// Gamification controller.
+				if ( 'yes' === get_option( 'gym_core_gamification_enabled', 'yes' ) ) {
+					$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
+					$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
+
+					$gamification_controller = new API\GamificationController( $badge_engine, $streak_tracker );
+					$gamification_controller->register_hooks();
+				}
+			}
+		);
 	}
 
 	/**

@@ -1,0 +1,349 @@
+<?php
+/**
+ * Class schedule REST controller.
+ *
+ * @package Gym_Core\API
+ * @since   1.3.0
+ */
+
+declare( strict_types=1 );
+
+namespace Gym_Core\API;
+
+use Gym_Core\Schedule\ClassPostType;
+
+/**
+ * Handles REST endpoints for class schedule data.
+ *
+ * Routes:
+ *   GET /gym/v1/classes          List classes (filterable by location, program, instructor)
+ *   GET /gym/v1/classes/{id}     Single class detail
+ *   GET /gym/v1/schedule         Weekly schedule view (classes expanded by day)
+ */
+class ClassScheduleController extends BaseController {
+
+	/**
+	 * Route base.
+	 *
+	 * @var string
+	 */
+	protected $rest_base = 'classes';
+
+	/**
+	 * Registers REST routes.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @return void
+	 */
+	public function register_routes(): void {
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base,
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_classes' ),
+				'permission_callback' => array( $this, 'permissions_public' ),
+				'args'                => array_merge(
+					$this->pagination_route_args(),
+					array(
+						'location'   => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'program'    => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+						),
+						'instructor' => array(
+							'type'              => 'integer',
+							'sanitize_callback' => 'absint',
+						),
+					)
+				),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base . '/(?P<id>[\d]+)',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_class' ),
+				'permission_callback' => array( $this, 'permissions_public' ),
+				'args'                => array(
+					'id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
+			'/schedule',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_schedule' ),
+				'permission_callback' => array( $this, 'permissions_public' ),
+				'args'                => array(
+					'location' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'week_of'  => array(
+						'type'              => 'string',
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+					'program'  => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Returns a paginated list of classes.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_classes( \WP_REST_Request $request ): \WP_REST_Response {
+		$per_page = $request->get_param( 'per_page' );
+		$page     = $request->get_param( 'page' );
+
+		$args = array(
+			'post_type'      => ClassPostType::POST_TYPE,
+			'posts_per_page' => $per_page,
+			'paged'          => $page,
+			'post_status'    => 'publish',
+			'meta_query'     => array(), // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+		);
+
+		$location = $request->get_param( 'location' );
+		if ( $location ) {
+			$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				array(
+					'taxonomy' => 'gym_location',
+					'field'    => 'slug',
+					'terms'    => $location,
+				),
+			);
+		}
+
+		$program = $request->get_param( 'program' );
+		if ( $program ) {
+			$args['tax_query']   = $args['tax_query'] ?? array();
+			$args['tax_query'][] = array(
+				'taxonomy' => ClassPostType::PROGRAM_TAXONOMY,
+				'field'    => 'slug',
+				'terms'    => $program,
+			);
+		}
+
+		$instructor = $request->get_param( 'instructor' );
+		if ( $instructor ) {
+			$args['meta_query'][] = array(
+				'key'   => '_gym_class_instructor',
+				'value' => $instructor,
+				'type'  => 'NUMERIC',
+			);
+		}
+
+		// Only show active classes.
+		$args['meta_query'][] = array(
+			'key'     => '_gym_class_status',
+			'value'   => 'active',
+			'compare' => '=',
+		);
+
+		$query = new \WP_Query( $args );
+		$items = array_map( array( $this, 'format_class' ), $query->posts );
+
+		return $this->success_response(
+			$items,
+			$this->pagination_meta(
+				$query->found_posts,
+				$query->max_num_pages,
+				$page,
+				$per_page
+			)
+		);
+	}
+
+	/**
+	 * Returns a single class detail.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function get_class( \WP_REST_Request $request ) {
+		$post = get_post( $request->get_param( 'id' ) );
+
+		if ( ! $post || ClassPostType::POST_TYPE !== $post->post_type ) {
+			return $this->error_response( 'class_not_found', __( 'Class not found.', 'gym-core' ), 404 );
+		}
+
+		return $this->success_response( $this->format_class( $post ) );
+	}
+
+	/**
+	 * Returns a weekly schedule view.
+	 *
+	 * @param \WP_REST_Request $request Request object.
+	 * @return \WP_REST_Response
+	 */
+	public function get_schedule( \WP_REST_Request $request ): \WP_REST_Response {
+		$location = $request->get_param( 'location' );
+		$week_of  = $request->get_param( 'week_of' );
+		$program  = $request->get_param( 'program' );
+
+		$monday = '' !== $week_of
+			? gmdate( 'Y-m-d', strtotime( 'monday this week', strtotime( $week_of ) ) )
+			: gmdate( 'Y-m-d', strtotime( 'monday this week' ) );
+
+		$args = array(
+			'post_type'      => ClassPostType::POST_TYPE,
+			'posts_per_page' => -1,
+			'post_status'    => 'publish',
+			'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+				array(
+					'taxonomy' => 'gym_location',
+					'field'    => 'slug',
+					'terms'    => $location,
+				),
+			),
+			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+				array(
+					'key'   => '_gym_class_status',
+					'value' => 'active',
+				),
+			),
+		);
+
+		if ( $program ) {
+			$args['tax_query'][] = array(
+				'taxonomy' => ClassPostType::PROGRAM_TAXONOMY,
+				'field'    => 'slug',
+				'terms'    => $program,
+			);
+		}
+
+		$query = new \WP_Query( $args );
+
+		$days = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
+		$schedule = array();
+
+		foreach ( $days as $i => $day_name ) {
+			$date    = gmdate( 'Y-m-d', strtotime( $monday . " +{$i} days" ) );
+			$classes = array();
+
+			foreach ( $query->posts as $post ) {
+				$class_day = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
+				if ( $class_day !== $day_name ) {
+					continue;
+				}
+
+				$capacity = (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30;
+				$classes[] = array(
+					'id'              => $post->ID,
+					'name'            => $post->post_title,
+					'program'         => $this->get_class_program( $post->ID ),
+					'instructor'      => $this->get_instructor_name( $post->ID ),
+					'start_time'      => get_post_meta( $post->ID, '_gym_class_start_time', true ),
+					'end_time'        => get_post_meta( $post->ID, '_gym_class_end_time', true ),
+					'location'        => $location,
+					'capacity'        => $capacity,
+				);
+			}
+
+			// Sort by start time.
+			usort( $classes, static fn( $a, $b ) => strcmp( $a['start_time'], $b['start_time'] ) );
+
+			$schedule[] = array(
+				'date'     => $date,
+				'day_name' => ucfirst( $day_name ),
+				'classes'  => $classes,
+			);
+		}
+
+		return $this->success_response( $schedule );
+	}
+
+	/**
+	 * Formats a class post into API response shape.
+	 *
+	 * @param \WP_Post $post Class post.
+	 * @return array<string, mixed>
+	 */
+	private function format_class( \WP_Post $post ): array {
+		return array(
+			'id'          => $post->ID,
+			'name'        => $post->post_title,
+			'description' => $post->post_content,
+			'program'     => $this->get_class_program( $post->ID ),
+			'instructor'  => $this->get_instructor_data( $post->ID ),
+			'day_of_week' => get_post_meta( $post->ID, '_gym_class_day_of_week', true ),
+			'start_time'  => get_post_meta( $post->ID, '_gym_class_start_time', true ),
+			'end_time'    => get_post_meta( $post->ID, '_gym_class_end_time', true ),
+			'capacity'    => (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30,
+			'recurrence'  => get_post_meta( $post->ID, '_gym_class_recurrence', true ) ?: 'weekly',
+			'status'      => get_post_meta( $post->ID, '_gym_class_status', true ) ?: 'active',
+			'location'    => $this->get_class_location( $post->ID ),
+		);
+	}
+
+	/**
+	 * Gets the program name for a class.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string|null
+	 */
+	private function get_class_program( int $post_id ): ?string {
+		$terms = get_the_terms( $post_id, ClassPostType::PROGRAM_TAXONOMY );
+		return ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->name : null;
+	}
+
+	/**
+	 * Gets the location slug for a class.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string|null
+	 */
+	private function get_class_location( int $post_id ): ?string {
+		$terms = get_the_terms( $post_id, 'gym_location' );
+		return ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->slug : null;
+	}
+
+	/**
+	 * Gets instructor user data for a class.
+	 *
+	 * @param int $post_id Post ID.
+	 * @return array{id: int, name: string}|null
+	 */
+	private function get_instructor_data( int $post_id ): ?array {
+		$user_id = (int) get_post_meta( $post_id, '_gym_class_instructor', true );
+		if ( ! $user_id ) {
+			return null;
+		}
+		$user = get_userdata( $user_id );
+		return $user ? array( 'id' => $user_id, 'name' => $user->display_name ) : null;
+	}
+
+	/**
+	 * Gets instructor name for a class (short form for schedule view).
+	 *
+	 * @param int $post_id Post ID.
+	 * @return string|null
+	 */
+	private function get_instructor_name( int $post_id ): ?string {
+		$data = $this->get_instructor_data( $post_id );
+		return $data ? $data['name'] : null;
+	}
+}
