@@ -32,6 +32,24 @@ AI chat interface for the WordPress admin dashboard. Four agent personas (Sales,
 - HPOS enabled
 - Block-based Cart & Checkout
 
+## Deployment
+
+This repo is deployed to Pressable via GitHub integration. The repo root maps to `wp-content/` — only `plugins/` and `themes/` are synced. Everything else is excluded by `.deployignore`.
+
+```
+Pressable dashboard config:
+  Repo subdirectory: (blank)
+  Destination:       wp-content/
+  Delete extra files: OFF
+```
+
+Other plugins (WooCommerce, WooPayments, Subscriptions) are installed separately via WP-CLI.
+
+To provision a new Pressable site:
+```bash
+python3 scripts/provision_pressable.py
+```
+
 ## Getting Started
 
 ```bash

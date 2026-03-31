@@ -414,13 +414,14 @@ PHASE 4: CUTOVER
 - [ ] Belt rank/promotion CSV exported
 - [ ] Financial transaction CSV exported (full history)
 - [ ] Full data dump requested from `data@sparkmembership.com` and received
-- [ ] Membership plan details captured (CoWork Playbook 1)
-- [ ] POS product catalog captured (CoWork Playbook 2)
+- [x] Membership plan details captured (CoWork Playbook 1) — `spark-membership-plans.csv` (50 plans)
+- [x] POS product catalog captured (CoWork Playbook 2) — `spark-pos-products.csv` (10 products)
 - [ ] Member notes captured (from data dump or CoWork Playbook 5)
 - [ ] SMS send history captured
-- [ ] Class schedule structure documented
-- [ ] Belt rank definitions documented (including Kids BJJ 13 belts — confirm with Darby)
+- [x] Class schedule structure documented — `spark-class-schedule.csv` (19 classes)
+- [x] Belt rank definitions documented — `spark-belt-ranks.json` (3 programs, Kids BJJ 13 belts confirmed)
 - [ ] Promotion thresholds documented
+- [x] Spark dashboard/portal audit — `spark-dashboard-audit.md`
 
 ### GoHighLevel
 - [ ] Contacts CSV exported
@@ -436,11 +437,11 @@ PHASE 4: CUTOVER
 
 ### Wix
 - [ ] Blog posts exported as XML
-- [ ] All page content extracted (CoWork Playbook 9)
+- [x] All page content extracted (CoWork Playbook 9) — `wix-page-content/` (11 pages as markdown)
 - [ ] All media/images downloaded
 - [ ] Form submissions exported as CSV
 - [ ] Contacts exported as CSV
-- [ ] Full URL crawl completed (Screaming Frog)
+- [x] Full URL crawl completed — `wix-sitemap.csv` (11 URLs)
 - [ ] 301 redirects implemented and tested
 - [ ] DNS cutover completed
 - [ ] New WordPress site live and verified

@@ -706,20 +706,22 @@ These playbooks exist for data that has **no export path** — configuration and
 
 Recommended sequence — run these in the order data is needed by the milestones:
 
-| Priority | Playbook | Milestone | Blocker? |
-|----------|----------|-----------|----------|
-| 1 | **PB1: Spark Membership Plans** | M1.4 | Yes — can't create WC products without this |
-| 2 | **PB2: Spark POS Products** | M1.4 | No — can do later |
-| 3 | **PB9: Wix Page Content** | M1.7 | Yes — can't build the site without content |
-| 4 | **PB10: Wix Media Download** | M1.7 | Yes — can't build the site without images |
-| 5 | **PB12: USAePay Recurring Profiles** | M1.9 | Yes — needed for subscription import (try CSV export first) |
-| 6 | **PB6: GHL Automations** | M2.5 | Yes — can't rebuild workflows without this |
-| 7 | **PB7: GHL Forms** | M2.7 | Yes — can't rebuild forms without this |
-| 8 | **PB8: GHL Pipelines** | M2.6 | Yes — can't configure CRM pipeline without this |
-| 9 | **PB3: Spark Class Schedule** | M3.3 | Yes — can't create class CPT entries without this |
-| 10 | **PB11: Spark Member Portal** | M3.2 | Helpful but not blocking |
-| 11 | **PB4: Spark Belt Rank Defs** | M4.1 | Yes — can't build rank system without this |
-| 12 | **PB5: Spark Member Notes** | M2.2 | **Only if data dump doesn't include notes** |
+| Priority | Playbook | Milestone | Status | Output |
+|----------|----------|-----------|--------|--------|
+| 1 | **PB1: Spark Membership Plans** | M1.4 | **DONE** (2026-03-30) | `spark-membership-plans.csv` (50 plans) |
+| 2 | **PB2: Spark POS Products** | M1.4 | **DONE** (2026-03-30) | `spark-pos-products.csv` (10 products) |
+| 3 | **PB9: Wix Page Content** | M1.7 | **DONE** (2026-03-30) | `wix-page-content/` (11 pages as markdown) |
+| 4 | **PB10: Wix Media Download** | M1.7 | **DONE** (2026-03-30) | `wix-sitemap.csv` (11 URLs) |
+| 5 | **PB12: USAePay Recurring Profiles** | M1.9 | Pending | — |
+| 6 | **PB6: GHL Automations** | M2.5 | Pending | — |
+| 7 | **PB7: GHL Forms** | M2.7 | Pending | — |
+| 8 | **PB8: GHL Pipelines** | M2.6 | Pending | — |
+| 9 | **PB3: Spark Class Schedule** | M3.3 | **DONE** (2026-03-30) | `spark-class-schedule.csv` (19 classes) |
+| 10 | **PB11: Spark Member Portal** | M3.2 | **DONE** (2026-03-30) | `spark-dashboard-audit.md` |
+| 11 | **PB4: Spark Belt Rank Defs** | M4.1 | **DONE** (2026-03-30) | `spark-belt-ranks.json` (3 programs) |
+| 12 | **PB5: Spark Member Notes** | M2.2 | Pending (awaiting data dump) | — |
+
+**Data files location:** `~/Documents/Claude/Projects/Gym Revamp/`
 
 ---
 

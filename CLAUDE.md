@@ -14,12 +14,12 @@ This is a **private, internal project** — not marketplace software.
 
 ## Repository Structure
 
+The repo root mirrors `wp-content/` for Pressable GitHub deploy. Non-deployable files
+(docs, scripts, config) are excluded via `.deployignore`.
+
 ```
-haanpaa/                           # Monorepo root
-├── CLAUDE.md                      # This file — agent context
-├── README.md                      # Project overview for humans
-├── MILESTONES.md                  # Implementation tracker (7 milestones)
-├── plugins/                       # WordPress plugins
+haanpaa/                           # Repo root → maps to wp-content/ on Pressable
+├── plugins/                       # → wp-content/plugins/
 │   ├── gym-core/                  # Gym management plugin (WooCommerce extension)
 │   │   ├── gym-core.php           # Main plugin file
 │   │   ├── PROJECT_BRIEF.md       # Plugin-level feature specs
@@ -34,7 +34,14 @@ haanpaa/                           # Monorepo root
 │       ├── src/                   # PHP source (PSR-4: HMA_AI_Chat\)
 │       ├── assets/                # CSS + JS
 │       └── ...
-└── docs/                          # Planning & architecture (not plugin code)
+├── themes/                        # → wp-content/themes/ (future custom theme)
+├── .deployignore                  # Excludes non-deployable files from Pressable sync
+├── CLAUDE.md                      # Agent context (excluded from deploy)
+├── README.md                      # Project overview (excluded from deploy)
+├── MILESTONES.md                  # Implementation tracker (excluded from deploy)
+├── scripts/                       # Provisioning & automation (excluded from deploy)
+│   └── provision_pressable.py     # Pressable API provisioning script
+└── docs/                          # Planning & architecture (excluded from deploy)
     ├── planning/                  # Business cases, feature plans
     │   ├── gym-core-project-brief.md
     │   ├── systems-consolidation-proposal.md
@@ -46,19 +53,27 @@ haanpaa/                           # Monorepo root
     │   └── ai-architecture-paperclip.md
     └── migration/                 # Content & data from legacy platforms
         └── wix-content/           # Scraped Wix page content (see README.md inside)
-            ├── README.md          # Index + status + agent usage guide
-            ├── home.md            # Homepage (pending re-scrape)
-            ├── classes.md         # Class schedule (complete)
-            ├── kids.md            # Kids program (complete)
-            ├── beloit.md          # Beloit location (complete)
-            ├── fitness-kickboxing.md  # Kickboxing (pending re-scrape)
-            ├── personal-training.md   # Personal training (pending re-scrape)
-            ├── free-trial.md      # Free trial page (pending re-scrape)
-            ├── contact.md         # Contact page (pending re-scrape)
-            ├── blog.md            # Blog (pending re-scrape)
-            ├── reviews.md         # Reviews — original content
-            └── reviews-modernized.md  # Reviews — modernized quotes
 ```
+
+## Deployment
+
+**Pressable GitHub Deploy** — repo root maps to `wp-content/` on the Pressable site.
+
+| What | How |
+|------|-----|
+| `gym-core` + `hma-ai-chat` | Auto-deployed via GitHub push → Pressable |
+| WooCommerce + WooPayments | Installed via WP-CLI or wp-admin |
+| WooCommerce Subscriptions | Installed via WP-CLI (built from `woocommerce/woocommerce-subscriptions`) |
+| Non-deploy files | Excluded by `.deployignore` |
+
+**Pressable dashboard config:**
+- Repository URL: this repo's HTTPS clone URL
+- Branch: `main`
+- Repository subdirectory: (blank)
+- Destination: `wp-content/`
+- Delete files not in repo: **OFF** (preserves WooCommerce, WooPayments, Subscriptions)
+
+**Provisioning script:** `python3 scripts/provision_pressable.py` (see M1.1)
 
 ## Current State
 
