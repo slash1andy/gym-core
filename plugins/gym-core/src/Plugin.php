@@ -105,6 +105,7 @@ final class Plugin {
 		$this->register_notification_modules();
 		$this->register_kiosk_modules();
 		$this->register_gamification_modules();
+		$this->register_integration_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -396,6 +397,22 @@ final class Plugin {
 				);
 			}
 		);
+	}
+
+	/**
+	 * Registers the Form-to-CRM integration module.
+	 *
+	 * Hooks into Jetpack Forms and WooCommerce checkout to create
+	 * Jetpack CRM contacts and pipeline entries. Only activates when
+	 * the integration is enabled and Jetpack CRM is detected.
+	 *
+	 * @since 2.2.0
+	 *
+	 * @return void
+	 */
+	private function register_integration_modules(): void {
+		$form_to_crm = new Integrations\FormToCrm();
+		$form_to_crm->register_hooks();
 	}
 
 	/**
