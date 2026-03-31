@@ -443,11 +443,8 @@ class LocationController extends BaseController {
 	 * @return string
 	 */
 	private function location_label( string $slug ): string {
-		return match ( $slug ) {
-			Taxonomy::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			Taxonomy::BELOIT   => __( 'Beloit', 'gym-core' ),
-			default            => $slug,
-		};
+		$labels = Taxonomy::get_location_labels();
+		return $labels[ $slug ] ?? $slug;
 	}
 
 	/**

@@ -137,10 +137,9 @@ class OrderLocation {
 			? sanitize_key( wp_unslash( $_GET['gym_location'] ) ) // phpcs:ignore WordPress.Security.NonceVerification.Recommended
 			: '';
 
-		$locations = array(
-			''                 => __( 'All locations', 'gym-core' ),
-			Taxonomy::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			Taxonomy::BELOIT   => __( 'Beloit', 'gym-core' ),
+		$locations = array_merge(
+			array( '' => __( 'All locations', 'gym-core' ) ),
+			Taxonomy::get_location_labels()
 		);
 
 		echo '<select name="gym_location" id="gym_location_filter">';
@@ -251,12 +250,8 @@ class OrderLocation {
 			return;
 		}
 
-		$labels = array(
-			Taxonomy::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			Taxonomy::BELOIT   => __( 'Beloit', 'gym-core' ),
-		);
-
-		$label = $labels[ $location ] ?? esc_html( $location );
+		$labels = Taxonomy::get_location_labels();
+		$label  = $labels[ $location ] ?? esc_html( $location );
 
 		printf(
 			'<p class="gym-order-location"><strong>%s</strong> %s</p>',

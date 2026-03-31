@@ -52,6 +52,23 @@ class Taxonomy {
 	const VALID_LOCATIONS = array( self::ROCKFORD, self::BELOIT );
 
 	/**
+	 * Returns location slugs mapped to human-readable labels.
+	 *
+	 * All code that needs location labels should call this method instead of
+	 * hardcoding label maps. Makes adding a third location a one-line change.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @return array<string, string> Slug => label.
+	 */
+	public static function get_location_labels(): array {
+		return array(
+			self::ROCKFORD => __( 'Rockford', 'gym-core' ),
+			self::BELOIT   => __( 'Beloit', 'gym-core' ),
+		);
+	}
+
+	/**
 	 * Registers WordPress hooks.
 	 *
 	 * @since 1.0.0
@@ -125,10 +142,7 @@ class Taxonomy {
 			return;
 		}
 
-		$terms = array(
-			self::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			self::BELOIT   => __( 'Beloit', 'gym-core' ),
-		);
+		$terms = self::get_location_labels();
 
 		foreach ( $terms as $slug => $name ) {
 			if ( ! term_exists( $slug, self::SLUG ) ) {
