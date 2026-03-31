@@ -92,13 +92,13 @@ final class BadgeEngine {
 	 * @param string $program     Program slug.
 	 * @param string $new_belt    New belt slug.
 	 * @param int    $new_stripes New stripe count.
-	 * @param string $from_belt   Previous belt slug.
-	 * @param int    $promoted_by Promoter user ID.
+	 * @param string|null $from_belt   Previous belt slug (null on first-ever rank).
+	 * @param int         $promoted_by Promoter user ID.
 	 * @return void
 	 */
-	public function evaluate_on_promotion( int $user_id, string $program, string $new_belt, int $new_stripes, string $from_belt, int $promoted_by ): void {
-		// Only award for belt changes, not stripe additions.
-		if ( $new_belt === $from_belt ) {
+	public function evaluate_on_promotion( int $user_id, string $program, string $new_belt, int $new_stripes, ?string $from_belt, int $promoted_by ): void {
+		// Only skip for stripe additions (same belt). First-ever promotion ($from_belt=null) gets the badge.
+		if ( null !== $from_belt && $new_belt === $from_belt ) {
 			return;
 		}
 

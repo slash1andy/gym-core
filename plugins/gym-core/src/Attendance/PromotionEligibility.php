@@ -151,47 +151,98 @@ final class PromotionEligibility {
 	 * @return array<int, array{user_id: int, display_name: string, belt: string, stripes: int, eligible: bool, attendance_count: int, attendance_required: int, days_at_rank: int, days_required: int, has_recommendation: bool}>
 	 */
 	public function get_eligible_members( string $program, float $approach = 0.8 ): array {
-		$ranked_members = $this->ranks->get_members_at_belt( $program, '' );
+		global $wpdb;
+		$tables = \Gym_Core\Data\TableManager::get_table_names();
 
-		// If empty slug returns nothing, get all ranked members for this program.
+		// Single query: all ranked members for this program.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$ranked_members = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT user_id, belt, stripes, promoted_at, promoted_by
+				FROM {$tables['ranks']}
+				WHERE program = %s",
+				$program
+			)
+		) ?: array();
+
 		if ( empty( $ranked_members ) ) {
-			// Query all members with any rank in this program.
-			global $wpdb;
-			$tables = \Gym_Core\Data\TableManager::get_table_names();
-
-			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$ranked_members = $wpdb->get_results(
-				$wpdb->prepare(
-					"SELECT user_id, belt, stripes, promoted_at, promoted_by
-					FROM {$tables['ranks']}
-					WHERE program = %s",
-					$program
-				)
-			) ?: array();
+			return array();
 		}
 
-		$eligible = array();
+		// Batch optimization: collect all user IDs for bulk operations.
+		$user_ids = array_map( static fn( $m ) => (int) $m->user_id, $ranked_members );
+
+		// Prime the WP user object cache in a single query.
+		cache_users( $user_ids );
+
+		// Batch-fetch attendance counts since each member's promotion date.
+		// Build a single query with CASE/WHEN for per-member date thresholds.
+		$attendance_counts = array();
+		if ( ! empty( $user_ids ) ) {
+			$placeholders = array();
+			$values       = array();
+			foreach ( $ranked_members as $member ) {
+				$placeholders[] = '(user_id = %d AND checked_in_at >= %s)';
+				$values[]       = (int) $member->user_id;
+				$values[]       = $member->promoted_at;
+			}
+
+			$where = implode( ' OR ', $placeholders );
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+			$count_results = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT user_id, COUNT(*) as cnt FROM {$tables['attendance']} WHERE {$where} GROUP BY user_id",
+					...$values
+				)
+			) ?: array();
+
+			foreach ( $count_results as $row ) {
+				$attendance_counts[ (int) $row->user_id ] = (int) $row->cnt;
+			}
+		}
+
+		$thresholds  = self::get_default_thresholds();
+		$threshold   = $thresholds[ $program ] ?? array( 'min_attendance' => 60, 'min_days' => 180 );
+		$require_rec = 'yes' === get_option( 'gym_core_require_coach_recommendation', 'yes' );
+		$eligible    = array();
 
 		foreach ( $ranked_members as $member ) {
-			$user_id = (int) $member->user_id;
-			$check   = $this->check( $user_id, $program );
+			$user_id          = (int) $member->user_id;
+			$attendance_count = $attendance_counts[ $user_id ] ?? 0;
+			$promoted_time    = strtotime( $member->promoted_at );
+			$days_at_rank     = $promoted_time ? (int) floor( ( time() - $promoted_time ) / DAY_IN_SECONDS ) : 0;
 
-			// Include if eligible OR approaching the threshold.
-			$approaching = $check['attendance_count'] >= ( $check['attendance_required'] * $approach )
-				|| $check['days_at_rank'] >= ( $check['days_required'] * $approach );
+			// Check if approaching or eligible.
+			$meets_attendance = $attendance_count >= $threshold['min_attendance'];
+			$meets_time       = $days_at_rank >= $threshold['min_days'];
+			$approaching      = $attendance_count >= ( $threshold['min_attendance'] * $approach )
+				|| $days_at_rank >= ( $threshold['min_days'] * $approach );
 
-			if ( $check['eligible'] || $approaching ) {
-				$user = get_userdata( $user_id );
-				$eligible[] = array_merge(
-					$check,
-					array(
-						'user_id'      => $user_id,
-						'display_name' => $user ? $user->display_name : "User #{$user_id}",
-						'belt'         => $member->belt,
-						'stripes'      => (int) $member->stripes,
-					)
-				);
+			if ( ! $meets_attendance && ! $meets_time && ! $approaching ) {
+				continue; // Not close enough — skip.
 			}
+
+			$recommendation     = get_user_meta( $user_id, '_gym_coach_recommendation_' . $program, true );
+			$has_recommendation = ! empty( $recommendation );
+			$meets_rec          = ! $require_rec || $has_recommendation;
+
+			$next_belt = \Gym_Core\Rank\RankDefinitions::get_next_belt( $program, $member->belt );
+			$is_eligible = $meets_attendance && $meets_time && $meets_rec;
+
+			$user = get_userdata( $user_id ); // Served from cache (primed above).
+			$eligible[] = array(
+				'user_id'              => $user_id,
+				'display_name'         => $user ? $user->display_name : "User #{$user_id}",
+				'belt'                 => $member->belt,
+				'stripes'              => (int) $member->stripes,
+				'eligible'             => $is_eligible,
+				'attendance_count'     => $attendance_count,
+				'attendance_required'  => $threshold['min_attendance'],
+				'days_at_rank'         => $days_at_rank,
+				'days_required'        => $threshold['min_days'],
+				'has_recommendation'   => $has_recommendation,
+				'next_belt'            => $next_belt ? $next_belt['slug'] : null,
+			);
 		}
 
 		// Sort: eligible first, then by attendance count descending.

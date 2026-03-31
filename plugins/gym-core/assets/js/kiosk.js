@@ -244,6 +244,7 @@
 				user_id:  selectedMember.id,
 				class_id: classId,
 				method:   'name_search',
+				location: config.location,
 			} ),
 		} )
 			.then( function ( result ) {

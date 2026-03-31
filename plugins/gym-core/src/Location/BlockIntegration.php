@@ -104,10 +104,7 @@ class BlockIntegration implements IntegrationInterface {
 	public function get_script_data(): array {
 		return array(
 			'currentLocation' => $this->manager->get_current_location(),
-			'locations'       => array(
-				Taxonomy::ROCKFORD => __( 'Rockford', 'gym-core' ),
-				Taxonomy::BELOIT   => __( 'Beloit', 'gym-core' ),
-			),
+			'locations'       => Taxonomy::get_location_labels(),
 			'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
 			'nonce'           => wp_create_nonce( 'gym_location_nonce' ),
 		);

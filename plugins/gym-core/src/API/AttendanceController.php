@@ -68,6 +68,12 @@ class AttendanceController extends BaseController {
 						'sanitize_callback' => 'sanitize_text_field',
 						'enum'              => array( 'qr_scan', 'member_id', 'name_search', 'manual' ),
 					),
+					'location' => array(
+						'type'              => 'string',
+						'required'          => false,
+						'sanitize_callback' => 'sanitize_text_field',
+						'description'       => __( 'Location slug. Used as fallback when class_id is 0 (Open Mat).', 'gym-core' ),
+					),
 				),
 			)
 		);
@@ -168,11 +174,17 @@ class AttendanceController extends BaseController {
 		$class_id = $request->get_param( 'class_id' );
 		$method   = $request->get_param( 'method' );
 
-		// Determine location from the class.
-		$location_terms = get_the_terms( $class_id, 'gym_location' );
-		$location       = ( $location_terms && ! is_wp_error( $location_terms ) )
-			? $location_terms[0]->slug
-			: '';
+		// Determine location from the class, fall back to request param (kiosk/Open Mat).
+		$location = '';
+		if ( $class_id > 0 ) {
+			$location_terms = get_the_terms( $class_id, 'gym_location' );
+			if ( $location_terms && ! is_wp_error( $location_terms ) ) {
+				$location = $location_terms[0]->slug;
+			}
+		}
+		if ( '' === $location ) {
+			$location = sanitize_text_field( $request->get_param( 'location' ) ?? '' );
+		}
 
 		// Validate.
 		$validation = $this->validator->validate( $user_id, $class_id, $location );

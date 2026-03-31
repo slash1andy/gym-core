@@ -127,10 +127,7 @@ class LocationSelector {
 	public function render_location_selector(): void {
 		$current = $this->manager->get_current_location();
 
-		$locations = array(
-			Taxonomy::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			Taxonomy::BELOIT   => __( 'Beloit', 'gym-core' ),
-		);
+		$locations = Taxonomy::get_location_labels();
 
 		$banner_class = 'gym-location-selector';
 		if ( '' === $current ) {
