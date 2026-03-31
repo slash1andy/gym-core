@@ -334,10 +334,33 @@ plugin install automatewoo --activate
 
 ---
 
-## Open Questions
+## Research Findings (Resolved)
 
-1. **Jetpack CRM extensions** — which paid extensions are needed? WooCommerce Connect may be free, but Automations and Mail Campaigns extensions have separate pricing. Need to verify.
-2. **GHL data export** — has the CSV export from GHL been done? If not, Andrew needs to do this from the GHL admin.
-3. **Twilio phone number** — does the gym already have a Twilio number, or does GHL own the SMS number? If GHL owns it, porting is needed.
-4. **AutomateWoo licensing** — is it already purchased as part of the WooCommerce extensions bundle? Or separate purchase needed?
-5. **Amazon SES** — does Andrew have an AWS account for SES, or should we use MailPoet Sending Service instead?
+**Jetpack CRM:**
+- WooSync (WC integration) is free in core since v5.0
+- Entrepreneur bundle ($199/yr = ~$17/mo) includes: Automations, Mail Campaigns, Twilio Connect, Client Portal Pro — all needed
+- No visual pipeline/kanban board — use contact statuses as pseudo-stages
+- API is Beta but functional: `/create_customer`, `/customers`, `/customer_search`
+- Custom fields supported (dropdown, text, date) — add gym_location, belt_rank, program, foundations_status
+- No native WC Subscriptions lifecycle awareness — AutomateWoo fills this gap
+
+**AutomateWoo ($119/yr = ~$10/mo):**
+- Custom triggers via `automatewoo/triggers` filter — extend `AutomateWoo\Trigger` class
+- "One workflow per step" pattern for multi-step sequences (4 workflows for a 4-step drip)
+- Built-in Twilio SMS action + MailPoet list management action
+- WC Subscriptions triggers: before renewal, payment failed, status changed, trial end
+- Rules system for conditional targeting (tags, meta, product, subscription status)
+
+**MailPoet (free for <1,000 subscribers):**
+- Free tier covers the gym's needs (~150 active members + leads)
+- WC integration auto-syncs customers with purchase/subscription segmentation
+- Handles broadcasts/newsletters; AutomateWoo handles behavioral triggers
+- Amazon SES for sending (~$0.10/1,000 emails) or MailPoet Sending Service (~$15/mo)
+
+**Total M2 annual cost:** ~$318/yr ($199 JPCRM + $119 AW) vs ~$1,644/yr GHL = **$1,326/yr savings**
+
+## Remaining Questions for Andrew
+
+1. **GHL data export** — has the CSV export been done from GHL admin?
+2. **Twilio phone number** — does the gym already have a Twilio number, or does GHL own it?
+3. **Amazon SES vs MailPoet Sending** — do you have an AWS account, or prefer MailPoet's managed sending?
