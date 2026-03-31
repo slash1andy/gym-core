@@ -108,23 +108,7 @@ class RankController extends BaseController {
 	 * @return bool|\WP_Error
 	 */
 	public function permissions_view_rank( \WP_REST_Request $request ): bool|\WP_Error {
-		if ( ! is_user_logged_in() ) {
-			return $this->error_response( 'rest_not_logged_in', __( 'Authentication required.', 'gym-core' ), 401 );
-		}
-
-		$target_id = $request->get_param( 'id' );
-
-		// Members can view their own rank.
-		if ( (int) $target_id === get_current_user_id() ) {
-			return true;
-		}
-
-		// Coaches/admins can view anyone's rank.
-		if ( current_user_can( 'gym_view_ranks' ) || current_user_can( 'manage_woocommerce' ) ) {
-			return true;
-		}
-
-		return $this->error_response( 'rest_forbidden', __( 'You cannot view this member\'s rank.', 'gym-core' ), 403 );
+		return $this->permissions_view_own_or_cap( $request, 'id', 'gym_view_ranks' );
 	}
 
 	/**

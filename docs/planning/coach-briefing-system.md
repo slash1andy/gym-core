@@ -79,15 +79,11 @@ What to teach in this class. Sourced from a curriculum plan (if configured) or s
 | Positional focus | Curriculum metadata |
 | Competition prep notes | If within 2 weeks of a scheduled comp |
 
-**Curriculum management** — Darby owns the curriculum; coaches and Gandalf can suggest:
-- `gym_curriculum` CPT with admin calendar view
+**Curriculum management** — a simple admin interface where Darby sets the weekly/monthly curriculum plan:
+- `gym_curriculum` CPT or admin calendar view
 - Fields: date, program, technique name, video URL, notes, positional focus
 - Can be recurring (e.g., "Monday Fundamentals = guard passing" every Monday)
-- **Suggestion queue**: coaches or Gandalf submit suggestions → Darby approves/rejects
-  - "Coach Jordan suggests: review arm bars from guard — 3 students struggled last class"
-  - "Gandalf suggests: guard passing drill — trending weakness across last 2 weeks of class notes"
-- Coaches add post-class notes (what was actually covered, what to revisit)
-- Darby sees a dashboard of suggestions + class notes to inform next week's plan
+- Coaches can add class notes after teaching (what was actually covered, what to revisit)
 
 ### 4. Announcements
 
@@ -247,10 +243,10 @@ New settings section in the Admin Settings tab:
 
 ---
 
-## Resolved Questions
+## Open Questions
 
-1. **Curriculum ownership** — Darby sets curriculum centrally. Coaches and Gandalf can suggest additions/changes for Darby's approval (suggestion queue, not direct edits).
-2. **Hour logging** — Used for payroll (indirectly — not a payroll system, but coaches reference logged hours for their pay). Needs to be accurate but not a time clock.
-3. **Video hosting** — No requirement for YouTube. Can use any hosted video (VideoPress, direct upload, or external links). Keep it flexible.
-4. **Coach roles** — Two tiers: Darby as head coach (full admin, sets curriculum, approves promotions) and coaches (teach classes, record attendance, log hours). Kids' classes may have a lead + assistant coach.
-5. **Multi-coach classes** — Kids' classes can have two coaches. Both get the briefing. Adult classes are single-coach.
+1. **Curriculum ownership** — Does Darby set curriculum centrally, or do individual coaches plan their own classes? (Affects whether curriculum is prescribed or suggested.)
+2. **Hour logging** — Is this for payroll, or just operational tracking? Determines required precision.
+3. **Video hosting** — YouTube links, or should we use Jetpack VideoPress for private technique videos?
+4. **Coach roles** — Are all coaches equal, or is there a head coach / assistant coach distinction that affects briefing content?
+5. **Multi-coach classes** — Can a class have multiple coaches? If so, does each get a briefing or is it shared?

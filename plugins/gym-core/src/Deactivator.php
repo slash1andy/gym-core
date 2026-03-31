@@ -27,6 +27,7 @@ final class Deactivator {
 			return;
 		}
 
+		Capabilities::deactivate();
 		self::clear_scheduled_events();
 
 		// Flush rewrite rules to remove any CPT/taxonomy rewrite slugs.

@@ -16,6 +16,7 @@ namespace Gym_Core\Attendance;
 
 use Gym_Core\Rank\RankStore;
 use Gym_Core\Rank\RankDefinitions;
+use Gym_Core\Attendance\FoundationsClearance;
 
 /**
  * Evaluates and queries promotion eligibility for members.
@@ -37,47 +38,49 @@ final class PromotionEligibility {
 	private RankStore $ranks;
 
 	/**
+	 * Foundations clearance (optional — for filtering out Foundations students).
+	 *
+	 * @var FoundationsClearance|null
+	 */
+	private ?FoundationsClearance $foundations;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param AttendanceStore $attendance Attendance data store.
-	 * @param RankStore       $ranks      Rank data store.
+	 * @param AttendanceStore          $attendance  Attendance data store.
+	 * @param RankStore                $ranks       Rank data store.
+	 * @param FoundationsClearance|null $foundations Optional Foundations clearance system.
 	 */
-	public function __construct( AttendanceStore $attendance, RankStore $ranks ) {
-		$this->attendance = $attendance;
-		$this->ranks      = $ranks;
+	public function __construct( AttendanceStore $attendance, RankStore $ranks, ?FoundationsClearance $foundations = null ) {
+		$this->attendance  = $attendance;
+		$this->ranks       = $ranks;
+		$this->foundations = $foundations;
 	}
 
 	/**
 	 * Returns the default promotion thresholds per program.
 	 *
-	 * @since 1.2.0
+	 * @deprecated 2.0.0 Use RankDefinitions::get_promotion_threshold() for per-rank thresholds.
 	 *
-	 * @return array<string, array{min_attendance: int, min_days: int}>
+	 * @return array<string, array>
 	 */
 	public static function get_default_thresholds(): array {
-		$defaults = array(
-			'adult-bjj'  => array(
-				'min_attendance' => 60,
-				'min_days'       => 180,
-			),
-			'kids-bjj'   => array(
-				'min_attendance' => 40,
-				'min_days'       => 120,
-			),
-			'kickboxing' => array(
-				'min_attendance' => 30,
-				'min_days'       => 90,
-			),
-		);
+		return RankDefinitions::get_default_thresholds();
+	}
 
-		/**
-		 * Filters the promotion eligibility thresholds.
-		 *
-		 * @since 1.2.0
-		 *
-		 * @param array<string, array> $defaults Program slug => thresholds.
-		 */
-		return apply_filters( 'gym_core_promotion_thresholds', $defaults );
+	/**
+	 * Checks if a user is currently in Foundations and not yet cleared.
+	 *
+	 * @param int $user_id User ID.
+	 * @return bool
+	 */
+	private function is_in_foundations( int $user_id ): bool {
+		if ( null === $this->foundations ) {
+			return false;
+		}
+
+		$status = $this->foundations->get_status( $user_id );
+		return $status['in_foundations'] && ! $status['cleared'];
 	}
 
 	/**
@@ -90,19 +93,29 @@ final class PromotionEligibility {
 	 * @return array{eligible: bool, attendance_count: int, attendance_required: int, days_at_rank: int, days_required: int, has_recommendation: bool, next_belt: string|null}
 	 */
 	public function check( int $user_id, string $program ): array {
-		$rank       = $this->ranks->get_rank( $user_id, $program );
-		$thresholds = self::get_default_thresholds();
-		$threshold  = $thresholds[ $program ] ?? array( 'min_attendance' => 60, 'min_days' => 180 );
+		$rank = $this->ranks->get_rank( $user_id, $program );
+
+		// Use per-rank thresholds from RankDefinitions (sourced from Spark data).
+		$threshold = $rank
+			? RankDefinitions::get_promotion_threshold( $program, $rank->belt )
+			: array( 'min_days' => 0, 'min_classes' => 0 );
 
 		$result = array(
 			'eligible'             => false,
+			'in_foundations'       => false,
 			'attendance_count'     => 0,
-			'attendance_required'  => $threshold['min_attendance'],
+			'attendance_required'  => $threshold['min_classes'],
 			'days_at_rank'         => 0,
 			'days_required'        => $threshold['min_days'],
 			'has_recommendation'   => false,
 			'next_belt'            => null,
 		);
+
+		// Foundations-enrolled students are not eligible for promotion.
+		if ( $this->is_in_foundations( $user_id ) ) {
+			$result['in_foundations'] = true;
+			return $result;
+		}
 
 		if ( ! $rank ) {
 			// No current rank — member needs to be assigned an initial rank first.
@@ -201,21 +214,27 @@ final class PromotionEligibility {
 			}
 		}
 
-		$thresholds  = self::get_default_thresholds();
-		$threshold   = $thresholds[ $program ] ?? array( 'min_attendance' => 60, 'min_days' => 180 );
 		$require_rec = 'yes' === get_option( 'gym_core_require_coach_recommendation', 'yes' );
 		$eligible    = array();
 
 		foreach ( $ranked_members as $member ) {
 			$user_id          = (int) $member->user_id;
+
+			// Skip Foundations-enrolled students.
+			if ( $this->is_in_foundations( $user_id ) ) {
+				continue;
+			}
+
+			// Per-rank thresholds.
+			$threshold        = RankDefinitions::get_promotion_threshold( $program, $member->belt );
 			$attendance_count = $attendance_counts[ $user_id ] ?? 0;
 			$promoted_time    = strtotime( $member->promoted_at );
 			$days_at_rank     = $promoted_time ? (int) floor( ( time() - $promoted_time ) / DAY_IN_SECONDS ) : 0;
 
 			// Check if approaching or eligible.
-			$meets_attendance = $attendance_count >= $threshold['min_attendance'];
+			$meets_attendance = $attendance_count >= $threshold['min_classes'];
 			$meets_time       = $days_at_rank >= $threshold['min_days'];
-			$approaching      = $attendance_count >= ( $threshold['min_attendance'] * $approach )
+			$approaching      = $attendance_count >= ( $threshold['min_classes'] * $approach )
 				|| $days_at_rank >= ( $threshold['min_days'] * $approach );
 
 			if ( ! $meets_attendance && ! $meets_time && ! $approaching ) {
@@ -237,7 +256,7 @@ final class PromotionEligibility {
 				'stripes'              => (int) $member->stripes,
 				'eligible'             => $is_eligible,
 				'attendance_count'     => $attendance_count,
-				'attendance_required'  => $threshold['min_attendance'],
+				'attendance_required'  => $threshold['min_classes'],
 				'days_at_rank'         => $days_at_rank,
 				'days_required'        => $threshold['min_days'],
 				'has_recommendation'   => $has_recommendation,
