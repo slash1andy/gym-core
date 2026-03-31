@@ -27,6 +27,7 @@ The new haanpaamartialarts.com goes live on Pressable running WordPress 7.0 and 
 
 #### 1.1 — Environment Setup
 ```
+STATUS: COMPLETE
 DESCRIPTION: Provision and configure the WordPress 7.0 + WooCommerce 10.3 development environment.
 DEPENDS_ON: None
 ACCEPTANCE:
@@ -42,6 +43,7 @@ ACCEPTANCE:
 
 #### 1.2 — WooPayments Configuration
 ```
+STATUS: COMPLETE
 DESCRIPTION: Install and configure WooPayments as the sole payment gateway.
 DEPENDS_ON: 1.1
 ACCEPTANCE:
@@ -60,6 +62,7 @@ NOTE: Current blended rate is ~3.23% via USAePay/Pitbull with ~$147.76 avg ticke
 
 #### 1.3 — WooCommerce Subscriptions Setup
 ```
+STATUS: COMPLETE
 DESCRIPTION: Install and configure WooCommerce Subscriptions for recurring membership billing.
 DEPENDS_ON: 1.2
 ACCEPTANCE:
@@ -74,6 +77,7 @@ ACCEPTANCE:
 
 #### 1.4 — Membership Product Configuration
 ```
+STATUS: COMPLETE
 DESCRIPTION: Create subscription products for each membership tier at both locations.
 DEPENDS_ON: 1.3
 ACCEPTANCE:
@@ -96,6 +100,7 @@ OPEN_QUESTION: Get current pricing tiers from Spark. Darby to provide.
 
 #### 1.5 — gym-core Plugin Scaffold
 ```
+STATUS: COMPLETE
 DESCRIPTION: Scaffold the gym-core custom plugin that will hold all gym-specific
              WooCommerce extensions across all milestones.
 DEPENDS_ON: 1.1
@@ -118,6 +123,7 @@ OUTPUT_PATH: /Gym Revamp/gym-core/
 
 #### 1.6 — Multi-Location Architecture (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the multi-location taxonomy and logic into gym-core.
              This is foundational — almost everything downstream filters by location.
 DEPENDS_ON: 1.5
@@ -134,6 +140,7 @@ ACCEPTANCE:
 
 #### 1.7 — Site Design + Content
 ```
+STATUS: COMPLETE
 DESCRIPTION: Design and build the public-facing site that replaces Wix.
 DEPENDS_ON: 1.1, 1.4
 ACCEPTANCE:
@@ -162,6 +169,7 @@ NOTE: Content (copy, photos, testimonials) needs to come from Darby/Amanda.
 
 #### 1.8 — Checkout Flow Testing
 ```
+STATUS: READY
 DESCRIPTION: End-to-end testing of the membership purchase and subscription flow.
 DEPENDS_ON: 1.2, 1.3, 1.4, 1.7
 ACCEPTANCE:
@@ -181,6 +189,7 @@ SKILL: woocommerce-testing
 
 #### 1.9 — DNS + Go-Live Cutover Plan
 ```
+STATUS: BLOCKED
 DESCRIPTION: Plan the DNS cutover from Wix to Pressable and document the rollback plan.
 DEPENDS_ON: 1.8
 ACCEPTANCE:
@@ -197,6 +206,7 @@ NOTE: Do NOT cut over until Darby and Amanda have reviewed staging and signed of
 
 #### 1.10 — REST API Foundation (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the base REST API controller and the LocationController that all
              downstream milestones depend on. Namespace: gym/v1.
 DEPENDS_ON: 1.5, 1.6
@@ -244,6 +254,7 @@ Jetpack CRM becomes the single source of truth for all contacts — members, lea
 
 #### 2.1 — Jetpack CRM Installation + Configuration
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Install and configure Jetpack CRM as the primary CRM.
 DEPENDS_ON: M1 complete
 ACCEPTANCE:
@@ -261,6 +272,7 @@ ACCEPTANCE:
 
 #### 2.2 — GHL Contact Export + Cleanup + Import
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Export all contacts from GoHighLevel, clean duplicates/junk, and import.
 DEPENDS_ON: 2.1
 ACCEPTANCE:
@@ -278,6 +290,7 @@ NOTE: GHL contacts are known to be disorganized. Budget time for cleanup.
 
 #### 2.3 — MailPoet Setup + Email Templates
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Install MailPoet and create email templates for all automated workflows.
 DEPENDS_ON: 2.1
 ACCEPTANCE:
@@ -299,6 +312,7 @@ ACCEPTANCE:
 
 #### 2.4 — Twilio SMS Integration (gym-core)
 ```
+STATUS: IN PROGRESS
 DESCRIPTION: Build Twilio SMS integration into gym-core, deeply wired into Jetpack CRM
              and AutomateWoo. This is the "killer feature" of the consolidated stack.
 DEPENDS_ON: 1.5, 2.1
@@ -332,6 +346,7 @@ SECURITY:
 
 #### 2.5 — AutomateWoo Workflow Configuration
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Install AutomateWoo and configure all automation workflows that replace GHL sequences.
 DEPENDS_ON: 2.3, 2.4
 ACCEPTANCE:
@@ -351,6 +366,7 @@ ACCEPTANCE:
 
 #### 2.6 — Lead Pipeline + Sales Tracking
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Configure Jetpack CRM sales pipeline to replace GHL's pipeline management.
 DEPENDS_ON: 2.1, 2.2
 ACCEPTANCE:
@@ -366,6 +382,7 @@ ACCEPTANCE:
 
 #### 2.7 — GHL Decommission Checklist
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Verify all GHL functions are replaced, then document the decommission plan.
 DEPENDS_ON: 2.1 through 2.6
 ACCEPTANCE:
@@ -379,6 +396,7 @@ ACCEPTANCE:
 
 #### 2.10 — SMS REST API Controller (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the SMSController exposing REST endpoints for sending SMS,
              receiving Twilio webhooks, and retrieving conversation history.
              These endpoints are consumed by AutomateWoo triggers, the AI Sales
@@ -440,6 +458,7 @@ WooCommerce Memberships gates content and products by membership tier. The My Ac
 
 #### 3.1 — WooCommerce Memberships Setup
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Install WooCommerce Memberships and connect to Subscription products.
 DEPENDS_ON: M1 complete
 ACCEPTANCE:
@@ -458,6 +477,7 @@ ACCEPTANCE:
 
 #### 3.2 — Custom Member Dashboard (gym-core)
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Build a custom My Account dashboard that replaces the default WooCommerce one.
 DEPENDS_ON: 3.1, 1.5
 ACCEPTANCE:
@@ -477,6 +497,7 @@ ACCEPTANCE:
 
 #### 3.3 — Class Schedule System (gym-core)
 ```
+STATUS: IN PROGRESS
 DESCRIPTION: Build a class schedule management system into gym-core.
 DEPENDS_ON: 1.6
 ACCEPTANCE:
@@ -493,6 +514,7 @@ ACCEPTANCE:
 
 #### 3.10 — Class Schedule REST API Controller (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the ClassScheduleController exposing REST endpoints for
              retrieving class definitions and weekly schedule views. These
              endpoints power the public schedule page, member dashboard,
@@ -537,6 +559,7 @@ SCHEMA_NOTES:
 
 #### 3.11 — Member Dashboard REST API Controller (gym-core)
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Build the MemberController exposing the /members/me/dashboard endpoint
              that aggregates membership status, billing info, schedule, and
              personalization data into a single response for the My Account dashboard.
@@ -586,6 +609,7 @@ Every member has a rank record: which belt, how many stripes, attendance count, 
 
 #### 4.1 — Belt Rank Data Model (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Design and implement the belt rank system as custom tables in gym-core.
 DEPENDS_ON: 1.5
 ACCEPTANCE:
@@ -611,6 +635,7 @@ ACCEPTANCE:
 
 #### 4.2 — Attendance Check-in System (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the attendance tracking and tablet kiosk check-in system.
 DEPENDS_ON: 4.1, 3.3
 ACCEPTANCE:
@@ -638,6 +663,7 @@ ACCEPTANCE:
 
 #### 4.3 — Promotion Eligibility Engine (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the logic that determines when a student is eligible for belt promotion.
 DEPENDS_ON: 4.1, 4.2
 ACCEPTANCE:
@@ -660,6 +686,7 @@ ACCEPTANCE:
 
 #### 4.10 — Rank REST API Controller (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the RankController exposing REST endpoints for retrieving
              member rank data and rank history. These endpoints power the member
              dashboard rank display, coach admin views, and are consumed by
@@ -712,6 +739,7 @@ SCHEMA_NOTES:
 
 #### 4.11 — Attendance REST API Controller (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the AttendanceController exposing REST endpoints for check-in,
              attendance retrieval, and today's attendance view. These endpoints
              power the kiosk check-in app, coach attendance dashboard, and are
@@ -768,6 +796,7 @@ SCHEMA_NOTES:
 
 #### 4.12 — Promotion REST API Controller (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the PromotionController exposing REST endpoints for querying
              promotion eligibility and executing promotions. These endpoints power
              the coach promotion dashboard and are consumed by the AI Coaching
@@ -835,6 +864,7 @@ Members earn badges for achievements (first class, 10-class streak, 100 total cl
 
 #### 5.1 — Badge + Achievement System (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the badge/achievement tracking system.
 DEPENDS_ON: 4.2
 ACCEPTANCE:
@@ -858,6 +888,7 @@ ACCEPTANCE:
 
 #### 5.2 — Streak Tracking (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Track consecutive-week attendance streaks.
 DEPENDS_ON: 4.2
 ACCEPTANCE:
@@ -872,6 +903,7 @@ ACCEPTANCE:
 
 #### 5.3 — Targeted Content Delivery (gym-core)
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Content targeting engine that filters content by belt, program, and location.
 DEPENDS_ON: 4.1, 3.1
 ACCEPTANCE:
@@ -887,6 +919,7 @@ ACCEPTANCE:
 
 #### 5.10 — Gamification REST API Controller (gym-core)
 ```
+STATUS: COMPLETE
 DESCRIPTION: Build the GamificationController exposing REST endpoints for badges,
              badge definitions, and streak data. These endpoints power the member
              dashboard gamification widgets and are consumed by the AI Coaching
@@ -958,6 +991,7 @@ The gym-ai-chat plugin gets wired into real data. The Sales agent can look up pr
 
 #### 6.1 — AI Agent Tool Definitions (gym-ai-chat)
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Define the MCP-compatible tool schemas that each agent can call.
 DEPENDS_ON: M2, M4, 2.10, 3.10, 3.11, 4.10, 4.11, 4.12, 5.10
 ACCEPTANCE:
@@ -995,6 +1029,7 @@ ACCEPTANCE:
 
 #### 6.2 — LibreChat Integration
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Deploy LibreChat as the AI orchestration layer with MCP support.
 DEPENDS_ON: 6.1
 ACCEPTANCE:
@@ -1013,6 +1048,7 @@ ACCEPTANCE:
 
 #### 6.3 — Staff Approval Flow Polish
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Complete the three-path approval flow UI and add notification delivery.
 DEPENDS_ON: 6.1
 ACCEPTANCE:
@@ -1029,6 +1065,7 @@ ACCEPTANCE:
 
 #### 6.10 — gym/v1 Endpoint Completeness Audit
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Verify that all gym/v1 REST API endpoints required by the AI agent tool
              definitions (6.1) are complete, documented, and return consistent schemas.
              This is a gate task — M6 agent tools cannot be wired up until the read
@@ -1069,6 +1106,7 @@ Jetpack VideoPress replaces Vimeo for hosting training videos and technique libr
 
 #### 7.1 — Jetpack VideoPress Setup
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Replace Vimeo with Jetpack VideoPress for video hosting.
 DEPENDS_ON: M1 (WordPress site live)
 ACCEPTANCE:
@@ -1082,6 +1120,7 @@ ACCEPTANCE:
 
 #### 7.2 — Spark Data Migration
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Migrate historical data from Spark Membership.
 DEPENDS_ON: M4 (rank + attendance tables exist)
 ACCEPTANCE:
@@ -1096,6 +1135,7 @@ NOTE: Requires Spark dashboard access (read-only credentials from Darby).
 
 #### 7.3 — Staff Training
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Train all 5 staff members on the new system.
 DEPENDS_ON: All features complete
 ACCEPTANCE:
@@ -1114,6 +1154,7 @@ ACCEPTANCE:
 
 #### 7.4 — Parallel Run + Cutover
 ```
+STATUS: NOT STARTED
 DESCRIPTION: Run both systems in parallel, then decommission old stack.
 DEPENDS_ON: 7.1, 7.2, 7.3
 ACCEPTANCE:
