@@ -20,6 +20,21 @@ parameters:
     bootstrapFiles:
         - vendor/autoload.php
         - phpstan-bootstrap.php
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-stubs.php
+        - vendor/php-stubs/woocommerce-stubs/woocommerce-packages-stubs.php
+        - vendor/php-stubs/wp-cli-stubs/wp-cli-stubs.php
 
-    # Treat missing WordPress/WooCommerce functions as errors (caught by stubs above).
     treatPhpDocTypesAsCertain: false
+
+    ignoreErrors:
+        # WP_CLI::error() is declared as @return never in stubs but PHPStan
+        # still flags code after it as unreachable. These are defensive returns.
+        - '#Unreachable statement - code above always terminates#'
+        # Cookie constants are defined by WordPress at runtime.
+        - '#Constant COOKIEPATH not found#'
+        - '#Constant COOKIE_DOMAIN not found#'
+        # LocationController passes get_post_thumbnail_id() result (int|false) to
+        # wp_get_attachment_url() which expects int. False case is handled by the ternary.
+        -
+            message: '#Parameter \#1 \$attachment_id of function wp_get_attachment_url#'
+            path: src/API/LocationController.php
