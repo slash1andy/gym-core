@@ -1,0 +1,459 @@
+/**
+ * Gym Core — Admin Dashboard Styles
+ *
+ * Enqueued only on gym-* admin pages.
+ *
+ * @package Gym_Core
+ * @since   2.1.0
+ */
+
+/* ── Layout ────────────────────────────────────────────────────────── */
+.gym-dashboard-wrap {
+	max-width: 1200px;
+}
+
+/* ── Tab navigation ────────────────────────────────────────────────── */
+.gym-tabs {
+	display: flex;
+	gap: 0;
+	border-bottom: 1px solid #c3c4c7;
+	margin-bottom: 20px;
+}
+
+.gym-tabs a {
+	display: inline-block;
+	padding: 10px 20px;
+	min-height: 44px;
+	line-height: 24px;
+	text-decoration: none;
+	color: #50575e;
+	border: 1px solid transparent;
+	border-bottom: none;
+	margin-bottom: -1px;
+	background: none;
+	font-size: 14px;
+}
+
+.gym-tabs a:hover {
+	color: #135e96;
+}
+
+.gym-tabs a.active {
+	background: #fff;
+	border-color: #c3c4c7;
+	border-bottom-color: #fff;
+	color: #1d2327;
+	font-weight: 600;
+}
+
+/* ── Location toggle ───────────────────────────────────────────────── */
+.gym-location-toggle {
+	display: flex;
+	gap: 0;
+	margin-bottom: 20px;
+}
+
+.gym-location-toggle .gym-loc-btn {
+	padding: 10px 24px;
+	min-height: 44px;
+	min-width: 44px;
+	border: 1px solid #c3c4c7;
+	background: #f0f0f1;
+	color: #50575e;
+	cursor: pointer;
+	font-size: 14px;
+	line-height: 1.4;
+	transition: background 0.15s, color 0.15s;
+}
+
+.gym-location-toggle .gym-loc-btn:first-child {
+	border-radius: 4px 0 0 4px;
+}
+
+.gym-location-toggle .gym-loc-btn:last-child {
+	border-radius: 0 4px 4px 0;
+}
+
+.gym-location-toggle .gym-loc-btn:not(:first-child) {
+	border-left: none;
+}
+
+.gym-location-toggle .gym-loc-btn.active {
+	background: #2271b1;
+	border-color: #2271b1;
+	color: #fff;
+	font-weight: 600;
+}
+
+.gym-location-toggle .gym-loc-btn:hover:not(.active) {
+	background: #e0e0e0;
+}
+
+/* ── Stat cards ────────────────────────────────────────────────────── */
+.gym-stat-cards {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 24px;
+	flex-wrap: wrap;
+}
+
+.gym-stat-card {
+	flex: 1;
+	min-width: 160px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+	text-align: center;
+}
+
+.gym-stat-card .stat-value {
+	font-size: 36px;
+	font-weight: 700;
+	color: #1d2327;
+	line-height: 1.2;
+}
+
+.gym-stat-card .stat-label {
+	font-size: 13px;
+	color: #646970;
+	margin-top: 4px;
+}
+
+/* ── Per-class collapsible sections ────────────────────────────────── */
+.gym-class-section {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	margin-bottom: 12px;
+}
+
+.gym-class-section summary {
+	padding: 12px 16px;
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	user-select: none;
+	list-style: none;
+}
+
+.gym-class-section summary::-webkit-details-marker {
+	display: none;
+}
+
+.gym-class-section summary::before {
+	content: "\25B6";
+	font-size: 10px;
+	transition: transform 0.15s;
+}
+
+.gym-class-section[open] summary::before {
+	transform: rotate(90deg);
+}
+
+.gym-class-section .class-meta {
+	font-weight: 400;
+	color: #646970;
+	font-size: 13px;
+}
+
+.gym-class-section .class-count {
+	margin-left: auto;
+	background: #f0f0f1;
+	border-radius: 10px;
+	padding: 2px 10px;
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+.gym-class-section .gym-checkin-table {
+	width: 100%;
+	border-collapse: collapse;
+}
+
+.gym-class-section .gym-checkin-table th,
+.gym-class-section .gym-checkin-table td {
+	padding: 8px 16px;
+	text-align: left;
+	border-top: 1px solid #f0f0f1;
+	font-size: 13px;
+}
+
+.gym-class-section .gym-checkin-table th {
+	font-weight: 600;
+	color: #646970;
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.gym-class-section .empty-class {
+	padding: 16px;
+	color: #646970;
+	font-style: italic;
+}
+
+/* ── Foundations badge ──────────────────────────────────────────────── */
+.gym-badge-foundations {
+	display: inline-block;
+	background: #f0c33c;
+	color: #1d2327;
+	font-size: 11px;
+	font-weight: 600;
+	padding: 2px 8px;
+	border-radius: 3px;
+	margin-left: 6px;
+	vertical-align: middle;
+	white-space: nowrap;
+}
+
+/* ── Quick Check-In bar ────────────────────────────────────────────── */
+.gym-quick-checkin {
+	position: sticky;
+	bottom: 0;
+	background: #1d2327;
+	padding: 12px 20px;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	border-radius: 4px 4px 0 0;
+	margin-top: 24px;
+	z-index: 100;
+	flex-wrap: wrap;
+}
+
+.gym-quick-checkin label {
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.gym-quick-checkin input[type="text"],
+.gym-quick-checkin select {
+	min-height: 44px;
+	padding: 8px 12px;
+	font-size: 14px;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+}
+
+.gym-quick-checkin input[type="text"] {
+	flex: 1;
+	min-width: 200px;
+}
+
+.gym-quick-checkin select {
+	min-width: 180px;
+}
+
+.gym-quick-checkin .button-primary {
+	min-height: 44px;
+	min-width: 44px;
+	padding: 8px 24px;
+	font-size: 14px;
+}
+
+.gym-quick-checkin .gym-checkin-msg {
+	color: #46b450;
+	font-size: 13px;
+}
+
+.gym-quick-checkin .gym-checkin-msg.error {
+	color: #dc3232;
+}
+
+/* ── Filter bar (History tab) ──────────────────────────────────────── */
+.gym-filter-bar {
+	display: flex;
+	gap: 12px;
+	align-items: flex-end;
+	margin-bottom: 16px;
+	flex-wrap: wrap;
+}
+
+.gym-filter-bar .filter-group {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.gym-filter-bar label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #646970;
+}
+
+.gym-filter-bar input[type="date"],
+.gym-filter-bar select {
+	min-height: 44px;
+	padding: 8px 12px;
+	font-size: 14px;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+}
+
+.gym-filter-bar .button {
+	min-height: 44px;
+	min-width: 44px;
+}
+
+/* ── Trend cards ───────────────────────────────────────────────────── */
+.gym-trend-cards {
+	display: flex;
+	gap: 16px;
+	margin-bottom: 24px;
+	flex-wrap: wrap;
+}
+
+.gym-trend-card {
+	flex: 1;
+	min-width: 200px;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+}
+
+.gym-trend-card h3 {
+	margin: 0 0 8px;
+	font-size: 14px;
+	color: #1d2327;
+}
+
+.gym-trend-card .trend-value {
+	font-size: 28px;
+	font-weight: 700;
+	color: #1d2327;
+}
+
+.gym-trend-card .trend-delta {
+	font-size: 13px;
+	margin-top: 4px;
+}
+
+.gym-trend-card .trend-delta.positive {
+	color: #00a32a;
+}
+
+.gym-trend-card .trend-delta.negative {
+	color: #dc3232;
+}
+
+.gym-trend-card .trend-delta.neutral {
+	color: #646970;
+}
+
+/* ── At-risk list ──────────────────────────────────────────────────── */
+.gym-at-risk-section {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-left: 4px solid #dba617;
+	border-radius: 4px;
+	padding: 16px 20px;
+	margin-top: 24px;
+}
+
+.gym-at-risk-section h3 {
+	margin: 0 0 12px;
+	font-size: 15px;
+	color: #1d2327;
+}
+
+.gym-at-risk-section .at-risk-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.gym-at-risk-section .at-risk-list li {
+	padding: 8px 0;
+	border-bottom: 1px solid #f0f0f1;
+	font-size: 13px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.gym-at-risk-section .at-risk-list li:last-child {
+	border-bottom: none;
+}
+
+.gym-at-risk-section .days-absent {
+	color: #b32d2e;
+	font-weight: 600;
+	font-size: 12px;
+}
+
+/* ── Typeahead dropdown ────────────────────────────────────────────── */
+.gym-typeahead-wrap {
+	position: relative;
+	flex: 1;
+	min-width: 200px;
+}
+
+.gym-typeahead-results {
+	position: absolute;
+	bottom: 100%;
+	left: 0;
+	right: 0;
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px 4px 0 0;
+	max-height: 200px;
+	overflow-y: auto;
+	display: none;
+	z-index: 110;
+	box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.gym-typeahead-results.visible {
+	display: block;
+}
+
+.gym-typeahead-results .typeahead-item {
+	padding: 10px 14px;
+	cursor: pointer;
+	font-size: 14px;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.gym-typeahead-results .typeahead-item:hover,
+.gym-typeahead-results .typeahead-item.selected {
+	background: #f0f6fc;
+}
+
+.gym-typeahead-results .typeahead-item:last-child {
+	border-bottom: none;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+@media screen and (max-width: 782px) {
+	.gym-stat-cards,
+	.gym-trend-cards {
+		flex-direction: column;
+	}
+
+	.gym-quick-checkin {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.gym-quick-checkin input[type="text"],
+	.gym-quick-checkin select {
+		min-width: 100%;
+	}
+
+	.gym-filter-bar {
+		flex-direction: column;
+	}
+}
