@@ -69,6 +69,7 @@ final class Settings {
 			'attendance'   => __( 'Attendance', 'gym-core' ),
 			'gamification' => __( 'Gamification', 'gym-core' ),
 			'sms'          => __( 'SMS', 'gym-core' ),
+			'crm'          => __( 'CRM', 'gym-core' ),
 			'api'          => __( 'API', 'gym-core' ),
 		);
 	}
@@ -157,6 +158,8 @@ final class Settings {
 				return $this->get_gamification_settings();
 			case 'sms':
 				return $this->get_sms_settings();
+			case 'crm':
+				return $this->get_crm_settings();
 			case 'api':
 				return $this->get_api_settings();
 			default:
@@ -539,6 +542,21 @@ final class Settings {
 				'id'   => 'gym_core_sms_options',
 			),
 		);
+	}
+
+	/**
+	 * CRM integration settings.
+	 *
+	 * Delegates to FormToCrm::get_settings() so the integration class owns
+	 * its own field definitions while still rendering inside the WC settings tab.
+	 *
+	 * @since 2.2.0
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_crm_settings(): array {
+		$form_to_crm = new \Gym_Core\Integrations\FormToCrm();
+		return $form_to_crm->get_settings();
 	}
 
 	/**
