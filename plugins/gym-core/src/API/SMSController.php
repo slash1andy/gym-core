@@ -147,11 +147,12 @@ class SMSController extends BaseController {
 			return $this->error_response( 'invalid_phone', __( 'Invalid phone number. Use E.164 format.', 'gym-core' ), 400 );
 		}
 
-		// Rate limit check.
-		if ( $contact_id && $this->twilio->is_rate_limited( $contact_id ) ) {
+		// Rate limit check — by contact_id if provided, otherwise by sending user.
+		$rate_key = $contact_id ?: get_current_user_id();
+		if ( $this->twilio->is_rate_limited( $rate_key ) ) {
 			return $this->error_response(
 				'rate_limited',
-				__( 'SMS rate limit exceeded for this contact. Please wait before sending again.', 'gym-core' ),
+				__( 'SMS rate limit exceeded. Please wait before sending again.', 'gym-core' ),
 				429
 			);
 		}
@@ -164,9 +165,7 @@ class SMSController extends BaseController {
 		}
 
 		// Record send for rate limiting.
-		if ( $contact_id ) {
-			$this->twilio->record_send( $contact_id );
-		}
+		$this->twilio->record_send( $rate_key );
 
 		return $this->success_response(
 			array(

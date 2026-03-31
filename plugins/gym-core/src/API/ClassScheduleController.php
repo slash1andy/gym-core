@@ -286,7 +286,7 @@ class ClassScheduleController extends BaseController {
 		return array(
 			'id'          => $post->ID,
 			'name'        => $post->post_title,
-			'description' => $post->post_content,
+			'description' => wp_kses_post( $post->post_content ),
 			'program'     => $this->get_class_program( $post->ID ),
 			'instructor'  => $this->get_instructor_data( $post->ID ),
 			'day_of_week' => get_post_meta( $post->ID, '_gym_class_day_of_week', true ),

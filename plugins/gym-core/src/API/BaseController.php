@@ -134,6 +134,32 @@ abstract class BaseController extends \WP_REST_Controller {
 		return true;
 	}
 
+	/**
+	 * Permission callback: view own data or require a specific capability.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param \WP_REST_Request $request    The REST request.
+	 * @param string           $id_param   Request parameter name for the target user ID.
+	 * @param string           $capability Required capability for other users' data.
+	 * @return true|\WP_Error
+	 */
+	protected function permissions_view_own_or_cap( \WP_REST_Request $request, string $id_param, string $capability ): bool|\WP_Error {
+		if ( ! is_user_logged_in() ) {
+			return new \WP_Error( 'rest_not_logged_in', __( 'Authentication required.', 'gym-core' ), array( 'status' => 401 ) );
+		}
+
+		if ( (int) $request->get_param( $id_param ) === get_current_user_id() ) {
+			return true;
+		}
+
+		if ( current_user_can( $capability ) || current_user_can( 'manage_woocommerce' ) ) {
+			return true;
+		}
+
+		return new \WP_Error( 'rest_forbidden', __( 'You do not have permission to access this data.', 'gym-core' ), array( 'status' => 403 ) );
+	}
+
 	// -------------------------------------------------------------------------
 	// Response formatting
 	// -------------------------------------------------------------------------
