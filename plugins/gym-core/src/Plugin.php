@@ -87,6 +87,7 @@ final class Plugin {
 	 */
 	public function init(): void {
 		$this->load_textdomain();
+		$this->register_capabilities();
 		$this->register_admin_modules();
 		$this->register_location_modules();
 		$this->register_api_modules();
@@ -255,6 +256,21 @@ final class Plugin {
 		$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
 		$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
 		$badge_engine->register_hooks();
+	}
+
+	/**
+	 * Registers custom capabilities and roles.
+	 *
+	 * The Capabilities class hooks into admin_init to sync capabilities
+	 * when the plugin version changes, ensuring updates are seamless.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @return void
+	 */
+	private function register_capabilities(): void {
+		$capabilities = new Capabilities();
+		$capabilities->register_hooks();
 	}
 
 	/**
