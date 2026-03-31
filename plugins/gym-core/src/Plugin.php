@@ -106,6 +106,7 @@ final class Plugin {
 		$this->register_kiosk_modules();
 		$this->register_gamification_modules();
 		$this->register_integration_modules();
+		$this->register_member_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -234,6 +235,9 @@ final class Plugin {
 				}
 
 				// Gamification controller.
+				$streak_tracker = null;
+				$badge_engine   = null;
+
 				if ( 'yes' === get_option( 'gym_core_gamification_enabled', 'yes' ) ) {
 					$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
 					$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
@@ -241,6 +245,16 @@ final class Plugin {
 					$gamification_controller = new API\GamificationController( $badge_engine, $streak_tracker );
 					$gamification_controller->register_hooks();
 				}
+
+				// Member dashboard controller (aggregated endpoint).
+				$member_controller = new API\MemberController(
+					$this->rank_store,
+					$this->attendance_store,
+					$this->foundations_clearance,
+					$streak_tracker,
+					$badge_engine
+				);
+				$member_controller->register_hooks();
 			}
 		);
 	}
@@ -413,6 +427,41 @@ final class Plugin {
 	private function register_integration_modules(): void {
 		$form_to_crm = new Integrations\FormToCrm();
 		$form_to_crm->register_hooks();
+	}
+
+	/**
+	 * Registers the member portal modules (dashboard + content gating).
+	 *
+	 * Deferred to gym_core_loaded so attendance/rank stores and gamification
+	 * engine are available for dependency injection into MemberDashboard.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @return void
+	 */
+	private function register_member_modules(): void {
+		// Content gating hooks early — it guards purchasability and access.
+		$content_gating = new Member\ContentGating();
+		$content_gating->register_hooks();
+
+		// Dashboard needs stores + gamification, which are created in
+		// register_attendance_modules() and register_gamification_modules().
+		add_action(
+			'gym_core_loaded',
+			function (): void {
+				$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
+				$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
+
+				$dashboard = new Member\MemberDashboard(
+					$this->rank_store,
+					$this->attendance_store,
+					$badge_engine,
+					$streak_tracker,
+					$this->foundations_clearance
+				);
+				$dashboard->register_hooks();
+			}
+		);
 	}
 
 	/**
