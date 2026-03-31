@@ -42,8 +42,22 @@ haanpaa/                           # Monorepo root
     │   ├── cowork-migration-playbooks.md
     │   ├── future-features-plan.md
     │   └── wp7-woo-ai-future-features-plan.md
-    └── architecture/              # Technical architecture decisions
-        └── ai-architecture-paperclip.md
+    ├── architecture/              # Technical architecture decisions
+    │   └── ai-architecture-paperclip.md
+    └── migration/                 # Content & data from legacy platforms
+        └── wix-content/           # Scraped Wix page content (see README.md inside)
+            ├── README.md          # Index + status + agent usage guide
+            ├── home.md            # Homepage (pending re-scrape)
+            ├── classes.md         # Class schedule (complete)
+            ├── kids.md            # Kids program (complete)
+            ├── beloit.md          # Beloit location (complete)
+            ├── fitness-kickboxing.md  # Kickboxing (pending re-scrape)
+            ├── personal-training.md   # Personal training (pending re-scrape)
+            ├── free-trial.md      # Free trial page (pending re-scrape)
+            ├── contact.md         # Contact page (pending re-scrape)
+            ├── blog.md            # Blog (pending re-scrape)
+            ├── reviews.md         # Reviews — original content
+            └── reviews-modernized.md  # Reviews — modernized quotes
 ```
 
 ## Current State
@@ -91,6 +105,7 @@ See `MILESTONES.md` at repo root. In dependency order:
 | `docs/planning/systems-consolidation-proposal.md` | Why is this migration happening? |
 | `docs/architecture/ai-architecture-paperclip.md` | How do the AI agents work? |
 | `docs/planning/future-features-plan.md` | What does WP 7.0 unlock for this project? |
+| `docs/migration/wix-content/README.md` | What Wix content has been scraped? (index + status + agent guide) |
 
 ## Technical Requirements
 
