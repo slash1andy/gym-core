@@ -1,0 +1,20 @@
+class_name,program,days,start_time,end_time,location,instructor,capacity,notes,status
+PT Coach Darby,Adult BJJ / Mixed Levels / Striking,Mon-Sat,09:00 AM,03:00 PM,Rockford,Coach Darby,,Private training sessions,Active
+Little Ninjas,Kids BJJ,Mon/Wed/Fri,04:15 PM,04:55 PM,Rockford,,,Group: Little Ninjas,Active
+Kids BJJ,Kids BJJ,Mon/Wed/Fri,05:15 PM,05:55 PM,Rockford,,,"Groups: Mixed Levels Kids BJJ + Kids BJJ Beginner",Active
+Kick Fit (Striking Fundamentals),Striking,Mon/Fri,06:15 PM,07:15 PM (estimated),Rockford,,,"POSSIBLE DATA ERROR: Spark shows end time 12:30 PM which is likely wrong",Active
+Fundamentals BJJ,Adult BJJ,Mon/Fri,07:15 PM,08:00 PM,Rockford,,,,Active
+Beloit Kids BJJ,Kids BJJ,Tue/Wed/Fri,05:00 PM,06:00 PM,Beloit,,,,Active
+Fundamentals BJJ,Adult BJJ,Tue/Thu,06:00 PM,07:00 PM,Rockford,,,,Active
+Mixed Levels Striking,Striking,Tue,06:00 PM,07:00 PM,Rockford,,,,Active
+Beloit Striking,Striking,Tue/Wed/Fri,06:00 PM,07:00 PM,Beloit,,,,Active
+Beloit BJJ Fundamentals,Adult BJJ,Tue/Wed/Fri,07:00 PM,08:00 PM,Beloit,,,,Active
+Mixed Levels BJJ (Gi/No-Gi),Adult BJJ,Tue,07:00 PM,08:00 PM,Rockford,,,Gi/No-Gi,Active
+Women's Only BJJ,Adult BJJ,Wed,06:15 PM,07:00 PM,Rockford,,,0 contacts; not being collected on,Inactive
+Mixed Levels Striking,Striking,Wed,06:15 PM,07:00 PM,Rockford,,,,Active
+No Gi BJJ Fundamentals/Mixed Levels,Adult BJJ,Wed,07:15 PM,08:00 PM,Rockford,,,No-Gi class,Active
+AM Kick Fit (Striking Fundamentals),Striking,Thu/Sat,10:00 AM,11:00 AM,Rockford,,,Morning class,Active
+AM Fundamentals BJJ,Adult BJJ,Thu,11:00 AM,12:00 PM,Rockford,,,Morning class,Active
+Mixed Levels BJJ,Adult BJJ,Thu,07:00 PM,08:00 PM,Rockford,,,,Active
+Saturday Kids BJJ,Kids BJJ,Sat,10:00 AM,10:45 AM,Rockford,,,No group assigned,Active
+AM Fundamentals/Mixed Levels BJJ,Adult BJJ,Sat,11:00 AM,12:00 PM,Rockford,,,Saturday morning class,Active
