@@ -1,0 +1,59 @@
+# Pressable GitHub Deploy — exclude non-deployable files
+# Repo root maps to wp-content/ on Pressable
+# Only plugins/ and themes/ should be synced
+
+# Development & documentation
+docs/
+scripts/
+.claude/
+.github/
+CLAUDE.md
+MILESTONES.md
+README.md
+LICENSE
+
+# Build & config files
+.gitignore
+.deployignore
+*.md
+!plugins/**/*.md
+!themes/**/*.md
+
+# Editor & OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Dependencies & build tools (should not be deployed)
+node_modules/
+package.json
+package-lock.json
+composer.json
+composer.lock
+phpcs.xml
+phpcs.xml.dist
+phpstan.neon
+phpunit.xml.dist
+webpack.config.js
+tsconfig.json
+
+# Test files
+tests/
+*.test.js
+*.test.php
+
+# CI
+.github/
+codecov.yml
+
+# Plugin-level dev files (vendor is built via composer install --no-dev)
+plugins/*/phpcs.xml.dist
+plugins/*/phpstan.neon
+plugins/*/phpstan-bootstrap.php
+plugins/*/phpunit.xml.dist
+plugins/*/.phpunit.result.cache
+plugins/*/PROJECT_BRIEF.md
+plugins/*/CLAUDE.md

@@ -56,7 +56,7 @@ PLUGINS_TO_INSTALL = [
 ]
 
 PLUGINS_MANUAL = [
-    "woocommerce-subscriptions  (premium — upload zip from woocommerce.com)",
+    "woocommerce-subscriptions  (build from woocommerce/woocommerce-subscriptions repo, install via WP-CLI)",
 ]
 
 
@@ -247,20 +247,28 @@ def print_summary(site, dry_run=False):
 
   Next steps (wp-admin or WP-CLI over SSH):
     1. Verify WooCommerce + WooPayments are active
-    2. Upload WooCommerce Subscriptions zip
-    3. Enable HPOS:
+    2. Install WC Subscriptions (build zip from woocommerce/woocommerce-subscriptions):
+       cd /path/to/woocommerce-subscriptions && npm run build
+       wp plugin install release/woocommerce-subscriptions.zip --activate
+    3. Connect GitHub deploy in Pressable dashboard:
+       - Repo URL: <this repo's HTTPS clone URL>
+       - Branch: main
+       - Subdirectory: (blank)
+       - Destination: wp-content/
+       - Delete extra files: OFF
+    4. Enable HPOS:
        wp option update woocommerce_custom_orders_table_enabled yes
-    4. Enable block-based checkout:
+    5. Enable block-based checkout:
        wp option update woocommerce_cart_page_id <page_id>
-    5. Set permalinks:
+    6. Set permalinks:
        wp rewrite structure '/%postname%/' --hard
-    6. Enable debug logging:
+    7. Enable debug logging:
        Add to wp-config.php:
          define( 'WP_DEBUG', true );
          define( 'WP_DEBUG_LOG', true );
          define( 'WP_DEBUG_DISPLAY', false );
          define( 'SCRIPT_DEBUG', true );
-    7. Proceed to M1.2 — WooPayments onboarding in wp-admin
+    8. Proceed to M1.2 — WooPayments onboarding in wp-admin
 """)
 
     if dry_run:
