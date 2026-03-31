@@ -61,6 +61,13 @@ final class Plugin {
 	private ?Attendance\PromotionEligibility $promotion_eligibility = null;
 
 	/**
+	 * Foundations clearance — shared instance for DI.
+	 *
+	 * @var Attendance\FoundationsClearance|null
+	 */
+	private ?Attendance\FoundationsClearance $foundations_clearance = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -94,6 +101,8 @@ final class Plugin {
 
 		$this->register_schedule_modules();
 		$this->register_attendance_modules();
+		$this->register_briefing_modules();
+		$this->register_notification_modules();
 		$this->register_kiosk_modules();
 		$this->register_gamification_modules();
 
@@ -130,6 +139,25 @@ final class Plugin {
 		if ( is_admin() ) {
 			$settings = new Admin\Settings();
 			$settings->register_hooks();
+
+			// Admin dashboards — class_exists guards allow safe loading before
+			// the files are created by another agent.
+			if ( class_exists( Admin\AttendanceDashboard::class ) ) {
+				$attendance_dashboard = new Admin\AttendanceDashboard();
+				$attendance_dashboard->register_hooks();
+			}
+
+			if ( class_exists( Admin\PromotionDashboard::class ) ) {
+				$promotion_dashboard = new Admin\PromotionDashboard();
+				$promotion_dashboard->register_hooks();
+			}
+		}
+
+		// UserProfileRank hooks into show_user_profile / edit_user_profile
+		// which fire on both admin and front-end profile pages.
+		if ( class_exists( Admin\UserProfileRank::class ) ) {
+			$user_profile_rank = new Admin\UserProfileRank();
+			$user_profile_rank->register_hooks();
 		}
 	}
 
@@ -187,6 +215,23 @@ final class Plugin {
 					$inbound_handler->register_hooks();
 				}
 
+				// Foundations controller.
+				$foundations_controller = new API\FoundationsController( $this->foundations_clearance );
+				$foundations_controller->register_hooks();
+
+				// Briefing controller.
+				if ( 'yes' === get_option( 'gym_core_briefing_enabled', 'yes' ) ) {
+					$briefing_generator = new Briefing\BriefingGenerator(
+						$this->attendance_store,
+						$this->rank_store,
+						$this->foundations_clearance,
+						$this->promotion_eligibility
+					);
+
+					$briefing_controller = new API\BriefingController( $briefing_generator );
+					$briefing_controller->register_hooks();
+				}
+
 				// Gamification controller.
 				if ( 'yes' === get_option( 'gym_core_gamification_enabled', 'yes' ) ) {
 					$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
@@ -236,6 +281,40 @@ final class Plugin {
 		$this->rank_store              = new Rank\RankStore();
 		$this->checkin_validator       = new Attendance\CheckInValidator( $this->attendance_store );
 		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store );
+		$this->foundations_clearance   = new Attendance\FoundationsClearance( $this->attendance_store );
+	}
+
+	/**
+	 * Registers the briefing module (announcement CPT).
+	 *
+	 * The AnnouncementPostType CPT is always registered so the admin UI is
+	 * available. The REST API controller and briefing generator are registered
+	 * in register_api_modules() behind the gym_core_briefing_enabled option.
+	 *
+	 * @since 2.1.0
+	 *
+	 * @return void
+	 */
+	private function register_briefing_modules(): void {
+		$announcement_cpt = new Briefing\AnnouncementPostType();
+		$announcement_cpt->register_hooks();
+	}
+
+	/**
+	 * Registers the promotion notification module.
+	 *
+	 * PromotionNotifier listens for gym_core_rank_changed and
+	 * gym_core_foundations_cleared to send email/SMS notifications.
+	 * Only active when SMS is enabled (TwilioClient dependency).
+	 *
+	 * @since 2.0.0
+	 *
+	 * @return void
+	 */
+	private function register_notification_modules(): void {
+		$twilio_client      = new SMS\TwilioClient();
+		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client );
+		$promotion_notifier->register_hooks();
 	}
 
 	/**
