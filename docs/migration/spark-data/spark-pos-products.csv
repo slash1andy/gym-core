@@ -1,0 +1,11 @@
+product_name,price_retail,price_wholesale,price_employee,category,stock_qty,description,status,variants
+Black Friday Special,2300.00,,,Down Payments,50,24 month Membership Deal,Active,None
+Down payment,499.00,,,Down Payments,999,Downpayment for membership,Active,None
+Downpayment Option 2,299.00,,,Down Payments,999,Option 2 Downpayment,Active,None
+Downpayment Option 2 (DUPLICATE),299.00,,,Down Payments,999,Option 2 Downpayment,Active,None
+HMA Uniform T-shirt,25.00,7.25,15.00,T-Shirts,-54,HMA Uniform T-shirt,Active,"Small (qty: -50); Medium (qty: -4)"
+Membership Down Payment,0.00,,,Down Payments,0,Membership Down Payment,Active,None
+Misc,25.00,,,Down Payments,999,Misc,Active,None
+One Month trial,163.00,,,Trial Lessons,999,One Month trial,Active,None
+One on One,50.00,50.00,0.00,Martial Arts Lessons,0,with Jordan,Active,None
+Team Haanpaa Gis,150.00,100.00,100.00,Uniforms,999,"450gsm Pearl Weave; No Back Seam; EVA Foam Collar; Embroidery & Woven Labels; Lightweight Cotton Ripstop Pants; 6 Point Loop System",Active,SIZE option created but no variants added

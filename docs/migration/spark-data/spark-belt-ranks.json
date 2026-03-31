@@ -1,0 +1,72 @@
+{
+  "source": "Spark Membership UI extraction via Claude in Chrome + Andrew Wikel manual input, 2026-03-30",
+  "governing_body": "IBJJF (https://ibjjf.com/graduation-system)",
+  "spark_settings": {
+    "rank_stripes_tips_enabled": true,
+    "drag_drop_reorder": true,
+    "rank_size_setup": "separate page in sidebar"
+  },
+  "ibjjf_promotion_rules": {
+    "adult": {
+      "white_to_blue": {"min_time_months": null, "min_age": 16, "notes": "No IBJJF minimum time at white belt"},
+      "blue_to_purple": {"min_time_months": 24, "min_age": 16, "notes": "Minimum 2 years at blue belt"},
+      "purple_to_brown": {"min_time_months": 18, "min_age": null, "notes": "Minimum 18 months at purple belt"},
+      "brown_to_black": {"min_time_months": 12, "min_age": 19, "notes": "Minimum 1 year at brown belt, must be at least 19"},
+      "world_champion_exception": "Adult World Champions (18+) at blue, purple, or brown have no minimum time requirement"
+    },
+    "kids_to_adult_transition": {
+      "age": 16,
+      "eligible_adult_belts": ["White", "Blue", "Purple"],
+      "notes": "Belt awarded based on accumulated kids experience and instructor evaluation"
+    }
+  },
+  "programs": [
+    {
+      "name": "Adult BJJ",
+      "stripes_per_belt": 4,
+      "age_requirement": "16+",
+      "notes": "Follows IBJJF graduation system rules. Includes Foundations Eval intro rank before White Belt. Black Belt has only 1 stripe (degree).",
+      "ranks": [
+        {"order": 1, "name": "Foundations Eval", "color": "red-white striped", "stripes": 1, "min_days": 0, "min_classes": 0},
+        {"order": 2, "name": "White Belt", "color": "white", "stripes": 4, "min_days": 25, "min_classes": 17},
+        {"order": 3, "name": "Blue Belt", "color": "blue", "stripes": 4, "min_days": 500, "min_classes": 225},
+        {"order": 4, "name": "Purple Belt", "color": "purple", "stripes": 4, "min_days": 700, "min_classes": 400},
+        {"order": 5, "name": "Brown Belt", "color": "brown", "stripes": 4, "min_days": 700, "min_classes": 400},
+        {"order": 6, "name": "Black Belt", "color": "black", "stripes": 1, "min_days": 700, "min_classes": 400}
+      ]
+    },
+    {
+      "name": "Kids BJJ",
+      "stripes_per_belt": 4,
+      "age_requirement": "Under 16",
+      "transition_rule": "At age 16, eligible for adult White, Blue, or Purple belt based on kids experience",
+      "notes": "Follows IBJJF graduation system rules. 14 belt levels (not 13 as originally stated — Spark has Yellow Orange, Yellow Green, and Orange Green as distinct ranks).",
+      "ranks": [
+        {"order": 1, "name": "White Belt", "color": "white", "stripes": 4, "min_days": 0, "min_classes": 0},
+        {"order": 2, "name": "White Grey", "color": "grey with white half", "stripes": 4, "min_days": 230, "min_classes": 48},
+        {"order": 3, "name": "Grey", "color": "grey", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 4, "name": "Grey Black", "color": "black with grey half", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 5, "name": "White Yellow", "color": "yellow with white half", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 6, "name": "Yellow", "color": "yellow", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 7, "name": "Yellow Black", "color": "black with yellow half", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 8, "name": "White Orange", "color": "orange with white half", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 9, "name": "Yellow Orange", "color": "orange with yellow half", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 10, "name": "Orange", "color": "orange", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 11, "name": "White Green", "color": "green with white half", "stripes": 4, "min_days": 340, "min_classes": 64},
+        {"order": 12, "name": "Yellow Green", "color": "green with yellow half", "stripes": 4, "min_days": 300, "min_classes": 60},
+        {"order": 13, "name": "Orange Green", "color": "green with orange half", "stripes": 4, "min_days": 300, "min_classes": 60},
+        {"order": 14, "name": "Green", "color": "green", "stripes": 4, "min_days": 300, "min_classes": 60}
+      ]
+    },
+    {
+      "name": "Striking",
+      "stripes_per_belt": 2,
+      "age_requirement": null,
+      "notes": "Simple 2-level system. Uses stripes (2 per level) rather than belt colors. Level 1 is black, Level 2 is blue.",
+      "ranks": [
+        {"order": 1, "name": "Level 1", "color": "black", "stripes": 2, "min_days": 0, "min_classes": 0},
+        {"order": 2, "name": "Level 2", "color": "blue", "stripes": 2, "min_days": 500, "min_classes": 200}
+      ]
+    }
+  ]
+}

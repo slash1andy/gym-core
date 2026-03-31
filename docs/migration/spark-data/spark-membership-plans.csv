@@ -1,0 +1,51 @@
+plan_name,price,billing_frequency,signup_fee,contract_months,locations,programs_included,status,active_members,track_as,income_category,total_price,installments,notes
+Gym Membership,30.00/mo,monthly,0.00,12,Not specified,Unlimited Classes Per Week,Active,0,New,Memberships,360.00,11,No Rank System assigned
+Personal Training With Coach Darby,1500.00,upfront,0.00,6,Not specified,Adult BJJ - 20 lessons / 20 class credits,Active,0,Add On,Memberships,1500.00,1,Members Pricing $80 per hour
+Comp Training Limited,95.00/mo,monthly,0.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Active,0,New,Memberships,1300.00,11,Monthly 30 days notice
+Starting Line Membership,500.00/biweekly,every 14 days,0.00,2,Not specified,Striking - Unlimited Classes Per Week,Active,0,New,Memberships,2000.00,4,499 biweekly
+Class Credits,0.00,none (class pass),0.00,3,Not specified,Adult BJJ - 6 lessons / 6 class credits,Active,3,New,Memberships,0.00,0,Open Ended agreement
+Kids Trial,149.00,single payment,0.00,1,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,0,Trial,Trial Programs,149.00,1,One Month Trial
+Adult Trial,149.00,single payment,0.00,1,Not specified,Unlimited Classes Per Week,Active,0,Trial,Trial Programs,149.00,1,149 on square; 0 class credits
+Unlimited Upgrade Multi Program Upfront,300.00/yr,yearly,0.00,12,Not specified,Unlimited Classes Per Week,Active,4,Upgrade,Memberships,300.00,1,$300 PIF
+Unlimited BJJ/Kickboxing Upgraded Monthly,30.00/mo,monthly,0.00,12,Not specified,Unlimited Classes Per Week,Active,2,Upgrade,Memberships,360.00,11,Upgrade plan
+Limited Upgraded MultiProgram Membership,30.00/mo,monthly,0.00,12,Not specified,Unlimited Classes Per Week,Active,2,Upgrade,Memberships,360.00,11,Upgrade plan
+Limited BJJ Upfront,2100.00/yr,yearly,0.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Active,4,New,Memberships,2100.00,1,Paid in Full
+Limited BJJ Monthly,163.00/mo,monthly,499.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Active,10,New,Memberships,2292.00,11,$499 down + $163/mo
+Unlimited Upfront BJJ,2400.00/yr,yearly,0.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Active,14,New,Memberships,2400.00,1,Paid in Full
+Unlimited BJJ Monthly,179.00/mo,monthly,699.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Active,19,New,Memberships,2668.00,11,$699 to start + $179/mo
+Limited Upfront Kickboxing,2100.00/yr,yearly,0.00,12,Not specified,Striking - Unlimited Classes Per Week,Active,2,New,Memberships,2100.00,1,Paid in Full
+Limited Kickboxing Monthly,163.00/mo,monthly,499.00,12,Not specified,Striking - Unlimited Classes Per Week,Active,12,New,Memberships,2292.00,11,$499 down + $163/mo
+Unlimited Kickboxing Upfront,2400.00/yr,yearly,0.00,12,Not specified,Striking - Unlimited Classes Per Week,Active,11,New,Memberships,2400.00,1,Paid in Full
+Unlimited Kickboxing Monthly,179.00/mo,monthly,699.00,12,Not specified,Striking - Unlimited Classes Per Week,Active,22,New,Memberships,2668.00,11,$699 to start + $179/mo
+Limited Upfront Kids BJJ,2100.00/yr,yearly,0.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,2,New,Memberships,2100.00,1,Paid in Full
+Limited Kids BJJ Monthly,163.00/mo,monthly,499.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,15,New,Memberships,2668.00,11,$499 down + $163/mo
+Unlimited Kids BJJ Upfront,2400.00/yr,yearly,0.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,16,New,Memberships,2400.00,1,Paid in Full
+Unlimited Kids BJJ Monthly,179.00/mo,monthly,699.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,5,New,Memberships,2668.00,11,$699 down + $179/mo
+Little Ninjas Upfront,2100.00/yr,yearly,0.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,7,New,Memberships,2100.00,1,Paid in Full
+Little Ninjas Monthly,163.00/mo,monthly,499.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Active,8,New,Memberships,2292.00,11,$499 down + $163/mo
+Beloit YMCA Striking,62.50/biweekly,every 14 days,0.00,12,Beloit,Striking - Unlimited Classes Per Week,Active,0,New,Memberships,1500.00,26,BiWeekly 65 every two weeks
+Beloit Striking Membership,75.00/biweekly,every 14 days,0.00,12,Beloit,Striking - Unlimited Classes Per Week,Active,0,New,Memberships,1950.00,26,$75 every two weeks
+Beloit YMCA BJJ Membership,62.50/biweekly,every 14 days,0.00,12,Beloit,Adult BJJ - Unlimited Classes Per Week,Active,0,New,Memberships,1700.00,26,$62.50 every two weeks
+Beloit BJJ Membership,75.00/biweekly,every 14 days,0.00,12,Beloit,Adult BJJ - Unlimited Classes Per Week,Active,0,New,Memberships,1900.00,0,$75 every 2 weeks
+Beloit Kids Membership,75.00/biweekly,every 14 days,299.00,12,Beloit,Kids BJJ - Unlimited Classes Per Week,Active,0,New,Memberships,2400.00,26,299 down + 75 biweekly
+Limited Upgrade Multi Program Upfront,300.00/yr,yearly,0.00,12,Not specified,Unlimited Classes Per Week,Inactive,0,Upgrade,Memberships,300.00,1,$300 PIF
+Limited BJJ Option 3,181.00/mo,monthly,399.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Inactive,0,New,Memberships,2292.00,11,$399 down + $181/mo
+Unlimited BJJ Option 3,199.00/mo,monthly,499.00,12,Not specified,Adult BJJ - Unlimited Classes Per Week,Inactive,0,New,Memberships,2688.00,11,$499 down + $199/mo
+Limited KickBoxing Option 3,181.00/mo,monthly,399.00,12,Not specified,Striking - Unlimited Classes Per Week,Inactive,0,New,Memberships,2292.00,0,$399 down + $181/mo
+Unlimited Kickboxing option 3,199.00/mo,monthly,499.00,12,Not specified,Striking - Unlimited Classes Per Week,Inactive,0,New,Memberships,2688.00,11,$499 down + $199/mo
+Limited Kids BJJ option 3,181.00/mo,monthly,399.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Inactive,0,New,Memberships,2292.00,11,$399 down + $181/mo
+Unlimited Kids BJJ Option 3,199.00/mo,monthly,499.00,12,Not specified,Kids BJJ - Unlimited Classes Per Week,Inactive,0,New,Memberships,2688.00,11,$499 down + $199/mo
+Little Ninjas option 3,174.00/mo,monthly,399.00,12,Not specified,Unlimited Classes Per Week,Inactive,0,New,Memberships,2688.00,11,$399 to start then $181/mo
+Unlimited Up Front BJJ,0.00,monthly,0.00,0,Not specified,Adult BJJ - Unlimited Classes Per Week,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+Intro Kickboxing Option 3,174.00/mo,monthly,299.00,12,Not specified,Striking - Unlimited Classes Per Week,Inactive,0,New,Memberships,2213.00,11,$299 down + $174/mo
+7 Month Upfront Kids,0.00,monthly,0.00,0,Not specified,Kids BJJ - Unlimited Classes Per Week,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+Intro Unlimited,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+HaanMade Fitness Area,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+BJJ Limited Split Pay,0.00,monthly,0.00,0,Not specified,Adult BJJ - Unlimited Classes Per Week,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+Mini Myagi Program,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+21 Day Remote Challenge Split Pay,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+7 Month Upfront BJJ,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+7 Month KickFIT,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+21 Day Remote Challenge Single,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+21 Day No Guarantee Payments,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
+Unlimited Split Pay,0.00,monthly,0.00,0,Not specified,N/A,Inactive (Legacy),0,Renewal,Memberships,0.00,0,Legacy plan
