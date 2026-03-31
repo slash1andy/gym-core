@@ -284,15 +284,16 @@ final class Settings {
 	}
 
 	/**
-	 * Belt rank settings.
+	 * Rank settings — promotion rules, Foundations gate, and per-program thresholds.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function get_ranks_settings(): array {
 		return array(
+			// --- Promotion Rules ---
 			array(
-				'title' => __( 'Belt Rank Settings', 'gym-core' ),
-				'desc'  => __( 'Configure belt rank tracking and promotion rules.', 'gym-core' ),
+				'title' => __( 'Promotion Rules', 'gym-core' ),
+				'desc'  => __( 'Global rules for rank promotions across all programs.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_ranks_options',
 			),
@@ -313,6 +314,185 @@ final class Settings {
 			array(
 				'type' => 'sectionend',
 				'id'   => 'gym_core_ranks_options',
+			),
+
+			// --- Foundations Clearance Gate ---
+			array(
+				'title' => __( 'Foundations Clearance (Adult BJJ)', 'gym-core' ),
+				'desc'  => __( 'New Adult BJJ students must complete a Foundations phase before live training with non-coaches. This is a safety gate — not a belt. Time in Foundations counts toward White Belt stripes.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_foundations_options',
+			),
+			array(
+				'title'   => __( 'Enable Foundations Gate', 'gym-core' ),
+				'desc'    => __( 'Require new Adult BJJ students to complete Foundations before live training', 'gym-core' ),
+				'id'      => 'gym_core_foundations_enabled',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'             => __( 'Phase 1 — Classes Before Coach Rolls', 'gym-core' ),
+				'desc'              => __( 'Classes required before first coach roll evaluation', 'gym-core' ),
+				'id'                => 'gym_core_foundations_phase1_classes',
+				'default'           => '10',
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+			),
+			array(
+				'title'             => __( 'Phase 2 — Coach Rolls Required', 'gym-core' ),
+				'desc'              => __( 'Supervised rolls with coaches needed after Phase 1', 'gym-core' ),
+				'id'                => 'gym_core_foundations_coach_rolls_required',
+				'default'           => '2',
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+			),
+			array(
+				'title'             => __( 'Phase 3 — Total Classes to Clear', 'gym-core' ),
+				'desc'              => __( 'Total classes (Phases 1+3 combined) required to clear Foundations', 'gym-core' ),
+				'id'                => 'gym_core_foundations_total_classes',
+				'default'           => '25',
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_foundations_options',
+			),
+
+			// --- Adult BJJ Promotion Thresholds ---
+			array(
+				'title' => __( 'Adult BJJ — Promotion Thresholds', 'gym-core' ),
+				'desc'  => __( 'Minimum days and classes at each belt before eligibility. Black Belt uses degrees (up to 10) instead of stripes.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_adult_bjj_thresholds',
+			),
+			array(
+				'title'   => __( 'White Belt — Min Days', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_white_days',
+				'default' => '25',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'White Belt — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_white_classes',
+				'default' => '17',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Blue Belt — Min Days', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_blue_days',
+				'default' => '500',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Blue Belt — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_blue_classes',
+				'default' => '225',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Purple Belt — Min Days', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_purple_days',
+				'default' => '700',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Purple Belt — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_purple_classes',
+				'default' => '400',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Brown Belt — Min Days', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_brown_days',
+				'default' => '700',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Brown Belt — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_adult_bjj_brown_classes',
+				'default' => '400',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_adult_bjj_thresholds',
+			),
+
+			// --- Kids BJJ Promotion Thresholds ---
+			array(
+				'title' => __( 'Kids BJJ — Promotion Thresholds', 'gym-core' ),
+				'desc'  => __( 'Defaults: 340 days / 64 classes per belt (lower for first and last belts). 13 belt levels with 4 stripes each. Per-rank overrides available via the gym_core_rank_thresholds filter.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_kids_bjj_thresholds',
+			),
+			array(
+				'title'   => __( 'Default — Min Days', 'gym-core' ),
+				'desc'    => __( 'Applied to most Kids belts (Grey/White through Green/White)', 'gym-core' ),
+				'id'      => 'gym_core_threshold_kids_bjj_default_days',
+				'default' => '340',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Default — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_kids_bjj_default_classes',
+				'default' => '64',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'White Belt — Min Days', 'gym-core' ),
+				'desc'    => __( 'First belt (typically 0)', 'gym-core' ),
+				'id'      => 'gym_core_threshold_kids_bjj_white_days',
+				'default' => '0',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'White Belt — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_kids_bjj_white_classes',
+				'default' => '0',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_kids_bjj_thresholds',
+			),
+
+			// --- Kickboxing Level Thresholds ---
+			array(
+				'title' => __( 'Kickboxing — Level Thresholds', 'gym-core' ),
+				'desc'  => __( 'Kickboxing uses a simple two-level system. No stripes or belts — just progression levels.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_kickboxing_thresholds',
+			),
+			array(
+				'title'   => __( 'Level 2 — Min Days', 'gym-core' ),
+				'id'      => 'gym_core_threshold_kickboxing_level2_days',
+				'default' => '500',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'title'   => __( 'Level 2 — Min Classes', 'gym-core' ),
+				'id'      => 'gym_core_threshold_kickboxing_level2_classes',
+				'default' => '200',
+				'type'    => 'number',
+				'custom_attributes' => array( 'min' => '0', 'step' => '1' ),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_kickboxing_thresholds',
 			),
 		);
 	}
@@ -417,7 +597,7 @@ final class Settings {
 		return array(
 			array(
 				'title' => __( 'Twilio SMS Settings', 'gym-core' ),
-				'desc'  => __( 'Configure Twilio credentials for SMS notifications. Credentials are stored encrypted.', 'gym-core' ),
+				'desc'  => __( 'Configure Twilio credentials for SMS notifications.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_sms_options',
 			),
