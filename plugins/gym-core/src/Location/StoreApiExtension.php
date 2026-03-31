@@ -139,11 +139,7 @@ class StoreApiExtension {
 	 * @return string The location label, or empty string for unknown slugs.
 	 */
 	private function get_location_label( string $slug ): string {
-		$labels = array(
-			Taxonomy::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			Taxonomy::BELOIT   => __( 'Beloit', 'gym-core' ),
-		);
-
+		$labels = Taxonomy::get_location_labels();
 		return $labels[ $slug ] ?? '';
 	}
 }

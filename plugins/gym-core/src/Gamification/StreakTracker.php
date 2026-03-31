@@ -176,7 +176,14 @@ final class StreakTracker {
 		}
 
 		$used = $this->get_freezes_used( $user_id );
-		update_user_meta( $user_id, '_gym_streak_freezes_used', $used + 1 );
+		update_user_meta(
+			$user_id,
+			'_gym_streak_freezes_used',
+			array(
+				'quarter' => self::current_quarter(),
+				'count'   => $used + 1,
+			)
+		);
 		update_user_meta( $user_id, '_gym_streak_frozen_at', gmdate( 'Y-m-d H:i:s' ) );
 
 		/**
@@ -212,11 +219,33 @@ final class StreakTracker {
 	/**
 	 * Returns the number of freezes used this quarter.
 	 *
+	 * Resets automatically at the start of each new quarter.
+	 *
 	 * @param int $user_id User ID.
 	 * @return int
 	 */
 	private function get_freezes_used( int $user_id ): int {
-		return (int) get_user_meta( $user_id, '_gym_streak_freezes_used', true );
+		$data = get_user_meta( $user_id, '_gym_streak_freezes_used', true );
+
+		// Auto-reset: if stored quarter doesn't match current quarter, count is 0.
+		if ( is_array( $data ) ) {
+			if ( ( $data['quarter'] ?? '' ) !== self::current_quarter() ) {
+				return 0;
+			}
+			return (int) ( $data['count'] ?? 0 );
+		}
+
+		// Legacy format (plain int) — treat as current quarter for migration.
+		return (int) $data;
+	}
+
+	/**
+	 * Returns the current quarter identifier (e.g., "2026-Q1").
+	 *
+	 * @return string
+	 */
+	private static function current_quarter(): string {
+		return gmdate( 'Y' ) . '-Q' . (string) ceil( (int) gmdate( 'n' ) / 3 );
 	}
 
 	/**
