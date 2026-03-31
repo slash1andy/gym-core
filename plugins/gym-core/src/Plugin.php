@@ -93,6 +93,7 @@ final class Plugin {
 
 		$this->register_schedule_modules();
 		$this->register_attendance_modules();
+		$this->register_gamification_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -163,6 +164,9 @@ final class Plugin {
 		}
 
 		return $this->location_manager;
+	}
+
+	/**
 	 * Registers the attendance and promotion eligibility modules.
 	 *
 	 * Makes store instances available for dependency injection into
@@ -180,6 +184,26 @@ final class Plugin {
 		$this->rank_store              = new Rank\RankStore();
 		$this->checkin_validator       = new Attendance\CheckInValidator( $this->attendance_store );
 		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store );
+	}
+
+	/**
+	 * Registers the gamification module (badges, streaks).
+	 *
+	 * The BadgeEngine hooks into gym_core_attendance_recorded and
+	 * gym_core_rank_changed to automatically evaluate and award badges.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @return void
+	 */
+	private function register_gamification_modules(): void {
+		if ( 'yes' !== get_option( 'gym_core_gamification_enabled', 'yes' ) ) {
+			return;
+		}
+
+		$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
+		$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
+		$badge_engine->register_hooks();
 	}
 
 	/**
