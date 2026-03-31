@@ -6,6 +6,10 @@
 **Custom Plugins:** `gym-core` (new) · `gym-ai-chat` (existing, v0.1.0)
 **Commercial Extensions:** WooPayments · WooCommerce Subscriptions · WooCommerce Memberships · Jetpack CRM · AutomateWoo · MailPoet · Jetpack VideoPress
 
+**REST API Namespace:** `gym/v1`
+**Base Controller:** `src/API/BaseController.php` (extends `WP_REST_Controller`)
+**Foundation Controllers (built in M1):** `src/API/LocationController.php`
+
 ---
 
 ## Milestone 1: Billing Engine + Site Replacement
@@ -191,6 +195,38 @@ ACCEPTANCE:
 NOTE: Do NOT cut over until Darby and Amanda have reviewed staging and signed off.
 ```
 
+#### 1.10 — REST API Foundation (gym-core)
+```
+DESCRIPTION: Build the base REST API controller and the LocationController that all
+             downstream milestones depend on. Namespace: gym/v1.
+DEPENDS_ON: 1.5, 1.6
+ACCEPTANCE:
+  - src/API/BaseController.php created:
+    - Extends WP_REST_Controller
+    - Provides shared helpers: permission checks, pagination, sanitization,
+      error response formatting, nonce verification
+    - Standard JSON envelope: { success, data, meta }
+    - Rate-limiting helper (X-RateLimit headers)
+  - src/API/LocationController.php created:
+    - Extends Gym_Core\API\BaseController
+    - Endpoints:
+      | Method | Route                             | Description                                | Auth         |
+      |--------|-----------------------------------|--------------------------------------------|--------------|
+      | GET    | /gym/v1/locations                 | List all gym locations                     | Public       |
+      | GET    | /gym/v1/locations/{slug}          | Single location details                    | Public       |
+      | GET    | /gym/v1/locations/{slug}/products | Products filtered to a location            | Public       |
+      | GET    | /gym/v1/user/location             | Current user's preferred location          | Logged-in    |
+      | PUT    | /gym/v1/user/location             | Set current user's preferred location      | Logged-in    |
+  - All endpoints registered via register_rest_routes()
+  - Permission callbacks enforce auth requirements
+  - Schema defined per WP REST API spec (get_item_schema)
+  - Unit tests for each endpoint
+  - Integration test: location CRUD round-trip
+SCHEMA_NOTES:
+  Location object: { slug, name, address, phone, hours, coordinates }
+  User location: { slug, name, set_at }
+```
+
 ---
 
 ## Milestone 2: Replace GoHighLevel
@@ -341,6 +377,53 @@ ACCEPTANCE:
   - Staff trained on new tools (Jetpack CRM, AutomateWoo dashboards)
 ```
 
+#### 2.10 — SMS REST API Controller (gym-core)
+```
+DESCRIPTION: Build the SMSController exposing REST endpoints for sending SMS,
+             receiving Twilio webhooks, and retrieving conversation history.
+             These endpoints are consumed by AutomateWoo triggers, the AI Sales
+             agent (M6), and the staff CRM interface.
+DEPENDS_ON: 2.4, 1.10
+CONTROLLER: src/API/SMSController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                                  | Description                                       | Auth                          |
+    |--------|----------------------------------------|---------------------------------------------------|-------------------------------|
+    | POST   | /gym/v1/sms/send                       | Send an SMS to a contact                          | manage_options OR gym_send_sms |
+    | POST   | /gym/v1/sms/webhook                    | Twilio inbound webhook (receives incoming SMS)    | Twilio signature validation   |
+    | GET    | /gym/v1/sms/conversations/{contact_id} | Retrieve SMS conversation history for a contact   | manage_options OR gym_send_sms |
+  - POST /sms/send parameters:
+    - contact_id (int, required) — Jetpack CRM contact ID
+    - message (string, required) — message body (max 1600 chars)
+    - template_slug (string, optional) — use a predefined MessageTemplate
+  - POST /sms/webhook:
+    - Validates X-Twilio-Signature header against configured auth token
+    - Parses From, To, Body from Twilio POST payload
+    - Matches inbound phone to CRM contact, stores message
+    - Fires action hook: gym_core_sms_received
+    - Returns TwiML response
+  - GET /sms/conversations/{contact_id}:
+    - Paginated (per_page, page params)
+    - Returns array of { direction, body, sent_at, status, sid }
+    - Sorted newest-first by default (order param available)
+  - Rate limiting enforced on POST /sms/send (max 1 per contact per hour)
+  - All endpoints return standard JSON envelope from BaseController
+  - Permission callbacks use current_user_can() checks
+  - Schema defined per WP REST API spec
+  - Unit tests for each endpoint
+  - Integration test: send → webhook round-trip
+SCHEMA_NOTES:
+  SMS message object: { id, contact_id, direction (inbound|outbound), body,
+    sent_at, status (queued|sent|delivered|failed), twilio_sid }
+  Send request: { contact_id, message, template_slug? }
+  Webhook payload: Twilio standard POST fields (validated server-side)
+SECURITY:
+  - Twilio credentials never returned in any REST response
+  - Webhook endpoint validates Twilio request signature; rejects invalid requests with 403
+  - contact_id validated against CRM — cannot send to arbitrary phone numbers
+  - Message body sanitized with wp_kses() before storage
+```
+
 ---
 
 ## Milestone 3: Member Portal + Content Gating
@@ -406,6 +489,84 @@ ACCEPTANCE:
   - Schedule change triggers notification (SMS + email via M2.4/M2.5)
   - iCal feed for members to subscribe
   - REST API endpoints for schedule data (consumed by AI agents)
+```
+
+#### 3.10 — Class Schedule REST API Controller (gym-core)
+```
+DESCRIPTION: Build the ClassScheduleController exposing REST endpoints for
+             retrieving class definitions and weekly schedule views. These
+             endpoints power the public schedule page, member dashboard,
+             and are consumed by the AI Coaching agent (M6).
+DEPENDS_ON: 3.3, 1.10
+CONTROLLER: src/API/ClassScheduleController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                  | Description                                          | Auth       |
+    |--------|------------------------|------------------------------------------------------|------------|
+    | GET    | /gym/v1/classes        | List all class definitions (filterable)              | Public     |
+    | GET    | /gym/v1/classes/{id}   | Single class definition with full details            | Public     |
+    | GET    | /gym/v1/schedule       | Weekly schedule view (classes expanded by recurrence)| Public     |
+  - GET /classes query parameters:
+    - location (string, optional) — filter by gym_location slug
+    - program (string, optional) — filter by program (bjj, kickboxing, kids-bjj)
+    - instructor (int, optional) — filter by instructor user ID
+    - per_page, page — pagination
+  - GET /classes/{id}:
+    - Returns full gym_class post data: name, description, instructor (with name),
+      program, recurring_schedule, location, capacity, next_occurrence
+  - GET /schedule query parameters:
+    - location (string, required) — gym_location slug
+    - week_of (string, optional, ISO 8601 date) — defaults to current week
+    - program (string, optional) — filter by program
+  - GET /schedule returns:
+    - Array of day objects, each containing scheduled class instances:
+      { date, day_name, classes: [{ id, name, program, instructor, start_time,
+        end_time, location, spots_remaining }] }
+  - All endpoints return standard JSON envelope from BaseController
+  - Schema defined per WP REST API spec
+  - Unit tests for each endpoint
+  - Integration test: class created → appears in schedule response
+SCHEMA_NOTES:
+  Class object: { id, name, description, program, instructor: { id, name },
+    location: { slug, name }, capacity, recurring_schedule: [{ day, start_time,
+    end_time }] }
+  Schedule day: { date (Y-m-d), day_name, classes: [ ClassInstance ] }
+  ClassInstance: { class_id, name, program, instructor, start_time, end_time,
+    location, spots_remaining }
+```
+
+#### 3.11 — Member Dashboard REST API Controller (gym-core)
+```
+DESCRIPTION: Build the MemberController exposing the /members/me/dashboard endpoint
+             that aggregates membership status, billing info, schedule, and
+             personalization data into a single response for the My Account dashboard.
+DEPENDS_ON: 3.2, 1.10
+CONTROLLER: src/API/MemberController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                          | Description                                           | Auth      |
+    |--------|--------------------------------|-------------------------------------------------------|-----------|
+    | GET    | /gym/v1/members/me/dashboard   | Aggregated dashboard data for the current logged-in member | Logged-in |
+  - GET /members/me/dashboard returns:
+    - member: { id, display_name, email, location: { slug, name } }
+    - memberships: [{ plan_name, status, start_date, end_date }]
+    - billing: { next_payment_date, next_payment_amount, payment_method_summary }
+    - upcoming_classes: array of next 7 days of classes at member's location
+      (reuses ClassScheduleController data format)
+    - rank: { program, belt, stripes, last_promoted_at } (null until M4 populates)
+    - gamification: { current_streak, badges_earned_count } (null until M5 populates)
+    - quick_links: { update_payment_url, billing_history_url, schedule_url }
+  - Response designed for a single fetch on dashboard load (avoids waterfall requests)
+  - rank and gamification fields return null gracefully when M4/M5 not yet active
+  - Logged-in user determined via get_current_user_id(); returns 401 if not authenticated
+  - Schema defined per WP REST API spec
+  - Unit tests for dashboard aggregation
+  - Integration test: member with active subscription sees correct dashboard data
+SCHEMA_NOTES:
+  Dashboard object: { member, memberships[], billing, upcoming_classes[],
+    rank (nullable), gamification (nullable), quick_links }
+  Designed to be extended by M4 and M5 without breaking changes — rank and
+  gamification are nullable objects that get populated when those milestones ship.
 ```
 
 ---
@@ -497,6 +658,167 @@ ACCEPTANCE:
   - REST API: GET /promotions/eligible, POST /promotions/promote
 ```
 
+#### 4.10 — Rank REST API Controller (gym-core)
+```
+DESCRIPTION: Build the RankController exposing REST endpoints for retrieving
+             member rank data and rank history. These endpoints power the member
+             dashboard rank display, coach admin views, and are consumed by
+             the AI Coaching agent (M6).
+DEPENDS_ON: 4.1, 1.10
+CONTROLLER: src/API/RankController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                              | Description                                    | Auth                             |
+    |--------|------------------------------------|------------------------------------------------|----------------------------------|
+    | GET    | /gym/v1/members/{id}/rank          | Current rank for a member (by program)         | Logged-in (own) OR gym_view_ranks |
+    | GET    | /gym/v1/members/{id}/rank-history  | Full promotion history for a member            | Logged-in (own) OR gym_view_ranks |
+    | POST   | /gym/v1/ranks/promote              | Promote a member to the next rank/stripe       | gym_promote_student              |
+  - GET /members/{id}/rank query parameters:
+    - program (string, optional) — filter by program slug (bjj, kids-bjj, kickboxing)
+    - If omitted, returns ranks for all programs the member participates in
+  - GET /members/{id}/rank returns:
+    - Array of { program, belt, stripes, promoted_at, promoted_by: { id, name },
+      attendance_since_promotion, next_belt, next_stripes }
+  - GET /members/{id}/rank-history query parameters:
+    - program (string, optional) — filter by program
+    - per_page, page — pagination
+  - GET /members/{id}/rank-history returns:
+    - Paginated array of { from_belt, from_stripes, to_belt, to_stripes,
+      promoted_at, promoted_by: { id, name }, notes }
+    - Sorted newest-first
+  - POST /ranks/promote request body:
+    - user_id (int, required)
+    - program (string, required)
+    - to_belt (string, optional — defaults to next in sequence)
+    - to_stripes (int, optional — defaults to next in sequence)
+    - notes (string, optional)
+  - POST /ranks/promote:
+    - Validates promotion is a legal progression (no skipping belts)
+    - Records in gym_ranks + gym_rank_history
+    - Fires gym_core_rank_changed action hook
+    - Returns the updated rank object
+  - Self-access: members can GET their own rank with just logged-in status
+  - Coach/admin access: gym_view_ranks cap required to view other members
+  - Schema defined per WP REST API spec
+  - Unit tests for each endpoint
+  - Integration test: promote → rank-history reflects change
+SCHEMA_NOTES:
+  Rank object: { program, belt, stripes, promoted_at, promoted_by: { id, name },
+    attendance_since_promotion, next_belt, next_stripes }
+  RankHistory entry: { from_belt, from_stripes, to_belt, to_stripes,
+    promoted_at, promoted_by: { id, name }, notes }
+  Promote request: { user_id, program, to_belt?, to_stripes?, notes? }
+```
+
+#### 4.11 — Attendance REST API Controller (gym-core)
+```
+DESCRIPTION: Build the AttendanceController exposing REST endpoints for check-in,
+             attendance retrieval, and today's attendance view. These endpoints
+             power the kiosk check-in app, coach attendance dashboard, and are
+             consumed by the AI Coaching and Admin agents (M6).
+DEPENDS_ON: 4.2, 1.10
+CONTROLLER: src/API/AttendanceController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                         | Description                                      | Auth                                |
+    |--------|-------------------------------|--------------------------------------------------|-------------------------------------|
+    | POST   | /gym/v1/check-in              | Record a member check-in for a class             | gym_check_in_member OR manage_options |
+    | GET    | /gym/v1/attendance/{user_id}  | Attendance history for a specific member         | Logged-in (own) OR gym_view_attendance |
+    | GET    | /gym/v1/attendance/today      | All check-ins for today (filterable by location) | gym_view_attendance                 |
+  - POST /check-in request body:
+    - user_id (int, required) — member being checked in
+    - class_id (int, required) — gym_class post ID
+    - method (string, required) — one of: qr_scan, member_id, name_search
+  - POST /check-in validation:
+    - Member has active WooCommerce Membership
+    - Member is eligible for this class (program + location match)
+    - No duplicate check-in for same class on same day
+    - Returns 409 Conflict on duplicate, 403 on ineligible
+  - POST /check-in response:
+    - { attendance_id, user: { id, name, rank }, class: { id, name }, checked_in_at }
+    - Fires gym_core_attendance_recorded action hook
+    - Target: check-in-to-response under 500ms
+  - GET /attendance/{user_id} query parameters:
+    - from (ISO 8601 date, optional) — start of date range
+    - to (ISO 8601 date, optional) — end of date range
+    - program (string, optional) — filter by program
+    - per_page, page — pagination
+  - GET /attendance/{user_id} returns:
+    - Paginated array of { id, class: { id, name, program }, location,
+      checked_in_at, method }
+    - Meta includes total_count for the filtered range
+  - GET /attendance/today query parameters:
+    - location (string, optional) — filter by gym_location slug
+    - class_id (int, optional) — filter to a specific class
+  - GET /attendance/today returns:
+    - Array of { user: { id, name, rank }, class: { id, name },
+      checked_in_at, method }
+    - Grouped by class if no class_id filter provided
+  - Self-access: members can GET their own attendance with logged-in status
+  - Coach/admin access: gym_view_attendance cap required for other members / today view
+  - Schema defined per WP REST API spec
+  - Unit tests for each endpoint (including validation edge cases)
+  - Integration test: check-in → appears in attendance/{user_id} and attendance/today
+SCHEMA_NOTES:
+  Attendance record: { id, user: { id, name }, class: { id, name, program },
+    location: { slug, name }, checked_in_at, method }
+  Check-in request: { user_id, class_id, method }
+  Today view groups: { class: { id, name, start_time }, attendees: [ AttendanceRecord ] }
+```
+
+#### 4.12 — Promotion REST API Controller (gym-core)
+```
+DESCRIPTION: Build the PromotionController exposing REST endpoints for querying
+             promotion eligibility and executing promotions. These endpoints power
+             the coach promotion dashboard and are consumed by the AI Coaching
+             agent (M6) for flagging promotion-ready students.
+DEPENDS_ON: 4.3, 1.10
+CONTROLLER: src/API/PromotionController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                        | Description                                         | Auth                |
+    |--------|------------------------------|-----------------------------------------------------|---------------------|
+    | GET    | /gym/v1/promotions/eligible   | List all members currently eligible for promotion   | gym_promote_student |
+    | POST   | /gym/v1/promotions/promote    | Execute a belt promotion for a member               | gym_promote_student |
+  - GET /promotions/eligible query parameters:
+    - location (string, optional) — filter by gym_location slug
+    - program (string, optional) — filter by program (bjj, kids-bjj, kickboxing)
+    - per_page, page — pagination
+  - GET /promotions/eligible returns:
+    - Paginated array of { user: { id, name, email }, program, current_belt,
+      current_stripes, attendance_since_promotion, time_at_current_rank,
+      meets_attendance_threshold (bool), meets_time_threshold (bool),
+      coach_recommended (bool), next_belt, next_stripes }
+    - Sorted by readiness (all three criteria met first, then two, then one)
+  - POST /promotions/promote request body:
+    - user_id (int, required)
+    - program (string, required)
+    - to_belt (string, optional — defaults to next in sequence)
+    - to_stripes (int, optional — defaults to next in sequence)
+    - notes (string, optional)
+    - bulk (bool, optional, default false) — if true, accepts user_ids[] array
+  - POST /promotions/promote:
+    - Delegates to RankController POST /ranks/promote internally
+    - Fires gym_core_rank_changed action hook
+    - Triggers notification (SMS + email congratulations via M2.4)
+    - Supports bulk: accepts user_ids[] for belt testing events
+    - Returns array of updated rank objects
+  - All endpoints require gym_promote_student capability (coaches + admins)
+  - Schema defined per WP REST API spec
+  - Unit tests for eligibility calculation and promotion execution
+  - Integration test: attendance threshold met → appears in eligible → promote → rank updated
+SCHEMA_NOTES:
+  Eligible member: { user, program, current_belt, current_stripes,
+    attendance_since_promotion, time_at_current_rank, meets_attendance_threshold,
+    meets_time_threshold, coach_recommended, next_belt, next_stripes }
+  Promote request: { user_id, program, to_belt?, to_stripes?, notes?, bulk? }
+  Bulk promote request: { user_ids[], program, to_belt?, to_stripes?, notes?, bulk: true }
+NOTE: POST /promotions/promote and POST /ranks/promote (4.10) share the same
+      underlying RankStore logic. PromotionController adds the eligibility check
+      and bulk support layer on top. The AI Coaching agent uses /promotions/eligible
+      to flag ready students and /ranks/promote (via approval gate) to execute.
+```
+
 ---
 
 ## Milestone 5: Gamification Engine
@@ -563,6 +885,52 @@ ACCEPTANCE:
   - Admin UI: simple meta box on posts/pages to set targeting rules
 ```
 
+#### 5.10 — Gamification REST API Controller (gym-core)
+```
+DESCRIPTION: Build the GamificationController exposing REST endpoints for badges,
+             badge definitions, and streak data. These endpoints power the member
+             dashboard gamification widgets and are consumed by the AI Coaching
+             agent (M6) for motivational recommendations.
+DEPENDS_ON: 5.1, 5.2, 1.10
+CONTROLLER: src/API/GamificationController.php (extends Gym_Core\API\BaseController)
+ACCEPTANCE:
+  - Endpoints registered under gym/v1 namespace:
+    | Method | Route                        | Description                                          | Auth                                    |
+    |--------|------------------------------|------------------------------------------------------|-----------------------------------------|
+    | GET    | /gym/v1/badges               | List all badge definitions (earned/locked states)    | Public (definitions) / Logged-in (states)|
+    | GET    | /gym/v1/members/{id}/badges  | Badges earned by a specific member                   | Logged-in (own) OR gym_view_achievements |
+    | GET    | /gym/v1/members/{id}/streak  | Current and longest streak for a member              | Logged-in (own) OR gym_view_achievements |
+  - GET /badges query parameters:
+    - category (string, optional) — filter by badge category (attendance, rank, special)
+  - GET /badges returns:
+    - Array of all badge definitions: { slug, name, description, icon_url,
+      category, criteria_summary }
+    - If user is logged in, each badge includes: { earned (bool), earned_at (nullable) }
+    - If not logged in, earned/earned_at fields are omitted
+  - GET /members/{id}/badges query parameters:
+    - per_page, page — pagination
+  - GET /members/{id}/badges returns:
+    - Paginated array of { badge: { slug, name, description, icon_url },
+      earned_at, metadata }
+    - Sorted by earned_at descending (most recent first)
+    - Meta includes total_badges_earned, total_badges_available
+  - GET /members/{id}/streak returns:
+    - { current_streak (int, weeks), longest_streak (int, weeks),
+      streak_started_at (date), freezes_remaining (int),
+      last_check_in_date, streak_status (active|frozen|broken) }
+  - Self-access: members can GET their own badges/streak with just logged-in status
+  - Coach/admin access: gym_view_achievements cap required for other members
+  - Schema defined per WP REST API spec
+  - Unit tests for each endpoint
+  - Integration test: badge earned → appears in /members/{id}/badges
+  - Integration test: streak increments → reflected in /members/{id}/streak
+SCHEMA_NOTES:
+  Badge definition: { slug, name, description, icon_url, category, criteria_summary }
+  Earned badge: { badge: BadgeDefinition, earned_at, metadata (JSON) }
+  Streak object: { current_streak, longest_streak, streak_started_at,
+    freezes_remaining, last_check_in_date, streak_status }
+```
+
 ---
 
 ## Milestone 6: AI Operations Layer
@@ -571,6 +939,16 @@ ACCEPTANCE:
 
 **Depends on:** M2 (CRM data for agents to query), M4 (attendance/rank data for coaching agent)
 **Plugin:** `gym-ai-chat` (already scaffolded at v0.1.0)
+
+**REST API NOTE:** The AI agent tool endpoints live in `gym-ai-chat`, NOT in `gym-core`.
+However, the gym-core REST API (gym/v1) is the primary **read layer** that all AI agents
+call through their MCP tool definitions. M6 therefore depends on all gym/v1 endpoints
+from M2-M5 being complete and stable:
+
+- **Sales Agent reads:** `/gym/v1/locations`, `/gym/v1/classes`, `/gym/v1/sms/conversations/{contact_id}`
+- **Coaching Agent reads:** `/gym/v1/members/{id}/rank`, `/gym/v1/members/{id}/rank-history`, `/gym/v1/attendance/{user_id}`, `/gym/v1/members/{id}/badges`, `/gym/v1/members/{id}/streak`, `/gym/v1/schedule`
+- **Finance Agent reads:** WooCommerce REST API (orders, subscriptions) — no gym/v1 endpoints needed
+- **Admin Agent reads:** `/gym/v1/attendance/today`, `/gym/v1/schedule`, `/gym/v1/promotions/eligible`
 
 ### For Andrew (what gets done)
 
@@ -581,7 +959,7 @@ The gym-ai-chat plugin gets wired into real data. The Sales agent can look up pr
 #### 6.1 — AI Agent Tool Definitions (gym-ai-chat)
 ```
 DESCRIPTION: Define the MCP-compatible tool schemas that each agent can call.
-DEPENDS_ON: M2, M4
+DEPENDS_ON: M2, M4, 2.10, 3.10, 3.11, 4.10, 4.11, 4.12, 5.10
 ACCEPTANCE:
   - Sales Agent tools:
     - lookup_pricing (read: product catalog)
@@ -591,9 +969,11 @@ ACCEPTANCE:
     - draft_email (write: creates pending email for approval)
     - schedule_trial_class (write: creates pending booking)
   - Coaching Agent tools:
-    - get_student_rank (read: rank data)
-    - get_attendance_history (read: attendance records)
-    - get_class_schedule (read: schedule)
+    - get_student_rank (read: rank data — calls GET /gym/v1/members/{id}/rank)
+    - get_attendance_history (read: attendance records — calls GET /gym/v1/attendance/{user_id})
+    - get_class_schedule (read: schedule — calls GET /gym/v1/schedule)
+    - get_badges (read: badges — calls GET /gym/v1/members/{id}/badges)
+    - get_streak (read: streak — calls GET /gym/v1/members/{id}/streak)
     - recommend_training_plan (write: creates pending plan for coach review)
     - flag_promotion_ready (write: creates pending promotion flag)
   - Finance Agent tools:
@@ -602,12 +982,15 @@ ACCEPTANCE:
     - get_failed_payments (read: failed renewal list)
     - generate_report (write: creates pending report)
   - Admin Agent tools:
-    - get_staff_schedule (read: schedule data)
-    - get_attendance_summary (read: attendance aggregates)
+    - get_staff_schedule (read: schedule data — calls GET /gym/v1/schedule)
+    - get_attendance_summary (read: attendance aggregates — calls GET /gym/v1/attendance/today)
+    - get_promotion_eligible (read: calls GET /gym/v1/promotions/eligible)
     - draft_announcement (write: creates pending staff message)
   - All tools registered as REST API endpoints in gym-ai-chat
   - All write tools create PendingAction records (existing approval flow)
   - Tool schemas follow MCP tool definition format
+  - Read tools are thin wrappers that authenticate to gym/v1 endpoints
+    using WordPress application passwords or internal REST dispatch
 ```
 
 #### 6.2 — LibreChat Integration
@@ -644,6 +1027,27 @@ ACCEPTANCE:
   - Mobile-friendly approval (works on phone)
 ```
 
+#### 6.10 — gym/v1 Endpoint Completeness Audit
+```
+DESCRIPTION: Verify that all gym/v1 REST API endpoints required by the AI agent tool
+             definitions (6.1) are complete, documented, and return consistent schemas.
+             This is a gate task — M6 agent tools cannot be wired up until the read
+             layer is confirmed stable.
+DEPENDS_ON: 2.10, 3.10, 3.11, 4.10, 4.11, 4.12, 5.10
+ACCEPTANCE:
+  - Every endpoint listed in 6.1's read tools is reachable and returns expected schema
+  - Response envelope is consistent across all controllers (BaseController standard)
+  - Pagination works consistently (per_page, page, total, total_pages in meta)
+  - Error responses follow consistent format (status code, code, message)
+  - Authentication/authorization verified for each endpoint
+  - OpenAPI/JSON Schema documentation generated for gym/v1 namespace
+  - Performance: all read endpoints respond under 200ms (p95) with representative data
+  - Integration test suite: one test per endpoint exercising happy path + auth failure
+NOTE: This task exists because M6 agents are only as good as the data they can read.
+      If any gym/v1 endpoint is broken, inconsistent, or slow, the agents will fail.
+      Treat this as a release gate — do not proceed to 6.1 wiring until this passes.
+```
+
 ---
 
 ## Milestone 7: Media, Migration + Go-Live
@@ -652,6 +1056,10 @@ ACCEPTANCE:
 
 **Replaces:** Vimeo ($20+/mo) · Spark Membership (dominant cost driver)
 **Depends on:** All previous milestones
+
+**REST API NOTE:** M7 does not introduce new REST controllers in gym-core. If a migration
+status dashboard is needed during the parallel run (7.4), it can be built as a WP admin
+page reading directly from the database — no public API required.
 
 ### For Andrew (what gets done)
 
@@ -779,8 +1187,47 @@ gym-core/                          gym-ai-chat/
 │   │   ├── MessageTemplates.php
 │   │   └── InboundHandler.php
 │   └── API/
-│       └── (REST endpoints for each module)
+│       ├── BaseController.php          ← M1.10 (foundation)
+│       ├── LocationController.php      ← M1.10
+│       ├── SMSController.php           ← M2.10
+│       ├── ClassScheduleController.php ← M3.10
+│       ├── MemberController.php        ← M3.11
+│       ├── RankController.php          ← M4.10
+│       ├── AttendanceController.php    ← M4.11
+│       ├── PromotionController.php     ← M4.12
+│       └── GamificationController.php  ← M5.10
 ```
+
+---
+
+## REST API Endpoint Summary (gym/v1)
+
+All endpoints use the `gym/v1` namespace. Controllers extend `Gym_Core\API\BaseController`.
+
+| Controller | Task | Route | Methods | Auth |
+|---|---|---|---|---|
+| **LocationController** | 1.10 | `/locations` | GET | Public |
+| | | `/locations/{slug}` | GET | Public |
+| | | `/locations/{slug}/products` | GET | Public |
+| | | `/user/location` | GET, PUT | Logged-in |
+| **SMSController** | 2.10 | `/sms/send` | POST | gym_send_sms |
+| | | `/sms/webhook` | POST | Twilio signature |
+| | | `/sms/conversations/{contact_id}` | GET | gym_send_sms |
+| **ClassScheduleController** | 3.10 | `/classes` | GET | Public |
+| | | `/classes/{id}` | GET | Public |
+| | | `/schedule` | GET | Public |
+| **MemberController** | 3.11 | `/members/me/dashboard` | GET | Logged-in |
+| **RankController** | 4.10 | `/members/{id}/rank` | GET | Logged-in (own) / gym_view_ranks |
+| | | `/members/{id}/rank-history` | GET | Logged-in (own) / gym_view_ranks |
+| | | `/ranks/promote` | POST | gym_promote_student |
+| **AttendanceController** | 4.11 | `/check-in` | POST | gym_check_in_member |
+| | | `/attendance/{user_id}` | GET | Logged-in (own) / gym_view_attendance |
+| | | `/attendance/today` | GET | gym_view_attendance |
+| **PromotionController** | 4.12 | `/promotions/eligible` | GET | gym_promote_student |
+| | | `/promotions/promote` | POST | gym_promote_student |
+| **GamificationController** | 5.10 | `/badges` | GET | Public / Logged-in |
+| | | `/members/{id}/badges` | GET | Logged-in (own) / gym_view_achievements |
+| | | `/members/{id}/streak` | GET | Logged-in (own) / gym_view_achievements |
 
 ---
 
@@ -789,18 +1236,35 @@ gym-core/                          gym-ai-chat/
 ```
 M1 Billing ──────────────────────┐
   │                               │
+  ├── 1.10 REST Foundation        │
+  │     │                         │
   ├── M2 Replace GHL ────────┐   │
   │     │                     │   │
+  │     ├── 2.10 SMS API      │   │
+  │     │                     │   │
   │     ├── M3 Member Portal ─┤   │
+  │     │     │                │   │
+  │     │     ├── 3.10 Class   │   │
+  │     │     │   Schedule API │   │
+  │     │     ├── 3.11 Member  │   │
+  │     │     │   Dashboard API│   │
   │     │     │                │   │
   │     │     ├── M4 Rank +   │   │
   │     │     │   Attendance   │   │
   │     │     │     │          │   │
+  │     │     │     ├── 4.10 Rank API
+  │     │     │     ├── 4.11 Attendance API
+  │     │     │     ├── 4.12 Promotion API
+  │     │     │     │          │   │
   │     │     │     ├── M5    │   │
   │     │     │     │  Gamify  │   │
+  │     │     │     │  │       │   │
+  │     │     │     │  ├── 5.10 Gamification API
   │     │     │     │          │   │
   │     ├─────┴─────┤          │   │
   │     │           │          │   │
+  │     └── 6.10 API Audit ───┘   │
+  │           │                    │
   │     └── M6 AI Agents ─────┘   │
   │                                │
   └── M7 Media + Cutover ─────────┘
