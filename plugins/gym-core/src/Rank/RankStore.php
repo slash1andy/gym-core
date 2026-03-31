@@ -254,9 +254,12 @@ final class RankStore {
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
 		$results = $wpdb->get_results(
-			"SELECT program, COUNT(*) as count FROM {$tables['ranks']} GROUP BY program",
+			$wpdb->prepare(
+				'SELECT program, COUNT(*) as count FROM %i GROUP BY program',
+				$tables['ranks']
+			),
 			OBJECT_K
 		);
 

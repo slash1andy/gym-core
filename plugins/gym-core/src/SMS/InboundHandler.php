@@ -87,7 +87,12 @@ final class InboundHandler {
 			);
 		}
 
-		$url    = rest_url( 'gym/v1/sms/webhook' );
+		// Use actual request URL for signature validation (rest_url() may
+		// differ behind proxies/CDNs, breaking Twilio signature checks).
+		$scheme = is_ssl() ? 'https' : 'http';
+		$host   = sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ?? '' ) );
+		$uri    = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) );
+		$url    = $scheme . '://' . $host . $uri;
 		$params = $request->get_body_params();
 
 		if ( ! $this->client->validate_webhook_signature( $url, $params, $signature ) ) {

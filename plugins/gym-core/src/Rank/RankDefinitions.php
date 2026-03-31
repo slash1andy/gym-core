@@ -11,7 +11,7 @@
  * and editable under WooCommerce > Settings > Gym Core > Ranks.
  *
  * @package Gym_Core
- * @since   1.2.0
+ * @since   2.0.0
  */
 
 declare( strict_types=1 );
@@ -66,7 +66,7 @@ final class RankDefinitions {
 	 *
 	 * @since 2.0.0
 	 *
-	 * @return array<string, array<int, array{name: string, slug: string, color: string, max_stripes: int, type: string}>>
+	 * @return array<string, array>
 	 */
 	public static function get_all_definitions(): array {
 		$definitions = array(
@@ -106,13 +106,11 @@ final class RankDefinitions {
 	/**
 	 * Returns the ordinal position of a rank within its program (0-based).
 	 *
-	 * @since 1.2.0
-	 *
 	 * @param string $program   Program slug.
 	 * @param string $rank_slug Rank slug.
 	 * @return int|null Position, or null if not found.
 	 */
-	public static function get_rank_position( string $program, string $rank_slug ): ?int {
+	public static function get_belt_position( string $program, string $rank_slug ): ?int {
 		$ranks = self::get_ranks( $program );
 
 		foreach ( $ranks as $index => $rank ) {
@@ -125,24 +123,15 @@ final class RankDefinitions {
 	}
 
 	/**
-	 * Backward-compatible alias.
-	 */
-	public static function get_belt_position( string $program, string $belt_slug ): ?int {
-		return self::get_rank_position( $program, $belt_slug );
-	}
-
-	/**
 	 * Returns the next rank after the given rank in the hierarchy.
-	 *
-	 * @since 1.2.0
 	 *
 	 * @param string $program   Program slug.
 	 * @param string $rank_slug Current rank slug.
 	 * @return array|null Next rank, or null if at highest.
 	 */
-	public static function get_next_rank( string $program, string $rank_slug ): ?array {
+	public static function get_next_belt( string $program, string $rank_slug ): ?array {
 		$ranks    = self::get_ranks( $program );
-		$position = self::get_rank_position( $program, $rank_slug );
+		$position = self::get_belt_position( $program, $rank_slug );
 
 		if ( null === $position || $position >= count( $ranks ) - 1 ) {
 			return null;
@@ -152,17 +141,9 @@ final class RankDefinitions {
 	}
 
 	/**
-	 * Backward-compatible alias.
-	 */
-	public static function get_next_belt( string $program, string $belt_slug ): ?array {
-		return self::get_next_rank( $program, $belt_slug );
-	}
-
-	/**
 	 * Returns the promotion thresholds for a specific rank in a program.
 	 *
-	 * Falls back to the default thresholds from get_default_thresholds() if
-	 * no per-rank override is stored in the database.
+	 * Falls back to the default thresholds if no per-rank override is stored.
 	 *
 	 * @since 2.0.0
 	 *
@@ -176,20 +157,28 @@ final class RankDefinitions {
 		if ( isset( $all_thresholds[ $program ][ $rank_slug ] ) ) {
 			return wp_parse_args(
 				$all_thresholds[ $program ][ $rank_slug ],
-				array( 'min_days' => 0, 'min_classes' => 0 )
+				array(
+					'min_days'    => 0,
+					'min_classes' => 0,
+				)
 			);
 		}
 
-		// Fall back to per-program defaults.
 		$defaults = self::get_default_thresholds();
-		return $defaults[ $program ][ $rank_slug ] ?? $defaults[ $program ]['_default'] ?? array( 'min_days' => 0, 'min_classes' => 0 );
+		if ( isset( $defaults[ $program ][ $rank_slug ] ) ) {
+			return $defaults[ $program ][ $rank_slug ];
+		}
+
+		return array(
+			'min_days'    => 0,
+			'min_classes' => 0,
+		);
 	}
 
 	/**
 	 * Returns the default promotion thresholds for all programs and ranks.
 	 *
-	 * Sourced from Spark Membership extraction (2026-03-30). Per-rank thresholds
-	 * can be overridden in WooCommerce > Settings > Gym Core > Ranks.
+	 * Sourced from Spark Membership extraction (2026-03-30).
 	 *
 	 * @since 2.0.0
 	 *
@@ -197,15 +186,15 @@ final class RankDefinitions {
 	 */
 	public static function get_default_thresholds(): array {
 		return array(
-			'adult-bjj' => array(
-				'white'  => array( 'min_days' => 25,  'min_classes' => 17 ),
+			'adult-bjj'  => array(
+				'white'  => array( 'min_days' => 25, 'min_classes' => 17 ),
 				'blue'   => array( 'min_days' => 500, 'min_classes' => 225 ),
 				'purple' => array( 'min_days' => 700, 'min_classes' => 400 ),
 				'brown'  => array( 'min_days' => 700, 'min_classes' => 400 ),
 				'black'  => array( 'min_days' => 700, 'min_classes' => 400 ),
 			),
-			'kids-bjj' => array(
-				'white'        => array( 'min_days' => 0,   'min_classes' => 0 ),
+			'kids-bjj'   => array(
+				'white'        => array( 'min_days' => 0, 'min_classes' => 0 ),
 				'grey-white'   => array( 'min_days' => 230, 'min_classes' => 48 ),
 				'grey'         => array( 'min_days' => 340, 'min_classes' => 64 ),
 				'grey-black'   => array( 'min_days' => 340, 'min_classes' => 64 ),
@@ -220,7 +209,7 @@ final class RankDefinitions {
 				'green-black'  => array( 'min_days' => 300, 'min_classes' => 60 ),
 			),
 			'kickboxing' => array(
-				'level-1' => array( 'min_days' => 0,   'min_classes' => 0 ),
+				'level-1' => array( 'min_days' => 0, 'min_classes' => 0 ),
 				'level-2' => array( 'min_days' => 500, 'min_classes' => 200 ),
 			),
 		);
@@ -232,15 +221,15 @@ final class RankDefinitions {
 	 * White through Brown have 4 stripes each. Black Belt uses degrees (up to 10).
 	 * Follows IBJJF graduation system rules.
 	 *
-	 * @return array<int, array{name: string, slug: string, color: string, max_stripes: int, type: string}>
+	 * @return array
 	 */
 	private static function get_adult_bjj_ranks(): array {
 		return array(
-			array( 'name' => __( 'White Belt', 'gym-core' ),  'slug' => 'white',  'color' => '#ffffff', 'max_stripes' => 4,  'type' => 'belt' ),
-			array( 'name' => __( 'Blue Belt', 'gym-core' ),   'slug' => 'blue',   'color' => '#1e40af', 'max_stripes' => 4,  'type' => 'belt' ),
-			array( 'name' => __( 'Purple Belt', 'gym-core' ), 'slug' => 'purple', 'color' => '#7c3aed', 'max_stripes' => 4,  'type' => 'belt' ),
-			array( 'name' => __( 'Brown Belt', 'gym-core' ),  'slug' => 'brown',  'color' => '#78350f', 'max_stripes' => 4,  'type' => 'belt' ),
-			array( 'name' => __( 'Black Belt', 'gym-core' ),  'slug' => 'black',  'color' => '#000000', 'max_stripes' => 10, 'type' => 'degree' ),
+			array( 'name' => __( 'White Belt', 'gym-core' ), 'slug' => 'white', 'color' => '#ffffff', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Blue Belt', 'gym-core' ), 'slug' => 'blue', 'color' => '#1e40af', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Purple Belt', 'gym-core' ), 'slug' => 'purple', 'color' => '#7c3aed', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Brown Belt', 'gym-core' ), 'slug' => 'brown', 'color' => '#78350f', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Black Belt', 'gym-core' ), 'slug' => 'black', 'color' => '#000000', 'max_stripes' => 10, 'type' => 'degree' ),
 		);
 	}
 
@@ -250,23 +239,23 @@ final class RankDefinitions {
 	 * Follows IBJJF youth graduation system. At age 16, students transition
 	 * to adult ranks (eligible for White, Blue, or Purple based on experience).
 	 *
-	 * @return array<int, array{name: string, slug: string, color: string, max_stripes: int, type: string}>
+	 * @return array
 	 */
 	private static function get_kids_bjj_ranks(): array {
 		return array(
-			array( 'name' => __( 'White Belt', 'gym-core' ),        'slug' => 'white',        'color' => '#ffffff', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Grey/White Belt', 'gym-core' ),   'slug' => 'grey-white',   'color' => '#d1d5db', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Grey Belt', 'gym-core' ),         'slug' => 'grey',         'color' => '#9ca3af', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Grey/Black Belt', 'gym-core' ),   'slug' => 'grey-black',   'color' => '#6b7280', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'White Belt', 'gym-core' ), 'slug' => 'white', 'color' => '#ffffff', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Grey/White Belt', 'gym-core' ), 'slug' => 'grey-white', 'color' => '#d1d5db', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Grey Belt', 'gym-core' ), 'slug' => 'grey', 'color' => '#9ca3af', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Grey/Black Belt', 'gym-core' ), 'slug' => 'grey-black', 'color' => '#6b7280', 'max_stripes' => 4, 'type' => 'belt' ),
 			array( 'name' => __( 'Yellow/White Belt', 'gym-core' ), 'slug' => 'yellow-white', 'color' => '#fef3c7', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Yellow Belt', 'gym-core' ),       'slug' => 'yellow',       'color' => '#fbbf24', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Yellow Belt', 'gym-core' ), 'slug' => 'yellow', 'color' => '#fbbf24', 'max_stripes' => 4, 'type' => 'belt' ),
 			array( 'name' => __( 'Yellow/Black Belt', 'gym-core' ), 'slug' => 'yellow-black', 'color' => '#b45309', 'max_stripes' => 4, 'type' => 'belt' ),
 			array( 'name' => __( 'Orange/White Belt', 'gym-core' ), 'slug' => 'orange-white', 'color' => '#fed7aa', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Orange Belt', 'gym-core' ),       'slug' => 'orange',       'color' => '#f97316', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Orange Belt', 'gym-core' ), 'slug' => 'orange', 'color' => '#f97316', 'max_stripes' => 4, 'type' => 'belt' ),
 			array( 'name' => __( 'Orange/Black Belt', 'gym-core' ), 'slug' => 'orange-black', 'color' => '#c2410c', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Green/White Belt', 'gym-core' ),  'slug' => 'green-white',  'color' => '#bbf7d0', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Green Belt', 'gym-core' ),        'slug' => 'green',        'color' => '#22c55e', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Green/Black Belt', 'gym-core' ),  'slug' => 'green-black',  'color' => '#15803d', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Green/White Belt', 'gym-core' ), 'slug' => 'green-white', 'color' => '#bbf7d0', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Green Belt', 'gym-core' ), 'slug' => 'green', 'color' => '#22c55e', 'max_stripes' => 4, 'type' => 'belt' ),
+			array( 'name' => __( 'Green/Black Belt', 'gym-core' ), 'slug' => 'green-black', 'color' => '#15803d', 'max_stripes' => 4, 'type' => 'belt' ),
 		);
 	}
 
@@ -276,7 +265,7 @@ final class RankDefinitions {
 	 * Simple two-level progression. No stripes — students are at Level 1 or Level 2.
 	 * This is not a belt system; levels indicate progression milestones.
 	 *
-	 * @return array<int, array{name: string, slug: string, color: string, max_stripes: int, type: string}>
+	 * @return array
 	 */
 	private static function get_kickboxing_ranks(): array {
 		return array(

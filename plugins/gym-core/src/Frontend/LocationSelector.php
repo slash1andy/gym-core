@@ -83,6 +83,20 @@ class LocationSelector {
 	 * @return void
 	 */
 	public function enqueue_assets(): void {
+		// Skip on REST/AJAX requests and when location selector is disabled.
+		if ( wp_doing_ajax() || ( defined( 'REST_REQUEST' ) && REST_REQUEST ) ) {
+			return;
+		}
+
+		if ( 'yes' !== get_option( 'gym_core_require_location', 'yes' ) ) {
+			return;
+		}
+
+		// Skip on the kiosk page (it has its own assets).
+		if ( get_query_var( 'gym_kiosk' ) ) {
+			return;
+		}
+
 		wp_enqueue_style(
 			self::STYLE_HANDLE,
 			GYM_CORE_URL . 'assets/css/location-selector.css',

@@ -123,7 +123,7 @@
 	}
 
 	function searchMembers( query ) {
-		wpApiFetch( 'wp/v2/users?search=' + encodeURIComponent( query ) + '&per_page=10&context=view' )
+		wpApiFetch( 'wp/v2/users?search=' + encodeURIComponent( query ) + '&per_page=10&context=view&roles=customer,subscriber' )
 			.then( function ( users ) {
 				renderSearchResults( users );
 			} )
