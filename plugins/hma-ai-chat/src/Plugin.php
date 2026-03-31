@@ -29,6 +29,13 @@ class Plugin {
 	private $chat_page = null;
 
 	/**
+	 * Tool executor instance.
+	 *
+	 * @var Tools\ToolExecutor|null
+	 */
+	private $tool_executor = null;
+
+	/**
 	 * Get plugin instance (singleton pattern for compatibility).
 	 *
 	 * @since 0.1.0
@@ -86,6 +93,11 @@ class Plugin {
 		// Initialize agent registry.
 		$agent_registry = Agents\AgentRegistry::instance();
 		$agent_registry->register_all_agents();
+
+		// Initialize tool layer.
+		$tool_registry      = Tools\ToolRegistry::instance();
+		$pending_store      = new Data\PendingActionStore();
+		$this->tool_executor = new Tools\ToolExecutor( $tool_registry, $pending_store );
 	}
 
 	/**
@@ -128,6 +140,31 @@ class Plugin {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 			error_log( sprintf( 'HMA AI Chat: Purged %d conversations older than 30 days.', $deleted ) );
 		}
+	}
+
+	/**
+	 * Get the tool executor instance.
+	 *
+	 * Available after register_hooks() has run. Returns null if the AI
+	 * client dependency is missing or hooks have not fired yet.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return Tools\ToolExecutor|null
+	 */
+	public function get_tool_executor(): ?Tools\ToolExecutor {
+		return $this->tool_executor;
+	}
+
+	/**
+	 * Get the tool registry instance.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return Tools\ToolRegistry
+	 */
+	public function get_tool_registry(): Tools\ToolRegistry {
+		return Tools\ToolRegistry::instance();
 	}
 
 	/**
