@@ -1,0 +1,324 @@
+/**
+ * Kiosk Check-In Styles
+ *
+ * Full-screen, touch-optimized UI for tablet check-in at gym entrance.
+ * Dark theme matching the martial arts aesthetic.
+ *
+ * @package Gym_Core
+ * @since   1.3.0
+ */
+
+/* Reset & base */
+.gym-kiosk {
+	margin: 0;
+	padding: 0;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
+	background: #0f0f0f;
+	color: #ffffff;
+	min-height: 100vh;
+	overflow: hidden;
+	-webkit-font-smoothing: antialiased;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+/* Hide WP admin bar on kiosk */
+.gym-kiosk #wpadminbar {
+	display: none !important;
+}
+
+.gym-kiosk html {
+	margin-top: 0 !important;
+}
+
+/* App container */
+#gym-kiosk-app {
+	position: relative;
+	width: 100vw;
+	height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* Screens */
+.kiosk-screen {
+	display: none;
+	flex-direction: column;
+	align-items: center;
+	justify-content: flex-start;
+	width: 100%;
+	max-width: 600px;
+	padding: 40px 24px;
+	text-align: center;
+}
+
+.kiosk-screen.active {
+	display: flex;
+}
+
+/* Header */
+.kiosk-header {
+	margin-bottom: 40px;
+}
+
+.kiosk-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin: 0 0 8px;
+	color: #ffffff;
+}
+
+.kiosk-subtitle {
+	font-size: 1.25rem;
+	color: #9ca3af;
+	margin: 0;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+/* Search input */
+.kiosk-search-box {
+	width: 100%;
+	margin-bottom: 24px;
+}
+
+.kiosk-input {
+	width: 100%;
+	padding: 20px 24px;
+	font-size: 1.5rem;
+	border: 2px solid #374151;
+	border-radius: 12px;
+	background: #1f2937;
+	color: #ffffff;
+	outline: none;
+	box-sizing: border-box;
+	transition: border-color 0.2s;
+}
+
+.kiosk-input:focus {
+	border-color: #3b82f6;
+}
+
+.kiosk-input::placeholder {
+	color: #6b7280;
+}
+
+/* Search results */
+.kiosk-results {
+	width: 100%;
+	max-height: 50vh;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.kiosk-result-item {
+	display: flex;
+	align-items: center;
+	padding: 20px 24px;
+	margin-bottom: 8px;
+	background: #1f2937;
+	border: 2px solid transparent;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: border-color 0.15s, background-color 0.15s;
+	text-align: left;
+}
+
+.kiosk-result-item:hover,
+.kiosk-result-item:focus {
+	border-color: #3b82f6;
+	background: #263244;
+}
+
+.kiosk-result-item:active {
+	background: #2d3e53;
+}
+
+.kiosk-result-name {
+	font-size: 1.25rem;
+	font-weight: 600;
+	flex: 1;
+}
+
+.kiosk-result-meta {
+	font-size: 0.875rem;
+	color: #9ca3af;
+}
+
+.kiosk-no-results {
+	padding: 40px 24px;
+	color: #6b7280;
+	font-size: 1.125rem;
+}
+
+/* Class selection */
+.kiosk-class-list {
+	width: 100%;
+	max-height: 55vh;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+.kiosk-class-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 20px 24px;
+	margin-bottom: 8px;
+	background: #1f2937;
+	border: 2px solid transparent;
+	border-radius: 12px;
+	cursor: pointer;
+	transition: border-color 0.15s, background-color 0.15s;
+}
+
+.kiosk-class-item:hover,
+.kiosk-class-item:focus {
+	border-color: #10b981;
+	background: #1a3332;
+}
+
+.kiosk-class-item:active {
+	background: #1e3d3a;
+}
+
+.kiosk-class-name {
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.kiosk-class-time {
+	font-size: 1rem;
+	color: #9ca3af;
+}
+
+/* Buttons */
+.kiosk-btn {
+	padding: 16px 40px;
+	font-size: 1.125rem;
+	font-weight: 600;
+	border: 2px solid #374151;
+	border-radius: 12px;
+	background: #1f2937;
+	color: #ffffff;
+	cursor: pointer;
+	margin-top: 24px;
+	transition: background-color 0.15s;
+}
+
+.kiosk-btn:hover,
+.kiosk-btn:focus {
+	background: #374151;
+}
+
+.kiosk-btn--back {
+	align-self: center;
+}
+
+/* Success screen */
+.kiosk-screen--success {
+	justify-content: center;
+}
+
+.kiosk-success-icon {
+	font-size: 6rem;
+	color: #10b981;
+	margin-bottom: 16px;
+	line-height: 1;
+}
+
+.kiosk-screen--success .kiosk-title {
+	color: #10b981;
+	font-size: 3rem;
+}
+
+.kiosk-welcome {
+	font-size: 1.5rem;
+	color: #d1d5db;
+	margin: 8px 0;
+}
+
+.kiosk-rank {
+	font-size: 1.125rem;
+	color: #9ca3af;
+	margin: 4px 0;
+}
+
+/* Error screen */
+.kiosk-screen--error {
+	justify-content: center;
+}
+
+.kiosk-error-icon {
+	font-size: 6rem;
+	color: #ef4444;
+	margin-bottom: 16px;
+	line-height: 1;
+}
+
+.kiosk-screen--error .kiosk-title {
+	color: #ef4444;
+}
+
+.kiosk-error-msg {
+	font-size: 1.25rem;
+	color: #d1d5db;
+	margin: 8px 0 24px;
+}
+
+/* Loading overlay */
+.kiosk-loading {
+	display: none;
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: rgba(15, 15, 15, 0.85);
+	align-items: center;
+	justify-content: center;
+	z-index: 100;
+}
+
+.kiosk-loading.active {
+	display: flex;
+}
+
+.kiosk-spinner {
+	width: 48px;
+	height: 48px;
+	border: 4px solid #374151;
+	border-top-color: #3b82f6;
+	border-radius: 50%;
+	animation: kiosk-spin 0.8s linear infinite;
+}
+
+@keyframes kiosk-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* Accessibility */
+.screen-reader-text {
+	clip: rect(1px, 1px, 1px, 1px);
+	position: absolute;
+	height: 1px;
+	width: 1px;
+	overflow: hidden;
+}
+
+/* Responsive — larger text on bigger tablets */
+@media (min-width: 768px) {
+	.kiosk-title { font-size: 3rem; }
+	.kiosk-input { font-size: 1.75rem; padding: 24px 28px; }
+	.kiosk-result-name { font-size: 1.5rem; }
+	.kiosk-class-name { font-size: 1.5rem; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+	.kiosk-spinner { animation: none; }
+	.kiosk-result-item,
+	.kiosk-class-item,
+	.kiosk-input { transition: none; }
+}

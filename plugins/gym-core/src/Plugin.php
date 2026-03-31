@@ -93,6 +93,7 @@ final class Plugin {
 
 		$this->register_schedule_modules();
 		$this->register_attendance_modules();
+		$this->register_kiosk_modules();
 		$this->register_gamification_modules();
 
 		/**
@@ -103,6 +104,18 @@ final class Plugin {
 		 * @since 1.0.0
 		 */
 		do_action( 'gym_core_loaded' );
+	}
+
+	/**
+	 * Registers the kiosk check-in endpoint.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @return void
+	 */
+	private function register_kiosk_modules(): void {
+		$kiosk = new Attendance\KioskEndpoint();
+		$kiosk->register_hooks();
 	}
 
 	/**
