@@ -74,7 +74,7 @@ final class ImportCommand {
 		$skip       = isset( $assoc_args['skip-existing'] );
 
 		$rows = $this->read_csv( $file );
-		if ( null === $rows ) {
+		if ( empty( $rows ) ) {
 			return;
 		}
 
@@ -189,7 +189,7 @@ final class ImportCommand {
 		$batch_size = (int) ( $assoc_args['batch-size'] ?? 500 );
 
 		$rows = $this->read_csv( $file );
-		if ( null === $rows ) {
+		if ( empty( $rows ) ) {
 			return;
 		}
 
@@ -274,7 +274,7 @@ final class ImportCommand {
 		$skip    = isset( $assoc_args['skip-existing'] );
 
 		$rows = $this->read_csv( $file );
-		if ( null === $rows ) {
+		if ( empty( $rows ) ) {
 			return;
 		}
 
@@ -372,7 +372,7 @@ final class ImportCommand {
 		$skip    = isset( $assoc_args['skip-existing'] );
 
 		$rows = $this->read_csv( $file );
-		if ( null === $rows ) {
+		if ( empty( $rows ) ) {
 			return;
 		}
 
@@ -469,9 +469,9 @@ final class ImportCommand {
 	 * Reads a CSV file and returns an array of associative arrays.
 	 *
 	 * @param string $file File path.
-	 * @return array<int, array<string, string>>|null Null on failure.
+	 * @return array<int, array<string, string>> Rows from the CSV. Exits via WP_CLI::error() on failure.
 	 */
-	private function read_csv( string $file ): ?array {
+	private function read_csv( string $file ): array {
 		if ( '' === $file ) {
 			\WP_CLI::error( 'The --file argument is required.' );
 			return null;
@@ -489,7 +489,7 @@ final class ImportCommand {
 		}
 
 		$headers = fgetcsv( $handle );
-		if ( false === $headers || null === $headers ) {
+		if ( false === $headers ) {
 			\WP_CLI::error( 'CSV file is empty or has no header row.' );
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			return null;
