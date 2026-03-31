@@ -172,7 +172,7 @@ final class Settings {
 	private function get_general_settings(): array {
 		return array(
 			array(
-				'title' => __( 'General Settings', 'gym-core' ),
+				'title' => __( 'General settings', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_general_options',
 			),
@@ -184,7 +184,7 @@ final class Settings {
 				'type'    => 'checkbox',
 			),
 			array(
-				'title'   => __( 'SMS Notifications', 'gym-core' ),
+				'title'   => __( 'SMS notifications', 'gym-core' ),
 				'desc'    => __( 'Enable Twilio SMS integration', 'gym-core' ),
 				'id'      => 'gym_core_sms_enabled',
 				'default' => 'no',
@@ -212,20 +212,20 @@ final class Settings {
 	private function get_locations_settings(): array {
 		return array(
 			array(
-				'title' => __( 'Location Settings', 'gym-core' ),
+				'title' => __( 'Location settings', 'gym-core' ),
 				'desc'  => __( 'Configure multi-location behavior. Locations are managed as taxonomy terms under Products > Gym Locations.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_location_options',
 			),
 			array(
-				'title'   => __( 'Require Location Selection', 'gym-core' ),
+				'title'   => __( 'Require location selection', 'gym-core' ),
 				'desc'    => __( 'Show location selector banner until visitor picks a location', 'gym-core' ),
 				'id'      => 'gym_core_require_location',
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			),
 			array(
-				'title'   => __( 'Filter Products by Location', 'gym-core' ),
+				'title'   => __( 'Filter products by location', 'gym-core' ),
 				'desc'    => __( 'Only show products assigned to the selected location', 'gym-core' ),
 				'id'      => 'gym_core_filter_products_by_location',
 				'default' => 'yes',
@@ -246,13 +246,13 @@ final class Settings {
 	private function get_schedule_settings(): array {
 		return array(
 			array(
-				'title' => __( 'Class Schedule Settings', 'gym-core' ),
+				'title' => __( 'Class schedule settings', 'gym-core' ),
 				'desc'  => __( 'Configure class scheduling behavior.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_schedule_options',
 			),
 			array(
-				'title'             => __( 'Default Class Capacity', 'gym-core' ),
+				'title'             => __( 'Default class capacity', 'gym-core' ),
 				'desc'              => __( 'Maximum students per class (can be overridden per class)', 'gym-core' ),
 				'id'                => 'gym_core_default_class_capacity',
 				'default'           => '30',
@@ -263,14 +263,14 @@ final class Settings {
 				),
 			),
 			array(
-				'title'   => __( 'Enable Waitlist', 'gym-core' ),
+				'title'   => __( 'Enable waitlist', 'gym-core' ),
 				'desc'    => __( 'Allow students to join a waitlist when class is full', 'gym-core' ),
 				'id'      => 'gym_core_waitlist_enabled',
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			),
 			array(
-				'title'   => __( 'iCal Feed', 'gym-core' ),
+				'title'   => __( 'iCal feed', 'gym-core' ),
 				'desc'    => __( 'Enable iCal feed for members to subscribe to the class schedule', 'gym-core' ),
 				'id'      => 'gym_core_ical_enabled',
 				'default' => 'yes',
@@ -290,30 +290,109 @@ final class Settings {
 	 */
 	private function get_ranks_settings(): array {
 		return array(
+			// --- Promotion Rules ---
 			array(
-				'title' => __( 'Belt Rank Settings', 'gym-core' ),
-				'desc'  => __( 'Configure belt rank tracking and promotion rules.', 'gym-core' ),
+				'title' => __( 'Promotion rules', 'gym-core' ),
+				'desc'  => __( 'Global rules for rank promotions across all programs.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_ranks_options',
 			),
 			array(
-				'title'   => __( 'Require Coach Recommendation', 'gym-core' ),
+				'title'   => __( 'Require coach recommendation', 'gym-core' ),
 				'desc'    => __( 'Promotions require a coach recommendation before instructor approval', 'gym-core' ),
 				'id'      => 'gym_core_require_coach_recommendation',
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			),
 			array(
-				'title'   => __( 'Notify on Promotion', 'gym-core' ),
+				'title'   => __( 'Notify on promotion', 'gym-core' ),
 				'desc'    => __( 'Send SMS and email notification when a member is promoted', 'gym-core' ),
 				'id'      => 'gym_core_notify_on_promotion',
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			),
+			array( 'type' => 'sectionend', 'id' => 'gym_core_ranks_options' ),
+
+			// --- Foundations Clearance Gate ---
 			array(
-				'type' => 'sectionend',
-				'id'   => 'gym_core_ranks_options',
+				'title' => __( 'Foundations clearance (Adult BJJ)', 'gym-core' ),
+				'desc'  => __( 'New Adult BJJ students must complete a Foundations phase before live training with non-coaches. This is a safety gate — not a belt. Time in Foundations counts toward White Belt stripes.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_foundations_options',
 			),
+			array(
+				'title'   => __( 'Enable foundations gate', 'gym-core' ),
+				'desc'    => __( 'Require new Adult BJJ students to complete Foundations before live training', 'gym-core' ),
+				'id'      => 'gym_core_foundations_enabled',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
+				'title'             => __( 'Phase 1 — Classes Before Coach Rolls', 'gym-core' ),
+				'desc'              => __( 'Classes required before first coach roll evaluation', 'gym-core' ),
+				'id'                => 'gym_core_foundations_phase1_classes',
+				'default'           => '10',
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+			),
+			array(
+				'title'             => __( 'Phase 2 — Coach Rolls Required', 'gym-core' ),
+				'desc'              => __( 'Supervised rolls with coaches needed after Phase 1', 'gym-core' ),
+				'id'                => 'gym_core_foundations_coach_rolls_required',
+				'default'           => '2',
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+			),
+			array(
+				'title'             => __( 'Phase 3 — Total Classes to Clear', 'gym-core' ),
+				'desc'              => __( 'Total classes (Phases 1+3 combined) required to clear Foundations', 'gym-core' ),
+				'id'                => 'gym_core_foundations_total_classes',
+				'default'           => '25',
+				'type'              => 'number',
+				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+			),
+			array( 'type' => 'sectionend', 'id' => 'gym_core_foundations_options' ),
+
+			// --- Adult BJJ Promotion Thresholds ---
+			array(
+				'title' => __( 'Adult BJJ — Promotion Thresholds', 'gym-core' ),
+				'desc'  => __( 'Minimum days and classes at each belt before eligibility. Black Belt uses degrees (up to 10) instead of stripes.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_adult_bjj_thresholds',
+			),
+			array( 'title' => __( 'White Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_white_days', 'default' => '25', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'White Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_white_classes', 'default' => '17', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Blue Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_blue_days', 'default' => '500', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Blue Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_blue_classes', 'default' => '225', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Purple Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_purple_days', 'default' => '700', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Purple Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_purple_classes', 'default' => '400', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Brown Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_brown_days', 'default' => '700', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Brown Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_brown_classes', 'default' => '400', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'type' => 'sectionend', 'id' => 'gym_core_adult_bjj_thresholds' ),
+
+			// --- Kids BJJ Promotion Thresholds ---
+			array(
+				'title' => __( 'Kids BJJ — Promotion Thresholds', 'gym-core' ),
+				'desc'  => __( 'Defaults: 340 days / 64 classes per belt. 13 belt levels, 4 stripes each. Per-rank overrides via gym_core_rank_thresholds filter.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_kids_bjj_thresholds',
+			),
+			array( 'title' => __( 'Default — Min Days', 'gym-core' ), 'desc' => __( 'Applied to most Kids belts', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_default_days', 'default' => '340', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Default — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_default_classes', 'default' => '64', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'White Belt — Min Days', 'gym-core' ), 'desc' => __( 'First belt (typically 0)', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_white_days', 'default' => '0', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'White Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_white_classes', 'default' => '0', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'type' => 'sectionend', 'id' => 'gym_core_kids_bjj_thresholds' ),
+
+			// --- Kickboxing Level Thresholds ---
+			array(
+				'title' => __( 'Kickboxing — Level Thresholds', 'gym-core' ),
+				'desc'  => __( 'Simple two-level system. No stripes or belts.', 'gym-core' ),
+				'type'  => 'title',
+				'id'    => 'gym_core_kickboxing_thresholds',
+			),
+			array( 'title' => __( 'Level 2 — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_kickboxing_level2_days', 'default' => '500', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'title' => __( 'Level 2 — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_kickboxing_level2_classes', 'default' => '200', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
+			array( 'type' => 'sectionend', 'id' => 'gym_core_kickboxing_thresholds' ),
 		);
 	}
 
@@ -325,26 +404,26 @@ final class Settings {
 	private function get_attendance_settings(): array {
 		return array(
 			array(
-				'title' => __( 'Attendance & Check-In Settings', 'gym-core' ),
+				'title' => __( 'Attendance & check-in settings', 'gym-core' ),
 				'desc'  => __( 'Configure the check-in kiosk and attendance tracking.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_attendance_options',
 			),
 			array(
-				'title'   => __( 'Check-In Methods', 'gym-core' ),
+				'title'   => __( 'Check-in methods', 'gym-core' ),
 				'desc'    => __( 'Allowed check-in methods on the kiosk', 'gym-core' ),
 				'id'      => 'gym_core_checkin_methods',
 				'default' => array( 'qr', 'search', 'manual' ),
 				'type'    => 'multiselect',
 				'options' => array(
-					'qr'     => __( 'QR Code Scan', 'gym-core' ),
-					'search' => __( 'Name Search', 'gym-core' ),
+					'qr'     => __( 'QR code scan', 'gym-core' ),
+					'search' => __( 'Name search', 'gym-core' ),
 					'manual' => __( 'Manual (Staff)', 'gym-core' ),
 				),
 				'class'   => 'wc-enhanced-select',
 			),
 			array(
-				'title'             => __( 'Kiosk Auto-Logout', 'gym-core' ),
+				'title'             => __( 'Kiosk auto-logout', 'gym-core' ),
 				'desc'              => __( 'Seconds of inactivity before kiosk resets', 'gym-core' ),
 				'id'                => 'gym_core_kiosk_timeout',
 				'default'           => '10',
@@ -356,7 +435,7 @@ final class Settings {
 				),
 			),
 			array(
-				'title'   => __( 'Prevent Duplicate Check-Ins', 'gym-core' ),
+				'title'   => __( 'Prevent duplicate check-ins', 'gym-core' ),
 				'desc'    => __( 'Block a member from checking into the same class twice in one day', 'gym-core' ),
 				'id'      => 'gym_core_prevent_duplicate_checkin',
 				'default' => 'yes',
@@ -377,13 +456,13 @@ final class Settings {
 	private function get_gamification_settings(): array {
 		return array(
 			array(
-				'title' => __( 'Gamification Settings', 'gym-core' ),
+				'title' => __( 'Gamification settings', 'gym-core' ),
 				'desc'  => __( 'Configure badges, streaks, and achievement tracking.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_gamification_options',
 			),
 			array(
-				'title'             => __( 'Streak Freeze Allowance', 'gym-core' ),
+				'title'             => __( 'Streak freeze allowance', 'gym-core' ),
 				'desc'              => __( 'Number of streak freezes per quarter (0 to disable)', 'gym-core' ),
 				'id'                => 'gym_core_streak_freezes_per_quarter',
 				'default'           => '1',
@@ -395,7 +474,7 @@ final class Settings {
 				),
 			),
 			array(
-				'title'   => __( 'Notify on Badge Earned', 'gym-core' ),
+				'title'   => __( 'Notify on badge earned', 'gym-core' ),
 				'desc'    => __( 'Send SMS and email when a member earns a badge', 'gym-core' ),
 				'id'      => 'gym_core_notify_on_badge',
 				'default' => 'yes',
@@ -416,8 +495,8 @@ final class Settings {
 	private function get_sms_settings(): array {
 		return array(
 			array(
-				'title' => __( 'Twilio SMS Settings', 'gym-core' ),
-				'desc'  => __( 'Configure Twilio credentials for SMS notifications. Credentials are stored encrypted.', 'gym-core' ),
+				'title' => __( 'Twilio SMS settings', 'gym-core' ),
+				'desc'  => __( 'Configure Twilio credentials for SMS notifications.', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_sms_options',
 			),
@@ -429,14 +508,14 @@ final class Settings {
 				'placeholder' => 'ACXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
 			),
 			array(
-				'title'       => __( 'Twilio Auth Token', 'gym-core' ),
+				'title'       => __( 'Twilio auth token', 'gym-core' ),
 				'id'          => 'gym_core_twilio_auth_token',
 				'default'     => '',
 				'type'        => 'password',
 				'placeholder' => __( 'Auth token (hidden after save)', 'gym-core' ),
 			),
 			array(
-				'title'       => __( 'Twilio Phone Number', 'gym-core' ),
+				'title'       => __( 'Twilio phone number', 'gym-core' ),
 				'desc'        => __( 'The Twilio phone number to send SMS from (E.164 format)', 'gym-core' ),
 				'id'          => 'gym_core_twilio_phone_number',
 				'default'     => '',
@@ -444,7 +523,7 @@ final class Settings {
 				'placeholder' => '+1XXXXXXXXXX',
 			),
 			array(
-				'title'             => __( 'Rate Limit', 'gym-core' ),
+				'title'             => __( 'Rate limit', 'gym-core' ),
 				'desc'              => __( 'Maximum SMS per contact per hour', 'gym-core' ),
 				'id'                => 'gym_core_sms_rate_limit',
 				'default'           => '1',
@@ -470,13 +549,13 @@ final class Settings {
 	private function get_api_settings(): array {
 		return array(
 			array(
-				'title' => __( 'REST API Settings', 'gym-core' ),
+				'title' => __( 'REST API settings', 'gym-core' ),
 				'desc'  => __( 'Configure the gym/v1 REST API endpoints used by AI agents (Gandalf).', 'gym-core' ),
 				'type'  => 'title',
 				'id'    => 'gym_core_api_options',
 			),
 			array(
-				'title'   => __( 'Require Authentication', 'gym-core' ),
+				'title'   => __( 'Require authentication', 'gym-core' ),
 				'desc'    => __( 'Require Application Password or JWT for all API requests', 'gym-core' ),
 				'id'      => 'gym_core_api_require_auth',
 				'default' => 'yes',
