@@ -34,6 +34,7 @@
 	var classList     = document.getElementById( 'kiosk-class-list' );
 	var memberNameEl  = document.getElementById( 'kiosk-member-name' );
 	var welcomeMsg    = document.getElementById( 'kiosk-welcome-msg' );
+	var streakDisplay = document.getElementById( 'kiosk-streak-display' );
 	var rankDisplay   = document.getElementById( 'kiosk-rank-display' );
 	var errorMsg      = document.getElementById( 'kiosk-error-msg' );
 	var loadingEl     = document.getElementById( 'kiosk-loading' );
@@ -176,11 +177,14 @@
 
 		var html = '';
 		users.forEach( function ( user ) {
+			var foundationsBadge = user.gym_foundations_active
+				? ' <span class="kiosk-foundations-badge">Foundations</span>'
+				: '';
 			html += '<button type="button" class="kiosk-result-item" ' +
 				'data-user-id="' + user.id + '" ' +
 				'data-user-name="' + escapeAttr( user.name ) + '" ' +
 				'role="option">' +
-				'<span class="kiosk-result-name">' + escapeHtml( user.name ) + '</span>' +
+				'<span class="kiosk-result-name">' + escapeHtml( user.name ) + foundationsBadge + '</span>' +
 				'</button>';
 		} );
 
@@ -312,6 +316,17 @@
 	function showSuccess( data ) {
 		welcomeMsg.textContent = ( config.strings.welcomeBack || 'Welcome back,' ) +
 			' ' + ( data.user ? data.user.name : selectedMember.name ) + '!';
+
+		// Show streak if available.
+		if ( streakDisplay && data.current_streak && data.current_streak > 0 ) {
+			var streakText = ( config.strings.weekStreak || 'Week %d streak!' )
+				.replace( '%d', data.current_streak );
+			streakDisplay.textContent = streakText;
+			streakDisplay.style.display = '';
+		} else if ( streakDisplay ) {
+			streakDisplay.textContent = '';
+			streakDisplay.style.display = 'none';
+		}
 
 		// Fetch rank for display.
 		apiFetch( 'members/' + selectedMember.id + '/rank' )

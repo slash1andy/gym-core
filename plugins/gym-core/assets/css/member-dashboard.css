@@ -1,0 +1,288 @@
+/**
+ * Member Dashboard Styles
+ *
+ * Styles for the personalized member dashboard within WooCommerce My Account.
+ *
+ * @package Gym_Core
+ * @since   3.0.0
+ */
+
+.gym-dashboard {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1.5rem;
+	max-width: 900px;
+}
+
+@media (min-width: 768px) {
+	.gym-dashboard {
+		grid-template-columns: 1fr 1fr;
+	}
+	.gym-dashboard__header,
+	.gym-dashboard__schedule,
+	.gym-dashboard__gamification {
+		grid-column: 1 / -1;
+	}
+}
+
+.gym-dashboard__header {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.gym-dashboard__welcome {
+	margin: 0;
+	font-size: 1.5rem;
+}
+
+.gym-dashboard__location-badge {
+	display: inline-block;
+	padding: 0.25rem 0.75rem;
+	background: #1e40af;
+	color: #fff;
+	border-radius: 999px;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.gym-dashboard__card {
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 0.5rem;
+	padding: 1.25rem;
+}
+
+.gym-dashboard__card h3 {
+	margin: 0 0 0.75rem;
+	font-size: 1rem;
+	color: #374151;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+.gym-dashboard__status-badge {
+	display: inline-block;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+.gym-dashboard__status-badge--active {
+	background: #d1fae5;
+	color: #065f46;
+}
+
+.gym-dashboard__status-badge--pending-cancel {
+	background: #fef3c7;
+	color: #92400e;
+}
+
+.gym-dashboard__plan-name {
+	font-size: 1.1rem;
+	font-weight: 600;
+	margin: 0 0 0.5rem;
+}
+
+.gym-dashboard__plan-price {
+	color: #6b7280;
+	font-size: 0.9rem;
+	margin: 0.25rem 0 0;
+}
+
+.gym-dashboard__billing {
+	margin: 0.5rem 0 0;
+	color: #6b7280;
+	font-size: 0.9rem;
+}
+
+.gym-dashboard__quick-links ul {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.gym-dashboard__quick-links li {
+	margin-bottom: 0.5rem;
+}
+
+.gym-dashboard__quick-links a {
+	text-decoration: none;
+	color: #1e40af;
+	font-weight: 500;
+}
+
+.gym-dashboard__quick-links a:hover {
+	text-decoration: underline;
+}
+
+.gym-dashboard__class-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.gym-dashboard__class-item {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 0.5rem;
+	padding: 0.5rem 0;
+	border-bottom: 1px solid #f3f4f6;
+}
+
+.gym-dashboard__class-item:last-child {
+	border-bottom: none;
+}
+
+.gym-dashboard__class-meta {
+	color: #6b7280;
+	font-size: 0.9rem;
+}
+
+.gym-dashboard__class-instructor {
+	color: #9ca3af;
+	font-size: 0.85rem;
+}
+
+.gym-dashboard__rank-item {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin-bottom: 0.75rem;
+}
+
+.gym-dashboard__belt-circle {
+	width: 2rem;
+	height: 2rem;
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+
+.gym-dashboard__rank-details {
+	display: flex;
+	flex-direction: column;
+}
+
+.gym-dashboard__rank-program {
+	color: #6b7280;
+	font-size: 0.85rem;
+}
+
+.gym-dashboard__stripes {
+	color: #9ca3af;
+	font-size: 0.8rem;
+}
+
+.gym-dashboard__belt-progression {
+	display: flex;
+	gap: 0.4rem;
+	margin-top: 0.75rem;
+	padding-top: 0.75rem;
+	border-top: 1px solid #f3f4f6;
+	align-items: center;
+}
+
+.gym-dashboard__progression-dot {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 50%;
+	opacity: 0.35;
+	position: relative;
+}
+
+.gym-dashboard__progression-dot--current {
+	opacity: 1;
+	box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.3);
+}
+
+.gym-dashboard__progression-abbr {
+	font-size: 0.55rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #fff;
+	text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+}
+
+/* White belt abbreviation needs dark text since the dot background is white. */
+.gym-dashboard__progression-dot[style*="background-color: #ffffff"] .gym-dashboard__progression-abbr,
+.gym-dashboard__progression-dot[style*="background-color: #FFFFFF"] .gym-dashboard__progression-abbr {
+	color: #374151;
+	text-shadow: none;
+}
+
+.gym-dashboard__foundations-phase {
+	margin-bottom: 0.75rem;
+}
+
+.gym-dashboard__phase-label {
+	font-weight: 600;
+	color: #1e40af;
+}
+
+.gym-dashboard__foundations-stats {
+	display: flex;
+	gap: 2rem;
+}
+
+.gym-dashboard__gamification-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 1rem;
+	text-align: center;
+}
+
+@media (max-width: 480px) {
+	.gym-dashboard__gamification-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+.gym-dashboard__stat {
+	display: flex;
+	flex-direction: column;
+}
+
+.gym-dashboard__stat-value {
+	font-size: 1.75rem;
+	font-weight: 700;
+	color: #111827;
+}
+
+.gym-dashboard__stat-label {
+	font-size: 0.8rem;
+	color: #6b7280;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.gym-dashboard__empty-state {
+	color: #6b7280;
+	font-style: italic;
+	margin: 0.5rem 0;
+}
+
+.gym-dashboard__cta {
+	margin-top: 1rem;
+	text-align: center;
+}
+
+.gym-dashboard__cta .button {
+	display: inline-block;
+	padding: 0.6rem 1.5rem;
+	background: #1e40af;
+	color: #fff;
+	border-radius: 0.375rem;
+	text-decoration: none;
+	font-weight: 600;
+}
+
+.gym-dashboard__cta .button:hover {
+	background: #1e3a8a;
+	color: #fff;
+}

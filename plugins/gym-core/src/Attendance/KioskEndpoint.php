@@ -38,6 +38,33 @@ final class KioskEndpoint {
 		add_action( 'init', array( $this, 'add_rewrite_rule' ) );
 		add_filter( 'query_vars', array( $this, 'add_query_var' ) );
 		add_action( 'template_redirect', array( $this, 'render_kiosk' ) );
+		add_action( 'rest_api_init', array( $this, 'register_rest_fields' ) );
+	}
+
+	/**
+	 * Registers custom REST API fields on the user object for kiosk display.
+	 *
+	 * Exposes `gym_foundations_active` so the kiosk can badge Foundations members.
+	 *
+	 * @since 3.1.0
+	 *
+	 * @return void
+	 */
+	public function register_rest_fields(): void {
+		register_rest_field(
+			'user',
+			'gym_foundations_active',
+			array(
+				'get_callback' => static function ( array $user ): bool {
+					return (bool) get_user_meta( $user['id'], '_gym_foundations_active', true );
+				},
+				'schema'       => array(
+					'description' => __( 'Whether the member is currently in the Foundations program.', 'gym-core' ),
+					'type'        => 'boolean',
+					'context'     => array( 'view', 'edit' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -128,6 +155,8 @@ final class KioskEndpoint {
 					'tryAgain'       => __( 'Tap to try again', 'gym-core' ),
 					'noResults'      => __( 'No members found', 'gym-core' ),
 					'selectClass'    => __( 'Select Your Class', 'gym-core' ),
+					/* translators: %d: number of consecutive weeks */
+					'weekStreak'     => __( 'Week %d streak!', 'gym-core' ),
 				),
 			)
 		);
