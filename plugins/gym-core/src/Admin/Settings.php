@@ -502,6 +502,13 @@ final class Settings {
 				'type'    => 'checkbox',
 			),
 			array(
+				'title'   => __( 'Targeted content', 'gym-core' ),
+				'desc'    => __( 'Enable personalized content shortcodes ([gym_targeted], [gym_member_greeting], [gym_progress_card])', 'gym-core' ),
+				'id'      => 'gym_core_targeted_content_enabled',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
+			array(
 				'type' => 'sectionend',
 				'id'   => 'gym_core_gamification_options',
 			),
