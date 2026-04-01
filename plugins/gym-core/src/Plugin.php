@@ -301,7 +301,9 @@ final class Plugin {
 		$this->checkin_validator       = new Attendance\CheckInValidator( $this->attendance_store );
 		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store );
 		$this->foundations_clearance   = new Attendance\FoundationsClearance( $this->attendance_store );
-	}
+
+		$milestone_tracker = new Attendance\MilestoneTracker( $this->attendance_store );
+		$milestone_tracker->register_hooks();
 
 	/**
 	 * Registers the briefing module (announcement CPT).

@@ -82,6 +82,7 @@ class ToolRegistry {
 			'get_schedule',
 			'get_promotion_eligible',
 			'draft_announcement',
+			'draft_social_post',
 			'get_briefing_today',
 		),
 	);
@@ -680,6 +681,32 @@ class ToolRegistry {
 					'required'   => array( 'title' ),
 				),
 				'endpoint'     => '/announcements',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_manage_announcements',
+				'write'        => true,
+			),
+			array(
+				'name'         => 'draft_social_post',
+				'description'  => 'Draft a social media post for the gym. The post is created with pending status so a coach can review and approve it before Jetpack Publicize auto-shares to connected social accounts. Use this for promotional content, event highlights, member spotlights, or community updates.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'title'    => array(
+							'type'        => 'string',
+							'description' => 'Social post title.',
+						),
+						'content'  => array(
+							'type'        => 'string',
+							'description' => 'Social post body content (supports HTML). Keep concise for social sharing.',
+						),
+						'category' => array(
+							'type'        => 'string',
+							'description' => 'Post category slug (e.g. "general", "event", "promo"). Defaults to "general".',
+						),
+					),
+					'required'   => array( 'title', 'content' ),
+				),
+				'endpoint'     => '/social/draft',
 				'method'       => 'POST',
 				'auth_cap'     => 'gym_manage_announcements',
 				'write'        => true,

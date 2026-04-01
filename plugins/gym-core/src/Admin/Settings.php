@@ -412,7 +412,7 @@ final class Settings {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function get_attendance_settings(): array {
-		return array(
+		$settings = array(
 			array(
 				'title' => __( 'Attendance & check-in settings', 'gym-core' ),
 				'desc'  => __( 'Configure the check-in kiosk and attendance tracking.', 'gym-core' ),
@@ -456,6 +456,17 @@ final class Settings {
 				'id'   => 'gym_core_attendance_options',
 			),
 		);
+
+		/**
+		 * Filters the Attendance settings fields.
+		 *
+		 * Used by MilestoneTracker to inject its configuration field.
+		 *
+		 * @since 2.4.0
+		 *
+		 * @param array<int, array<string, mixed>> $settings Attendance settings.
+		 */
+		return apply_filters( 'gym_core_attendance_settings', $settings );
 	}
 
 	/**
