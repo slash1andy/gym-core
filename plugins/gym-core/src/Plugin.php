@@ -68,6 +68,20 @@ final class Plugin {
 	private ?Attendance\FoundationsClearance $foundations_clearance = null;
 
 	/**
+	 * Streak tracker — shared instance for DI.
+	 *
+	 * @var Gamification\StreakTracker|null
+	 */
+	private ?Gamification\StreakTracker $streak_tracker = null;
+
+	/**
+	 * Badge engine — shared instance for DI.
+	 *
+	 * @var Gamification\BadgeEngine|null
+	 */
+	private ?Gamification\BadgeEngine $badge_engine = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -251,14 +265,8 @@ final class Plugin {
 				}
 
 				// Gamification controller.
-				$streak_tracker = null;
-				$badge_engine   = null;
-
-				if ( 'yes' === get_option( 'gym_core_gamification_enabled', 'yes' ) ) {
-					$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
-					$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
-
-					$gamification_controller = new API\GamificationController( $badge_engine, $streak_tracker );
+				if ( null !== $this->badge_engine && null !== $this->streak_tracker ) {
+					$gamification_controller = new API\GamificationController( $this->badge_engine, $this->streak_tracker );
 					$gamification_controller->register_hooks();
 				}
 
@@ -267,8 +275,8 @@ final class Plugin {
 					$this->rank_store,
 					$this->attendance_store,
 					$this->foundations_clearance,
-					$streak_tracker,
-					$badge_engine
+					$this->streak_tracker,
+					$this->badge_engine
 				);
 				$member_controller->register_hooks();
 			}
@@ -382,9 +390,9 @@ final class Plugin {
 			return;
 		}
 
-		$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
-		$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
-		$badge_engine->register_hooks();
+		$this->streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
+		$this->badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $this->streak_tracker );
+		$this->badge_engine->register_hooks();
 	}
 
 	/**
@@ -484,14 +492,11 @@ final class Plugin {
 		add_action(
 			'gym_core_loaded',
 			function (): void {
-				$streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
-				$badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $streak_tracker );
-
 				$dashboard = new Member\MemberDashboard(
 					$this->rank_store,
 					$this->attendance_store,
-					$badge_engine,
-					$streak_tracker,
+					$this->badge_engine,
+					$this->streak_tracker,
 					$this->foundations_clearance
 				);
 				$dashboard->register_hooks();

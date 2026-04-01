@@ -229,6 +229,14 @@ final class CrmSmsBridge {
 			return null;
 		}
 
+		// Try Jetpack CRM's native phone lookup first (index-friendly).
+		if ( function_exists( 'zeroBS_getContactByPhone' ) ) {
+			$contact = zeroBS_getContactByPhone( $phone ); // @phpstan-ignore-line
+			if ( ! empty( $contact ) && isset( $contact['id'] ) ) {
+				return (int) $contact['id'];
+			}
+		}
+
 		global $wpdb;
 
 		// Jetpack CRM stores contacts in a custom table with zbsc_ prefix.
@@ -239,9 +247,28 @@ final class CrmSmsBridge {
 			return null;
 		}
 
-		// Strip the leading + for LIKE matching (CRM may store with or without it).
+		// Use E.164 digits for exact-match first, then fall back to LIKE.
 		$phone_digits = ltrim( $phone, '+' );
 
+		// Try exact match on all phone columns (can use indexes).
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$contact_id = $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT ID FROM {$table} WHERE zbsc_hometel = %s OR zbsc_worktel = %s OR zbsc_mobtel = %s OR zbsc_hometel = %s OR zbsc_worktel = %s OR zbsc_mobtel = %s LIMIT 1", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$phone,
+				$phone,
+				$phone,
+				$phone_digits,
+				$phone_digits,
+				$phone_digits
+			)
+		);
+
+		if ( null !== $contact_id ) {
+			return (int) $contact_id;
+		}
+
+		// Last resort: LIKE fallback for non-standard phone formats in CRM.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$contact_id = $wpdb->get_var(
 			$wpdb->prepare(

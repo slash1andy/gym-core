@@ -196,6 +196,9 @@ final class KioskEndpoint {
 				<p class="kiosk-subtitle"><?php echo esc_html( ucfirst( $location ) ); ?></p>
 			</div>
 			<div class="kiosk-search-box">
+				<label for="kiosk-search-input" class="kiosk-search-label">
+					<?php esc_html_e( 'Type your name to check in', 'gym-core' ); ?>
+				</label>
 				<label for="kiosk-search-input" class="screen-reader-text">
 					<?php esc_html_e( 'Search by Name', 'gym-core' ); ?>
 				</label>
@@ -229,6 +232,7 @@ final class KioskEndpoint {
 			<div class="kiosk-success-icon" aria-hidden="true">&#10003;</div>
 			<h2 class="kiosk-title"><?php esc_html_e( 'Checked In!', 'gym-core' ); ?></h2>
 			<p class="kiosk-welcome" id="kiosk-welcome-msg"></p>
+			<p class="kiosk-streak" id="kiosk-streak-display" style="display:none;"></p>
 			<p class="kiosk-rank" id="kiosk-rank-display"></p>
 		</div>
 

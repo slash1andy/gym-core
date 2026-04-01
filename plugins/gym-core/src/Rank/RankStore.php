@@ -87,6 +87,9 @@ final class RankStore {
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 
+		// Wrap read-then-write in a transaction to prevent race conditions.
+		$wpdb->query( 'START TRANSACTION' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
 		// Get the current rank for history.
 		$current   = $this->get_rank( $user_id, $program );
 		$from_belt = $current->belt ?? null;
@@ -95,7 +98,7 @@ final class RankStore {
 
 		// Update or insert the current rank.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->replace(
+		$rank_result = $wpdb->replace(
 			$tables['ranks'],
 			array(
 				'user_id'     => $user_id,
@@ -108,9 +111,14 @@ final class RankStore {
 			array( '%d', '%s', '%s', '%d', '%s', '%d' )
 		);
 
+		if ( false === $rank_result ) {
+			$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			return false;
+		}
+
 		// Record in rank history (never deleted — audit trail).
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->insert(
+		$history_result = $wpdb->insert(
 			$tables['rank_history'],
 			array(
 				'user_id'      => $user_id,
@@ -125,6 +133,13 @@ final class RankStore {
 			),
 			array( '%d', '%s', '%s', '%d', '%s', '%d', '%s', '%d', '%s' )
 		);
+
+		if ( false === $history_result ) {
+			$wpdb->query( 'ROLLBACK' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+			return false;
+		}
+
+		$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 
 		/**
 		 * Fires when a member's belt rank changes.
@@ -254,12 +269,11 @@ final class RankStore {
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare
+		$table_name = esc_sql( $tables['ranks'] );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$results = $wpdb->get_results(
-			$wpdb->prepare(
-				'SELECT program, COUNT(*) as count FROM %i GROUP BY program',
-				$tables['ranks']
-			),
+			"SELECT program, COUNT(*) as count FROM `{$table_name}` GROUP BY program",
 			OBJECT_K
 		);
 

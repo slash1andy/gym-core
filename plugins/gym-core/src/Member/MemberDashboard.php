@@ -366,6 +366,21 @@ final class MemberDashboard {
 						// Show progression for the first ranked program.
 						$primary_program = $ranks[0]->program ?? '';
 						$belt_defs       = RankDefinitions::get_ranks( $primary_program );
+
+						// Abbreviated labels for belt dots (color-blind accessible).
+						$belt_abbreviations = array(
+							'white'  => 'W',
+							'blue'   => 'B',
+							'purple' => 'P',
+							'brown'  => 'Br',
+							'black'  => 'Bk',
+							'grey'   => 'G',
+							'yellow' => 'Y',
+							'orange' => 'O',
+							'green'  => 'Gn',
+							'red'    => 'R',
+						);
+
 						foreach ( $belt_defs as $def ) :
 							$is_current = false;
 							foreach ( $ranks as $rank ) {
@@ -374,12 +389,16 @@ final class MemberDashboard {
 									break;
 								}
 							}
+							$abbr = $belt_abbreviations[ $def['slug'] ] ?? mb_strtoupper( mb_substr( $def['name'], 0, 1 ) );
 							?>
 							<span
 								class="gym-dashboard__progression-dot <?php echo $is_current ? 'gym-dashboard__progression-dot--current' : ''; ?>"
 								style="background-color: <?php echo esc_attr( $def['color'] ); ?>; <?php echo '#ffffff' === $def['color'] ? 'border: 2px solid #d1d5db;' : ''; ?>"
 								title="<?php echo esc_attr( $def['name'] ); ?>"
-							></span>
+								aria-label="<?php echo esc_attr( $def['name'] ); ?>"
+							>
+								<span class="gym-dashboard__progression-abbr"><?php echo esc_html( $abbr ); ?></span>
+							</span>
 						<?php endforeach; ?>
 					</div>
 				<?php else : ?>
@@ -879,7 +898,7 @@ final class MemberDashboard {
 				letter-spacing: 0.03em;
 			}
 			.gym-dashboard__empty-state {
-				color: #9ca3af;
+				color: #6b7280;
 				font-style: italic;
 				margin: 0.5rem 0;
 			}

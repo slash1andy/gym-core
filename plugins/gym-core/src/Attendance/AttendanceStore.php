@@ -113,6 +113,14 @@ class AttendanceStore {
 	 * @return array<int, object> Array of attendance row objects.
 	 */
 	public function get_user_history( int $user_id, int $limit = 50, int $offset = 0, string $from = '', string $to = '' ): array {
+		// Validate date format before using in SQL.
+		if ( $from && ! preg_match( '/^\d{4}-\d{2}-\d{2}/', $from ) ) {
+			return array();
+		}
+		if ( $to && ! preg_match( '/^\d{4}-\d{2}-\d{2}/', $to ) ) {
+			return array();
+		}
+
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 

@@ -786,7 +786,7 @@ final class PromotionListTable extends \WP_List_Table {
 			'stripes'        => __( 'Stripes', 'gym-core' ),
 			'attendance'     => __( 'Attendance', 'gym-core' ),
 			'days_at_rank'   => __( 'Days at Rank', 'gym-core' ),
-			'recommendation' => __( 'Rec.', 'gym-core' ),
+			'recommendation' => '<abbr title="' . esc_attr__( 'Coach Recommendation', 'gym-core' ) . '">' . esc_html__( "Rec'd", 'gym-core' ) . '</abbr>',
 			'actions'        => __( 'Actions', 'gym-core' ),
 		);
 	}

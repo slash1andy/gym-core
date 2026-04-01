@@ -77,6 +77,35 @@
 	// API helpers
 	// -----------------------------------------------------------------------
 
+	/**
+	 * Creates a fetch request with a 10-second timeout via AbortController.
+	 *
+	 * @param {string} url     Request URL.
+	 * @param {Object} opts    Fetch options.
+	 * @return {Promise}
+	 */
+	function fetchWithTimeout( url, opts ) {
+		var controller = new AbortController();
+		var timeoutId  = setTimeout( function () {
+			controller.abort();
+		}, 10000 );
+
+		opts.signal = controller.signal;
+
+		return fetch( url, opts )
+			.then( function ( response ) {
+				clearTimeout( timeoutId );
+				return response;
+			} )
+			.catch( function ( err ) {
+				clearTimeout( timeoutId );
+				if ( err.name === 'AbortError' ) {
+					throw new Error( 'timeout' );
+				}
+				throw err;
+			} );
+	}
+
 	function apiFetch( endpoint, options ) {
 		var url = config.restUrl + endpoint;
 		var opts = Object.assign( {
@@ -86,7 +115,7 @@
 			},
 		}, options || {} );
 
-		return fetch( url, opts ).then( function ( response ) {
+		return fetchWithTimeout( url, opts ).then( function ( response ) {
 			return response.json().then( function ( data ) {
 				return { status: response.status, body: data };
 			} );
@@ -95,7 +124,7 @@
 
 	function wpApiFetch( endpoint ) {
 		var url = config.restUrl.replace( 'gym/v1/', '' ) + endpoint;
-		return fetch( url, {
+		return fetchWithTimeout( url, {
 			headers: { 'X-WP-Nonce': config.nonce },
 		} ).then( function ( response ) {
 			return response.json();
@@ -127,7 +156,12 @@
 			.then( function ( users ) {
 				renderSearchResults( users );
 			} )
-			.catch( function () {
+			.catch( function ( err ) {
+				if ( err.message === 'timeout' ) {
+					resultsBox.innerHTML = '<div class="kiosk-no-results">' +
+						escapeHtml( 'Check-in is taking too long. Please try again.' ) + '</div>';
+					return;
+				}
 				resultsBox.innerHTML = '<div class="kiosk-no-results">' +
 					escapeHtml( config.strings.error || 'Search failed' ) + '</div>';
 			} );
@@ -202,9 +236,13 @@
 				renderClassList( todayClasses );
 				showScreen( 'classes' );
 			} )
-			.catch( function () {
+			.catch( function ( err ) {
 				hideLoading();
-				showError( 'Could not load class schedule.' );
+				if ( err.message === 'timeout' ) {
+					showError( 'Check-in is taking too long. Please try again.' );
+				} else {
+					showError( 'Could not load class schedule.' );
+				}
 			} );
 	}
 
@@ -257,9 +295,13 @@
 					showError( msg );
 				}
 			} )
-			.catch( function () {
+			.catch( function ( err ) {
 				hideLoading();
-				showError( 'Network error. Please try again.' );
+				if ( err.message === 'timeout' ) {
+					showError( 'Check-in is taking too long. Please try again.' );
+				} else {
+					showError( 'Network error. Please try again.' );
+				}
 			} );
 	}
 

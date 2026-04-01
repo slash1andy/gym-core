@@ -294,17 +294,25 @@ abstract class BaseController extends \WP_REST_Controller {
 		int $window = self::RATE_LIMIT_WINDOW
 	): bool {
 		$transient_key = 'gym_rl_' . substr( md5( $key ), 0, 16 );
-		$count         = (int) get_transient( $transient_key );
+		$data          = get_transient( $transient_key );
 
-		if ( $count >= $max ) {
-			return false;
+		if ( false !== $data && is_array( $data ) ) {
+			$count        = (int) $data['count'];
+			$window_start = (int) $data['start'];
+
+			if ( $count >= $max ) {
+				return false;
+			}
+
+			// Preserve the original window expiry (fixed window, not sliding).
+			$elapsed   = time() - $window_start;
+			$remaining = max( 1, $window - $elapsed );
+
+			set_transient( $transient_key, array( 'count' => $count + 1, 'start' => $window_start ), $remaining );
+		} else {
+			// First hit: create the transient so the window starts now.
+			set_transient( $transient_key, array( 'count' => 1, 'start' => time() ), $window );
 		}
-
-		// First hit: create the transient so the window starts now.
-		// Subsequent hits: increment and re-set (preserving remaining TTL is
-		// not possible with WP transients, so the window slides on each call —
-		// acceptable for the intended SMS use case).
-		set_transient( $transient_key, $count + 1, $window );
 
 		return true;
 	}

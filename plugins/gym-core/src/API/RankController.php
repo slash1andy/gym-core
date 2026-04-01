@@ -193,7 +193,7 @@ class RankController extends BaseController {
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function promote( \WP_REST_Request $request ) {
+	public function promote( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$user_id  = $request->get_param( 'user_id' );
 		$program  = $request->get_param( 'program' );
 		$belt     = $request->get_param( 'belt' );

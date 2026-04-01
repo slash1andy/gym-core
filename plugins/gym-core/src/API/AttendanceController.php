@@ -12,6 +12,7 @@ namespace Gym_Core\API;
 
 use Gym_Core\Attendance\AttendanceStore;
 use Gym_Core\Attendance\CheckInValidator;
+use Gym_Core\Gamification\StreakTracker;
 use Gym_Core\Location\Manager as LocationManager;
 
 /**
@@ -35,15 +36,22 @@ class AttendanceController extends BaseController {
 	private CheckInValidator $validator;
 
 	/**
+	 * @var StreakTracker|null
+	 */
+	private ?StreakTracker $streak_tracker;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param AttendanceStore  $store     Attendance data store.
-	 * @param CheckInValidator $validator Check-in validator.
+	 * @param AttendanceStore   $store          Attendance data store.
+	 * @param CheckInValidator  $validator      Check-in validator.
+	 * @param StreakTracker|null $streak_tracker Optional streak tracker for check-in response enrichment.
 	 */
-	public function __construct( AttendanceStore $store, CheckInValidator $validator ) {
+	public function __construct( AttendanceStore $store, CheckInValidator $validator, ?StreakTracker $streak_tracker = null ) {
 		parent::__construct();
-		$this->store     = $store;
-		$this->validator = $validator;
+		$this->store          = $store;
+		$this->validator      = $validator;
+		$this->streak_tracker = $streak_tracker;
 	}
 
 	/**
@@ -155,7 +163,7 @@ class AttendanceController extends BaseController {
 	 * @param \WP_REST_Request $request Request.
 	 * @return \WP_REST_Response|\WP_Error
 	 */
-	public function check_in( \WP_REST_Request $request ) {
+	public function check_in( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
 		$user_id  = $request->get_param( 'user_id' );
 		$class_id = $request->get_param( 'class_id' );
 		$method   = $request->get_param( 'method' );
@@ -191,24 +199,28 @@ class AttendanceController extends BaseController {
 		$user  = get_userdata( $user_id );
 		$class = get_post( $class_id );
 
-		return $this->success_response(
-			array(
-				'attendance_id' => $record_id,
-				'user'          => array(
-					'id'   => $user_id,
-					'name' => $user ? $user->display_name : '',
-				),
-				'class'         => array(
-					'id'   => $class_id,
-					'name' => $class ? $class->post_title : '',
-				),
-				'location'      => $location,
-				'checked_in_at' => gmdate( 'Y-m-d H:i:s' ),
-				'method'        => $method,
+		$response_data = array(
+			'attendance_id' => $record_id,
+			'user'          => array(
+				'id'   => $user_id,
+				'name' => $user ? $user->display_name : '',
 			),
-			null,
-			201
+			'class'         => array(
+				'id'   => $class_id,
+				'name' => $class ? $class->post_title : '',
+			),
+			'location'      => $location,
+			'checked_in_at' => gmdate( 'Y-m-d H:i:s' ),
+			'method'        => $method,
 		);
+
+		// Include streak data when the tracker is available (used by kiosk success screen).
+		if ( $this->streak_tracker ) {
+			$streak_data                    = $this->streak_tracker->get_streak( $user_id );
+			$response_data['current_streak'] = $streak_data['current_streak'];
+		}
+
+		return $this->success_response( $response_data, null, 201 );
 	}
 
 	/**
@@ -227,6 +239,16 @@ class AttendanceController extends BaseController {
 
 		$records = $this->store->get_user_history( $user_id, $per_page, $offset, $from, $to );
 		$total   = $this->store->get_total_count( $user_id, $from );
+
+		// Prime the post cache in bulk to avoid N+1 queries in the loop.
+		$class_ids = array_unique( array_filter( array_map(
+			static fn( $record ) => (int) $record->class_id,
+			$records
+		) ) );
+
+		if ( ! empty( $class_ids ) ) {
+			_prime_post_caches( $class_ids, false, false );
+		}
 
 		$formatted = array_map(
 			static function ( $record ) {
@@ -269,10 +291,21 @@ class AttendanceController extends BaseController {
 		} elseif ( $location ) {
 			$records = $this->store->get_today_by_location( $location );
 		} else {
-			// All locations — get both.
-			$rockford = $this->store->get_today_by_location( 'rockford' );
-			$beloit   = $this->store->get_today_by_location( 'beloit' );
-			$records  = array_merge( $rockford, $beloit );
+			// All locations — query gym_location taxonomy dynamically.
+			$location_slugs = get_terms(
+				array(
+					'taxonomy'   => 'gym_location',
+					'fields'     => 'slugs',
+					'hide_empty' => false,
+				)
+			);
+
+			$records = array();
+			if ( ! is_wp_error( $location_slugs ) && is_array( $location_slugs ) ) {
+				foreach ( $location_slugs as $slug ) {
+					$records = array_merge( $records, $this->store->get_today_by_location( $slug ) );
+				}
+			}
 		}
 
 		$formatted = array_map(

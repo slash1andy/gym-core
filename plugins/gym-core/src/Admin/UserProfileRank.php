@@ -228,7 +228,7 @@ final class UserProfileRank {
 
 			for ( $i = 1; $i <= $max_stripes; $i++ ) {
 				if ( $i <= $stripes ) {
-					echo '<span style="display:inline-block;width:10px;height:10px;border-radius:50;background:#333;margin-right:3px;border-radius:50%;" aria-hidden="true"></span>';
+					echo '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#333;margin-right:3px;" aria-hidden="true"></span>';
 				} else {
 					echo '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;border:1.5px solid #999;margin-right:3px;" aria-hidden="true"></span>';
 				}
@@ -244,11 +244,13 @@ final class UserProfileRank {
 			$promoted_ts   = strtotime( $rank->promoted_at );
 			$days_ago      = $promoted_ts ? (int) floor( ( time() - $promoted_ts ) / DAY_IN_SECONDS ) : 0;
 			$formatted     = $promoted_ts ? wp_date( 'M j, Y', $promoted_ts ) : $rank->promoted_at;
-			$relative_text = sprintf(
-				/* translators: %d: number of days */
-				_n( '%d day ago', '%d days ago', $days_ago, 'gym-core' ),
-				$days_ago
-			);
+			$relative_text = 0 === $days_ago
+				? __( 'Today', 'gym-core' )
+				: sprintf(
+					/* translators: %d: number of days */
+					_n( '%d day ago', '%d days ago', $days_ago, 'gym-core' ),
+					$days_ago
+				);
 
 			echo '<span style="color:#666;font-size:13px;">';
 			echo esc_html(
@@ -463,6 +465,7 @@ final class UserProfileRank {
 		$nonce_clear = wp_create_nonce( 'gym_clear_foundations_' . $user_id );
 		$ajax_url    = admin_url( 'admin-ajax.php' );
 
+		// TODO: Move this inline JS to an external file (e.g., assets/js/admin-user-profile-rank.js) — see Code-22.
 		return <<<JS
 jQuery(function($) {
 	// Toggle coach roll form.

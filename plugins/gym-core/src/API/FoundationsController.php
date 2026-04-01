@@ -274,12 +274,14 @@ class FoundationsController extends BaseController {
 	public function get_active( \WP_REST_Request $request ): \WP_REST_Response {
 		global $wpdb;
 
-		// Query all users with Foundations meta that don't have a cleared_at value.
+		// Use the dedicated indexed meta key for reliable active-foundations lookup.
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$results = $wpdb->get_col(
-			"SELECT user_id FROM {$wpdb->usermeta}
-			WHERE meta_key = '_gym_foundations_status'
-			AND meta_value LIKE '%\"cleared_at\";N;%'"
+			$wpdb->prepare(
+				"SELECT user_id FROM {$wpdb->usermeta} WHERE meta_key = %s AND meta_value = %s",
+				'_gym_foundations_active',
+				'1'
+			)
 		);
 
 		$students = array();

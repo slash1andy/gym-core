@@ -190,6 +190,7 @@ final class AttendanceDashboard {
 			static function (): void {
 				?>
 				<script>
+				// TODO: Move this inline JS to an external file (e.g., assets/js/admin-attendance.js) — see Code-22.
 				(function($) {
 					'use strict';
 
@@ -211,7 +212,7 @@ final class AttendanceDashboard {
 								q: q
 							}, function(res) {
 								if (!res.success || !res.data.length) {
-									$results.removeClass('visible').empty();
+									$results.html('<div class="typeahead-no-results">No members found</div>').addClass('visible');
 									return;
 								}
 								var html = '';
@@ -732,7 +733,7 @@ final class AttendanceDashboard {
 
 		echo '<div class="filter-group">';
 		echo '<label for="gym-program">' . esc_html__( 'Program', 'gym-core' ) . '</label>';
-		echo '<select id="gym-program" name="program">';
+		echo '<select id="gym-program" name="program" onchange="this.form.submit();">';
 		echo '<option value="">' . esc_html__( 'All Programs', 'gym-core' ) . '</option>';
 		$terms = get_terms(
 			array(
@@ -755,7 +756,7 @@ final class AttendanceDashboard {
 
 		echo '<div class="filter-group">';
 		echo '<label for="gym-location-filter">' . esc_html__( 'Location', 'gym-core' ) . '</label>';
-		echo '<select id="gym-location-filter" name="location">';
+		echo '<select id="gym-location-filter" name="location" onchange="this.form.submit();">';
 		echo '<option value="">' . esc_html__( 'All Locations', 'gym-core' ) . '</option>';
 		foreach ( self::LOCATIONS as $slug => $label ) {
 			printf(
@@ -912,9 +913,10 @@ final class AttendanceDashboard {
 		} else {
 			echo '<ul class="at-risk-list">';
 			foreach ( $at_risk as $member ) {
-				$days_ago = (int) floor( ( time() - strtotime( $member->last_checkin ) ) / DAY_IN_SECONDS );
+				$days_ago    = (int) floor( ( time() - strtotime( $member->last_checkin ) ) / DAY_IN_SECONDS );
+				$profile_url = admin_url( 'user-edit.php?user_id=' . (int) $member->user_id );
 				echo '<li>';
-				echo '<span>' . esc_html( $member->display_name ) . '</span>';
+				echo '<a href="' . esc_url( $profile_url ) . '">' . esc_html( $member->display_name ) . '</a>';
 				echo '<span class="days-absent">';
 				/* translators: %d: number of days since last check-in */
 				printf( esc_html__( '%d days ago', 'gym-core' ), $days_ago );

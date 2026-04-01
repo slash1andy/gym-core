@@ -78,9 +78,17 @@
 			handleAction( this, 'gym_recommend_student' );
 		} );
 
-		// Promote button handler.
+		// Promote button handler — with confirmation dialog.
 		$( document ).on( 'click', '.gym-promote-btn', function ( e ) {
 			e.preventDefault();
+			var $btn = $( this );
+			var $row = $btn.closest( 'tr' );
+			var memberName = $.trim( $row.find( '.column-name' ).text() ) || 'this member';
+			var nextRank   = $.trim( $btn.data( 'next-rank' ) ) || 'the next rank';
+
+			if ( ! window.confirm( 'Promote ' + memberName + ' to ' + nextRank + '? This cannot be undone.' ) ) {
+				return;
+			}
 			handleAction( this, 'gym_promote_student' );
 		} );
 	} );

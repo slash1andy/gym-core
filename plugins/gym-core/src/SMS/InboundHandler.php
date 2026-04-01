@@ -44,6 +44,39 @@ final class InboundHandler {
 	 */
 	public function register_hooks(): void {
 		add_action( 'rest_api_init', array( $this, 'register_webhook_route' ) );
+		add_filter( 'rest_pre_serve_request', array( $this, 'serve_twiml_response' ), 10, 4 );
+	}
+
+	/**
+	 * Bypasses WP REST JSON encoding for TwiML (application/xml) responses.
+	 *
+	 * Without this, WP REST infrastructure JSON-encodes the XML string,
+	 * breaking Twilio's expected TwiML response format.
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param bool              $served  Whether the request has already been served.
+	 * @param \WP_HTTP_Response $result  Result to send to the client.
+	 * @param \WP_REST_Request  $request Request used to generate the response.
+	 * @param \WP_REST_Server   $server  Server instance.
+	 * @return bool True if served, false to let WP handle it.
+	 */
+	public function serve_twiml_response( bool $served, \WP_HTTP_Response $result, \WP_REST_Request $request, \WP_REST_Server $server ): bool {
+		if ( $served ) {
+			return $served;
+		}
+
+		$content_type = $result->get_headers()['Content-Type'] ?? '';
+
+		if ( 'application/xml' !== $content_type ) {
+			return $served;
+		}
+
+		// Send raw XML without JSON encoding.
+		header( 'Content-Type: application/xml; charset=' . get_option( 'blog_charset' ) );
+		echo $result->get_data(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- TwiML XML already escaped via esc_xml().
+
+		return true;
 	}
 
 	/**
@@ -87,12 +120,22 @@ final class InboundHandler {
 			);
 		}
 
-		// Use actual request URL for signature validation (rest_url() may
-		// differ behind proxies/CDNs, breaking Twilio signature checks).
-		$scheme = is_ssl() ? 'https' : 'http';
-		$host   = sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ?? '' ) );
-		$uri    = sanitize_text_field( wp_unslash( $_SERVER['REQUEST_URI'] ?? '' ) );
-		$url    = $scheme . '://' . $host . $uri;
+		// Use a configurable webhook URL, falling back to rest_url().
+		// Reconstructing from $_SERVER is unreliable behind proxies/CDNs.
+		$url = get_option( 'gym_core_twilio_webhook_url', '' );
+
+		if ( empty( $url ) ) {
+			$url = rest_url( 'gym/v1/sms/webhook' );
+
+			// Respect X-Forwarded-Proto for SSL detection behind proxies.
+			$forwarded_proto = isset( $_SERVER['HTTP_X_FORWARDED_PROTO'] )
+				? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_PROTO'] ) )
+				: '';
+
+			if ( 'https' === $forwarded_proto && 0 === strpos( $url, 'http://' ) ) {
+				$url = 'https://' . substr( $url, 7 );
+			}
+		}
 		$params = $request->get_body_params();
 
 		if ( ! $this->client->validate_webhook_signature( $url, $params, $signature ) ) {

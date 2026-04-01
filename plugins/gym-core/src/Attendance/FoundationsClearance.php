@@ -178,6 +178,9 @@ final class FoundationsClearance {
 			'cleared_at'  => null,
 		) );
 
+		// Indexed flag for efficient active-foundations queries.
+		update_user_meta( $user_id, '_gym_foundations_active', '1' );
+
 		/** @since 2.0.0 */
 		do_action( 'gym_core_foundations_enrolled', $user_id );
 	}
@@ -185,12 +188,18 @@ final class FoundationsClearance {
 	/**
 	 * Records a supervised coach roll for a Foundations student.
 	 *
-	 * @param int    $user_id  Student user ID.
-	 * @param int    $coach_id Coach user ID who supervised the roll.
-	 * @param string $notes    Optional notes about the roll.
+	 * @param int    $user_id    Student user ID.
+	 * @param int    $coach_id   Coach user ID who supervised the roll.
+	 * @param string $notes      Optional notes about the roll.
+	 * @param bool   $verify_cap Whether to verify gym_promote_student capability. Default true.
+	 *                           Pass false when the caller (e.g. REST controller) has already checked caps.
 	 * @return bool Whether the roll was recorded.
 	 */
-	public function record_coach_roll( int $user_id, int $coach_id, string $notes = '' ): bool {
+	public function record_coach_roll( int $user_id, int $coach_id, string $notes = '', bool $verify_cap = true ): bool {
+		if ( $verify_cap && ! current_user_can( 'gym_promote_student' ) ) {
+			return false;
+		}
+
 		$status = $this->get_status( $user_id );
 
 		if ( ! $status['in_foundations'] ) {
@@ -246,6 +255,9 @@ final class FoundationsClearance {
 			'classes_at_clearance'     => $status['classes_completed'],
 			'coach_rolls_at_clearance' => $status['coach_rolls_completed'],
 		) );
+
+		// Remove indexed flag so active-foundations queries no longer match.
+		delete_user_meta( $user_id, '_gym_foundations_active' );
 
 		/** @since 2.0.0 */
 		do_action( 'gym_core_foundations_cleared', $user_id, $coach_id, $status );

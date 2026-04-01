@@ -170,6 +170,19 @@ class LocationSelector {
 					</button>
 				<?php endforeach; ?>
 			</div>
+
+			<?php if ( '' !== $current ) : ?>
+				<span class="gym-location-selector__helper">
+					<?php
+					$current_label = $locations[ $current ] ?? ucfirst( $current );
+					printf(
+						/* translators: %s: location name */
+						esc_html__( 'Showing classes and memberships for %s', 'gym-core' ),
+						esc_html( $current_label )
+					);
+					?>
+				</span>
+			<?php endif; ?>
 		</nav>
 		<?php
 	}

@@ -90,8 +90,8 @@ final class TwilioClient {
 			);
 		}
 
-		$status_code = wp_remote_retrieve_response_code( $response );
-		$body_json   = json_decode( wp_remote_retrieve_body( $response ), true );
+		$status_code   = wp_remote_retrieve_response_code( $response );
+		$response_body = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( $status_code >= 200 && $status_code < 300 ) {
 			/**
@@ -103,11 +103,11 @@ final class TwilioClient {
 			 * @param string $body Message body.
 			 * @param string $sid  Twilio message SID.
 			 */
-			do_action( 'gym_core_sms_sent', $to, $body, $body_json['sid'] ?? '' );
+			do_action( 'gym_core_sms_sent', $to, $body, $response_body['sid'] ?? '' );
 
 			return array(
 				'success' => true,
-				'sid'     => $body_json['sid'] ?? null,
+				'sid'     => $response_body['sid'] ?? null,
 				'error'   => null,
 			);
 		}
@@ -115,7 +115,7 @@ final class TwilioClient {
 		return array(
 			'success' => false,
 			'sid'     => null,
-			'error'   => $body_json['message'] ?? __( 'Twilio API error.', 'gym-core' ),
+			'error'   => $response_body['message'] ?? __( 'Twilio API error.', 'gym-core' ),
 		);
 	}
 
@@ -220,24 +220,40 @@ final class TwilioClient {
 	 * @return string
 	 */
 	private function get_account_sid(): string {
+		if ( defined( 'GYM_CORE_TWILIO_ACCOUNT_SID' ) && '' !== GYM_CORE_TWILIO_ACCOUNT_SID ) {
+			return (string) GYM_CORE_TWILIO_ACCOUNT_SID;
+		}
+
 		return (string) get_option( 'gym_core_twilio_account_sid', '' );
 	}
 
 	/**
 	 * Returns the configured Auth Token.
 	 *
+	 * Prefers wp-config.php constant over database option for security.
+	 *
 	 * @return string
 	 */
 	private function get_auth_token(): string {
+		if ( defined( 'GYM_CORE_TWILIO_AUTH_TOKEN' ) && '' !== GYM_CORE_TWILIO_AUTH_TOKEN ) {
+			return (string) GYM_CORE_TWILIO_AUTH_TOKEN;
+		}
+
 		return (string) get_option( 'gym_core_twilio_auth_token', '' );
 	}
 
 	/**
 	 * Returns the configured From number.
 	 *
+	 * Prefers wp-config.php constant over database option for security.
+	 *
 	 * @return string
 	 */
 	private function get_from_number(): string {
+		if ( defined( 'GYM_CORE_TWILIO_PHONE_NUMBER' ) && '' !== GYM_CORE_TWILIO_PHONE_NUMBER ) {
+			return (string) GYM_CORE_TWILIO_PHONE_NUMBER;
+		}
+
 		return (string) get_option( 'gym_core_twilio_phone_number', '' );
 	}
 }
