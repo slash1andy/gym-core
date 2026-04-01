@@ -567,9 +567,7 @@ final class MemberDashboard {
 				$total        = $subscription->get_total();
 
 				return array(
-					'plan_name'         => $subscription->get_parent()
-						? $subscription->get_parent()->get_formatted_line_subtotal( current( $subscription->get_items() ) )
-						: $this->get_subscription_product_name( $subscription ),
+					'plan_name'         => $this->get_subscription_product_name( $subscription ),
 					'status'            => $subscription->get_status(),
 					'next_payment_date' => $next_payment
 						? wp_date( get_option( 'date_format' ), strtotime( $next_payment ) )
