@@ -143,25 +143,37 @@ final class Plugin {
 			$settings = new Admin\Settings();
 			$settings->register_hooks();
 
-			// Admin dashboards — class_exists guards allow safe loading before
-			// the files are created by another agent.
-			if ( class_exists( Admin\AttendanceDashboard::class ) ) {
-				$attendance_dashboard = new Admin\AttendanceDashboard();
-				$attendance_dashboard->register_hooks();
-			}
+			// Admin dashboards need attendance/rank stores — defer to gym_core_loaded
+			// when stores have been instantiated by register_attendance_modules().
+			add_action( 'gym_core_loaded', function (): void {
+				if ( class_exists( Admin\AttendanceDashboard::class ) ) {
+					$dashboard = new Admin\AttendanceDashboard( $this->attendance_store, $this->checkin_validator );
+					$dashboard->register_hooks();
+				}
 
-			if ( class_exists( Admin\PromotionDashboard::class ) ) {
-				$promotion_dashboard = new Admin\PromotionDashboard();
-				$promotion_dashboard->register_hooks();
-			}
+				if ( class_exists( Admin\PromotionDashboard::class ) ) {
+					$dashboard = new Admin\PromotionDashboard(
+						$this->attendance_store,
+						$this->rank_store,
+						$this->promotion_eligibility,
+						$this->foundations_clearance
+					);
+					$dashboard->register_hooks();
+				}
+			} );
 		}
 
-		// UserProfileRank hooks into show_user_profile / edit_user_profile
-		// which fire on both admin and front-end profile pages.
-		if ( class_exists( Admin\UserProfileRank::class ) ) {
-			$user_profile_rank = new Admin\UserProfileRank();
-			$user_profile_rank->register_hooks();
-		}
+		// UserProfileRank — defer to gym_core_loaded for store dependencies.
+		add_action( 'gym_core_loaded', function (): void {
+			if ( class_exists( Admin\UserProfileRank::class ) ) {
+				$profile = new Admin\UserProfileRank(
+					$this->rank_store,
+					$this->attendance_store,
+					$this->foundations_clearance
+				);
+				$profile->register_hooks();
+			}
+		} );
 	}
 
 	/**
@@ -299,11 +311,12 @@ final class Plugin {
 		$this->attendance_store        = new Attendance\AttendanceStore();
 		$this->rank_store              = new Rank\RankStore();
 		$this->checkin_validator       = new Attendance\CheckInValidator( $this->attendance_store );
-		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store );
 		$this->foundations_clearance   = new Attendance\FoundationsClearance( $this->attendance_store );
+		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store, $this->foundations_clearance );
 
 		$milestone_tracker = new Attendance\MilestoneTracker( $this->attendance_store );
 		$milestone_tracker->register_hooks();
+	}
 
 	/**
 	 * Registers the briefing module (announcement CPT).
