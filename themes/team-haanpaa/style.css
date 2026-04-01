@@ -1,0 +1,149 @@
+/*
+Theme Name: Team Haanpää
+Author: WordPress Telex
+Description: A modern, warm, and family-friendly Brazilian Jiu-jitsu theme for Team Haanpää. Light neutrals, navy and coral accents, editorial typography, and generous whitespace.
+Version: 0.1.0
+Requires at least: 6.4
+Tested up to: 6.8
+Requires PHP: 7.4
+License: GPLv2 or later
+Text Domain: team-haanpaa
+Tags: block-theme, full-site-editing, one-column, custom-colors, custom-menu, editor-style
+*/
+
+/* ---------- Equal-height card grid ---------- */
+.equal-cards > .wp-block-column {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+}
+.equal-cards > .wp-block-column > .wp-block-group {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+.equal-cards .cta-bottom {
+  margin-top: auto;
+  justify-content: center;
+}
+
+/* ---------- Footer margin reset ---------- */
+.wp-site-blocks > footer {
+  margin-block-start: 0;
+}
+
+/* ---------- Nav link underline animation ---------- */
+.header-nav a {
+  position: relative;
+  text-decoration: none;
+}
+.header-nav a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background-color: var(--wp--preset--color--coral);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s ease;
+}
+.header-nav a:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ---------- Frosted header ---------- */
+.site-header {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(226, 221, 215, 0.5);
+}
+
+/* ---------- Hero overlay gradient ---------- */
+.hero-cover .wp-block-cover__background {
+  background: linear-gradient(
+    180deg,
+    rgba(26, 43, 74, 0.3) 0%,
+    rgba(200, 150, 80, 0.25) 50%,
+    rgba(26, 43, 74, 0.6) 100%
+  ) !important;
+}
+
+/* ---------- Pill button ---------- */
+.btn-pill .wp-block-button__link {
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 200ms ease;
+}
+.btn-pill .wp-block-button__link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26, 43, 74, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- Coral CTA button hover ---------- */
+.btn-coral .wp-block-button__link {
+  transition: all 200ms ease;
+}
+.btn-coral .wp-block-button__link:hover {
+  transform: scale(1.03);
+  box-shadow: 0 4px 16px rgba(232, 97, 58, 0.35);
+}
+
+/* ---------- Value card subtle lift ---------- */
+.value-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.value-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(26, 43, 74, 0.08);
+}
+
+/* ---------- Instructor image treatment ---------- */
+.instructor-img img {
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+/* ---------- Schedule table styling ---------- */
+.schedule-table table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.schedule-table th,
+.schedule-table td {
+  padding: 1rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid var(--wp--preset--color--warm-gray);
+}
+.schedule-table th {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.8rem;
+  color: var(--wp--preset--color--coral);
+}
+.schedule-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* ---------- Scroll margin for anchor targets ---------- */
+[id] {
+  scroll-margin-top: 100px;
+}
+
+/* ---------- Fade-in animation ---------- */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.fade-in-up {
+  animation: fadeInUp 0.7s ease both;
+}

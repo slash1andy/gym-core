@@ -1,0 +1,151 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/theme.json",
+  "version": 3,
+  "settings": {
+    "appearanceTools": true,
+    "layout": {
+      "contentSize": "860px",
+      "wideSize": "1280px"
+    },
+    "color": {
+      "palette": [
+        { "slug": "offwhite", "color": "#FAF8F4", "name": "Off-white" },
+        { "slug": "navy", "color": "#1A2B4A", "name": "Navy" },
+        { "slug": "coral", "color": "#E8613A", "name": "Coral" },
+        { "slug": "warm-gray", "color": "#E2DDD7", "name": "Warm Gray" },
+        { "slug": "white", "color": "#FFFFFF", "name": "White" },
+        { "slug": "light-coral", "color": "#FFF0EB", "name": "Light Coral" },
+        { "slug": "dark-navy", "color": "#111E36", "name": "Dark Navy" }
+      ]
+    },
+    "typography": {
+      "fontFamilies": [
+        {
+          "fontFamily": "'Playfair Display', Georgia, serif",
+          "slug": "playfair",
+          "name": "Playfair Display"
+        },
+        {
+          "fontFamily": "'DM Sans', 'Helvetica Neue', Arial, sans-serif",
+          "slug": "dm-sans",
+          "name": "DM Sans"
+        }
+      ],
+      "fontSizes": [
+        { "slug": "small", "size": "0.875rem", "name": "Small" },
+        { "slug": "medium", "size": "1rem", "name": "Medium" },
+        { "slug": "large", "size": "1.25rem", "name": "Large" },
+        { "slug": "x-large", "size": "1.75rem", "name": "Extra Large" },
+        { "slug": "xx-large", "size": "2.25rem", "name": "2X Large" },
+        { "slug": "huge", "size": "clamp(2.5rem, 4vw, 3.5rem)", "name": "Huge" }
+      ]
+    },
+    "spacing": {
+      "units": ["px", "em", "rem", "vh", "vw", "%"],
+      "spacingSizes": [
+        { "slug": "10", "size": "0.5rem", "name": "1" },
+        { "slug": "20", "size": "1rem", "name": "2" },
+        { "slug": "30", "size": "1.5rem", "name": "3" },
+        { "slug": "40", "size": "2rem", "name": "4" },
+        { "slug": "50", "size": "3rem", "name": "5" },
+        { "slug": "60", "size": "4rem", "name": "6" },
+        { "slug": "70", "size": "5rem", "name": "7" },
+        { "slug": "80", "size": "7rem", "name": "8" }
+      ]
+    }
+  },
+  "styles": {
+    "color": {
+      "background": "#FAF8F4",
+      "text": "#1A2B4A"
+    },
+    "typography": {
+      "fontFamily": "'DM Sans', 'Helvetica Neue', Arial, sans-serif",
+      "fontSize": "1rem",
+      "lineHeight": "1.6"
+    },
+    "elements": {
+      "heading": {
+        "typography": {
+          "fontFamily": "'Playfair Display', Georgia, serif",
+          "fontWeight": "900",
+          "lineHeight": "1.15"
+        },
+        "color": {
+          "text": "#1A2B4A"
+        }
+      },
+      "link": {
+        "color": {
+          "text": "#E8613A"
+        },
+        ":hover": {
+          "color": {
+            "text": "#1A2B4A"
+          }
+        }
+      },
+      "button": {
+        "typography": {
+          "fontSize": "0.875rem",
+          "fontWeight": "500",
+          "letterSpacing": "0.1em",
+          "textTransform": "uppercase"
+        },
+        "color": {
+          "background": "#E8613A",
+          "text": "#FFFFFF"
+        },
+        "border": {
+          "radius": "4px"
+        },
+        ":hover": {
+          "color": {
+            "background": "#d14e2a",
+            "text": "#FFFFFF"
+          }
+        }
+      }
+    },
+    "blocks": {
+      "core/navigation": {
+        "typography": {
+          "fontSize": "0.8125rem",
+          "fontWeight": "500",
+          "letterSpacing": "0.15em",
+          "textTransform": "uppercase"
+        },
+        "color": {
+          "text": "#1A2B4A"
+        }
+      },
+      "core/site-title": {
+        "typography": {
+          "fontFamily": "'Playfair Display', Georgia, serif",
+          "fontWeight": "900",
+          "fontSize": "1.5rem",
+          "letterSpacing": "-0.02em"
+        },
+        "color": {
+          "text": "#1A2B4A"
+        },
+        "elements": {
+          "link": {
+            "color": {
+              "text": "#1A2B4A"
+            },
+            ":hover": {
+              "color": {
+                "text": "#E8613A"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "templateParts": [
+    { "name": "header", "title": "Header", "area": "header" },
+    { "name": "footer", "title": "Footer", "area": "footer" }
+  ]
+}
