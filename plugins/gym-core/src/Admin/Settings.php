@@ -314,6 +314,13 @@ final class Settings {
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			),
+			array(
+				'title'   => __( 'Auto-create promotion posts', 'gym-core' ),
+				'desc'    => __( 'Publish a celebratory blog post when a student earns a new belt (shared via Jetpack Publicize)', 'gym-core' ),
+				'id'      => 'gym_core_auto_promotion_posts',
+				'default' => 'yes',
+				'type'    => 'checkbox',
+			),
 			array( 'type' => 'sectionend', 'id' => 'gym_core_ranks_options' ),
 
 			// --- Foundations Clearance Gate ---

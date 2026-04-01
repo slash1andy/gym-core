@@ -254,7 +254,7 @@ Jetpack CRM becomes the single source of truth for all contacts — members, lea
 
 #### 2.1 — Jetpack CRM Installation + Configuration
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Install and configure Jetpack CRM as the primary CRM.
 DEPENDS_ON: M1 complete
 ACCEPTANCE:
@@ -272,7 +272,7 @@ ACCEPTANCE:
 
 #### 2.2 — GHL Contact Export + Cleanup + Import
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Export all contacts from GoHighLevel, clean duplicates/junk, and import.
 DEPENDS_ON: 2.1
 ACCEPTANCE:
@@ -290,7 +290,7 @@ NOTE: GHL contacts are known to be disorganized. Budget time for cleanup.
 
 #### 2.3 — MailPoet Setup + Email Templates
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Install MailPoet and create email templates for all automated workflows.
 DEPENDS_ON: 2.1
 ACCEPTANCE:
@@ -312,7 +312,7 @@ ACCEPTANCE:
 
 #### 2.4 — Twilio SMS Integration (gym-core)
 ```
-STATUS: IN PROGRESS
+STATUS: COMPLETE
 DESCRIPTION: Build Twilio SMS integration into gym-core, deeply wired into Jetpack CRM
              and AutomateWoo. This is the "killer feature" of the consolidated stack.
 DEPENDS_ON: 1.5, 2.1
@@ -346,7 +346,7 @@ SECURITY:
 
 #### 2.5 — AutomateWoo Workflow Configuration
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Install AutomateWoo and configure all automation workflows that replace GHL sequences.
 DEPENDS_ON: 2.3, 2.4
 ACCEPTANCE:
@@ -366,7 +366,7 @@ ACCEPTANCE:
 
 #### 2.6 — Lead Pipeline + Sales Tracking
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Configure Jetpack CRM sales pipeline to replace GHL's pipeline management.
 DEPENDS_ON: 2.1, 2.2
 ACCEPTANCE:
@@ -382,7 +382,7 @@ ACCEPTANCE:
 
 #### 2.7 — GHL Decommission Checklist
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Verify all GHL functions are replaced, then document the decommission plan.
 DEPENDS_ON: 2.1 through 2.6
 ACCEPTANCE:
@@ -458,7 +458,7 @@ WooCommerce Memberships gates content and products by membership tier. The My Ac
 
 #### 3.1 — WooCommerce Memberships Setup
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Install WooCommerce Memberships and connect to Subscription products.
 DEPENDS_ON: M1 complete
 ACCEPTANCE:
@@ -477,7 +477,7 @@ ACCEPTANCE:
 
 #### 3.2 — Custom Member Dashboard (gym-core)
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Build a custom My Account dashboard that replaces the default WooCommerce one.
 DEPENDS_ON: 3.1, 1.5
 ACCEPTANCE:
@@ -497,7 +497,7 @@ ACCEPTANCE:
 
 #### 3.3 — Class Schedule System (gym-core)
 ```
-STATUS: IN PROGRESS
+STATUS: COMPLETE
 DESCRIPTION: Build a class schedule management system into gym-core.
 DEPENDS_ON: 1.6
 ACCEPTANCE:
@@ -559,7 +559,7 @@ SCHEMA_NOTES:
 
 #### 3.11 — Member Dashboard REST API Controller (gym-core)
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Build the MemberController exposing the /members/me/dashboard endpoint
              that aggregates membership status, billing info, schedule, and
              personalization data into a single response for the My Account dashboard.
@@ -903,7 +903,7 @@ ACCEPTANCE:
 
 #### 5.3 — Targeted Content Delivery (gym-core)
 ```
-STATUS: NOT STARTED
+STATUS: READY
 DESCRIPTION: Content targeting engine that filters content by belt, program, and location.
 DEPENDS_ON: 4.1, 3.1
 ACCEPTANCE:
@@ -991,7 +991,7 @@ The gym-ai-chat plugin gets wired into real data. The Sales agent can look up pr
 
 #### 6.1 — AI Agent Tool Definitions (gym-ai-chat)
 ```
-STATUS: NOT STARTED
+STATUS: COMPLETE
 DESCRIPTION: Define the MCP-compatible tool schemas that each agent can call.
 DEPENDS_ON: M2, M4, 2.10, 3.10, 3.11, 4.10, 4.11, 4.12, 5.10
 ACCEPTANCE:
@@ -1029,7 +1029,7 @@ ACCEPTANCE:
 
 #### 6.2 — LibreChat Integration
 ```
-STATUS: NOT STARTED
+STATUS: READY
 DESCRIPTION: Deploy LibreChat as the AI orchestration layer with MCP support.
 DEPENDS_ON: 6.1
 ACCEPTANCE:
@@ -1048,7 +1048,7 @@ ACCEPTANCE:
 
 #### 6.3 — Staff Approval Flow Polish
 ```
-STATUS: NOT STARTED
+STATUS: READY
 DESCRIPTION: Complete the three-path approval flow UI and add notification delivery.
 DEPENDS_ON: 6.1
 ACCEPTANCE:
@@ -1065,7 +1065,7 @@ ACCEPTANCE:
 
 #### 6.10 — gym/v1 Endpoint Completeness Audit
 ```
-STATUS: NOT STARTED
+STATUS: READY
 DESCRIPTION: Verify that all gym/v1 REST API endpoints required by the AI agent tool
              definitions (6.1) are complete, documented, and return consistent schemas.
              This is a gate task — M6 agent tools cannot be wired up until the read

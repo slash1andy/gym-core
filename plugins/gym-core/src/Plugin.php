@@ -103,6 +103,7 @@ final class Plugin {
 		$this->register_attendance_modules();
 		$this->register_briefing_modules();
 		$this->register_notification_modules();
+		$this->register_social_modules();
 		$this->register_kiosk_modules();
 		$this->register_gamification_modules();
 		$this->register_integration_modules();
@@ -173,6 +174,9 @@ final class Plugin {
 	private function register_schedule_modules(): void {
 		$class_post_type = new Schedule\ClassPostType();
 		$class_post_type->register_hooks();
+
+		$ical_feed = new Schedule\ICalFeed();
+		$ical_feed->register_hooks();
 	}
 
 	/**
@@ -330,6 +334,22 @@ final class Plugin {
 		$twilio_client      = new SMS\TwilioClient();
 		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client );
 		$promotion_notifier->register_hooks();
+	}
+
+	/**
+	 * Registers the social sharing module.
+	 *
+	 * PromotionPost listens for gym_core_rank_changed and creates a
+	 * published blog post for belt promotions. Jetpack Publicize then
+	 * auto-shares the post to connected social accounts.
+	 *
+	 * @since 2.3.0
+	 *
+	 * @return void
+	 */
+	private function register_social_modules(): void {
+		$promotion_post = new Social\PromotionPost();
+		$promotion_post->register_hooks();
 	}
 
 	/**
