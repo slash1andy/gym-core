@@ -152,6 +152,28 @@
 	font-size: 1.125rem;
 }
 
+.kiosk-foundations-badge {
+	display: inline-block;
+	padding: 0.15rem 0.5rem;
+	margin-left: 0.5rem;
+	background: #f59e0b;
+	color: #000;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	vertical-align: middle;
+}
+
+.kiosk-search-label {
+	display: block;
+	font-size: 1.25rem;
+	color: #d1d5db;
+	margin-bottom: 0.75rem;
+	text-align: center;
+}
+
 /* Class selection */
 .kiosk-class-list {
 	width: 100%;

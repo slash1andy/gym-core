@@ -196,15 +196,19 @@ final class AttendanceDashboard {
 
 					/* ── Typeahead member search ────────────────────────────── */
 					var $input   = $('#gym-member-search'),
-						$results = $('#gym-typeahead-results'),
+						$results = $('#gym-member-results'),
 						$hidden  = $('#gym-member-id'),
 						timer    = null,
 						idx      = -1;
 
+					function setExpanded(expanded) {
+						$input.attr('aria-expanded', expanded ? 'true' : 'false');
+					}
+
 					$input.on('input', function() {
 						clearTimeout(timer);
 						var q = $.trim($(this).val());
-						if (q.length < 2) { $results.removeClass('visible').empty(); return; }
+						if (q.length < 2) { $results.removeClass('visible').empty(); setExpanded(false); return; }
 						timer = setTimeout(function() {
 							$.post(gymDashboard.ajaxUrl, {
 								action: 'gym_member_search',
@@ -213,13 +217,15 @@ final class AttendanceDashboard {
 							}, function(res) {
 								if (!res.success || !res.data.length) {
 									$results.html('<div class="typeahead-no-results">No members found</div>').addClass('visible');
+									setExpanded(true);
 									return;
 								}
 								var html = '';
 								$.each(res.data, function(i, m) {
-									html += '<div class="typeahead-item" data-id="' + m.id + '">' + $('<span>').text(m.name).html() + '</div>';
+									html += '<div class="typeahead-item" role="option" data-id="' + m.id + '">' + $('<span>').text(m.name).html() + '</div>';
 								});
 								$results.html(html).addClass('visible');
+								setExpanded(true);
 								idx = -1;
 							});
 						}, 250);
@@ -241,11 +247,13 @@ final class AttendanceDashboard {
 						$hidden.val($(this).data('id'));
 						$input.val($(this).text());
 						$results.removeClass('visible').empty();
+						setExpanded(false);
 					});
 
 					$(document).on('click', function(e) {
 						if (!$(e.target).closest('.gym-typeahead-wrap').length) {
 							$results.removeClass('visible');
+							setExpanded(false);
 						}
 					});
 
@@ -662,9 +670,9 @@ final class AttendanceDashboard {
 		echo '<label>' . esc_html__( 'Quick Check-In', 'gym-core' ) . '</label>';
 
 		echo '<div class="gym-typeahead-wrap">';
-		echo '<input type="text" id="gym-member-search" placeholder="' . esc_attr__( 'Search member...', 'gym-core' ) . '" autocomplete="off">';
+		echo '<input type="text" id="gym-member-search" placeholder="' . esc_attr__( 'Search member...', 'gym-core' ) . '" autocomplete="off" role="combobox" aria-expanded="false" aria-owns="gym-member-results" aria-autocomplete="list">';
 		echo '<input type="hidden" id="gym-member-id" name="user_id" value="">';
-		echo '<div id="gym-typeahead-results" class="gym-typeahead-results"></div>';
+		echo '<div id="gym-member-results" class="gym-typeahead-results" role="listbox"></div>';
 		echo '</div>';
 
 		echo '<select name="class_id">';

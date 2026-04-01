@@ -231,7 +231,7 @@ final class Plugin {
 				$rank_controller = new API\RankController( $this->rank_store, $this->attendance_store );
 				$rank_controller->register_hooks();
 
-				$attendance_controller = new API\AttendanceController( $this->attendance_store, $this->checkin_validator );
+				$attendance_controller = new API\AttendanceController( $this->attendance_store, $this->checkin_validator, $this->streak_tracker );
 				$attendance_controller->register_hooks();
 
 				$promotion_controller = new API\PromotionController( $this->promotion_eligibility );
