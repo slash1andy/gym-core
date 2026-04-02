@@ -79,7 +79,9 @@ class Plugin {
 			add_action( 'admin_init', array( $this->settings_page, 'register_settings' ) );
 		}
 
+		// Register agents on both admin and REST requests.
 		add_action( 'admin_init', array( $this, 'register_hooks' ) );
+		add_action( 'rest_api_init', array( $this, 'register_hooks' ) );
 		add_action( 'admin_init', array( $this, 'handle_admin_actions' ) );
 		add_action( 'admin_notices', array( $this, 'display_admin_notices' ) );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );

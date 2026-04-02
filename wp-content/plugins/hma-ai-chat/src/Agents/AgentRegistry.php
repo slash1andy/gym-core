@@ -46,6 +46,10 @@ class AgentRegistry {
 	 * @internal
 	 */
 	public function register_all_agents() {
+		if ( ! empty( $this->agents ) ) {
+			return;
+		}
+
 		// Sales Agent.
 		$this->register_agent(
 			'sales',
