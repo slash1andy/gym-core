@@ -115,24 +115,27 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	public function register_menu(): void {
-		$this->hook_suffix = add_menu_page(
+		// Register the shared top-level Gym menu (first registrant wins).
+		add_menu_page(
 			__( 'Gym Dashboard', 'gym-core' ),
 			__( 'Gym', 'gym-core' ),
 			'gym_check_in_member',
-			self::MENU_SLUG,
-			array( $this, 'render_page' ),
+			'gym-core',
+			'__return_null',
 			'dashicons-awards',
 			3
 		);
 
-		$this->submenu_hook = add_submenu_page(
-			self::MENU_SLUG,
-			__( 'Attendance Dashboard', 'gym-core' ),
+		$this->hook_suffix = add_submenu_page(
+			'gym-core',
+			__( 'Attendance', 'gym-core' ),
 			__( 'Attendance', 'gym-core' ),
 			'gym_check_in_member',
 			self::MENU_SLUG,
 			array( $this, 'render_page' )
 		);
+
+		$this->submenu_hook = $this->hook_suffix;
 	}
 
 	// ─── Asset enqueueing ───────────────────────────────────────────

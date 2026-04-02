@@ -201,7 +201,7 @@ class Plugin {
 	 * @internal
 	 */
 	public function enqueue_admin_scripts( $hook_suffix ) {
-		if ( 'toplevel_page_hma-ai-chat' !== $hook_suffix ) {
+		if ( 'gym_page_hma-ai-chat' !== $hook_suffix ) {
 			return;
 		}
 

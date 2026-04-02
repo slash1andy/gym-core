@@ -51,22 +51,23 @@ class SettingsPage {
 			return;
 		}
 
-		// Top-level menu: Gym Dashboard.
+		// Register the shared top-level Gym menu if gym-core hasn't already.
+		// WordPress silently ignores duplicate slugs, so this is safe.
 		add_menu_page(
 			esc_html__( 'Gym Dashboard', 'hma-ai-chat' ),
-			esc_html__( 'Gym Dashboard', 'hma-ai-chat' ),
+			esc_html__( 'Gym', 'hma-ai-chat' ),
 			'edit_posts',
-			'hma-ai-chat',
-			'__return_null', // Chat page callback is registered via add_submenu_page below.
-			'dashicons-format-chat',
-			30
+			'gym-core',
+			'__return_null',
+			'dashicons-awards',
+			3
 		);
 
-		// Submenu: Chat (replaces the auto-generated top-level duplicate).
+		// Submenu: Gandalf Chat.
 		add_submenu_page(
-			'hma-ai-chat',
+			'gym-core',
 			esc_html__( 'Chat', 'hma-ai-chat' ),
-			esc_html__( 'Chat', 'hma-ai-chat' ),
+			esc_html__( 'Gandalf', 'hma-ai-chat' ),
 			'edit_posts',
 			'hma-ai-chat',
 			array( $this, 'render_chat_page' )
@@ -74,7 +75,7 @@ class SettingsPage {
 
 		// Submenu: Settings (admin only).
 		add_submenu_page(
-			'hma-ai-chat',
+			'gym-core',
 			esc_html__( 'Settings', 'hma-ai-chat' ),
 			esc_html__( 'Settings', 'hma-ai-chat' ),
 			'manage_options',
