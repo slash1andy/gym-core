@@ -172,7 +172,8 @@
 		} catch (error) {
 			// eslint-disable-next-line no-console -- User-facing error logging.
 			console.error('Error sending message:', error);
-			addMessage('assistant', config.strings.errorMessage);
+			const errorDetail = error?.message || error?.data?.message || config.strings.errorMessage;
+			addMessage('assistant', errorDetail);
 		}
 
 		// Re-enable input and button.

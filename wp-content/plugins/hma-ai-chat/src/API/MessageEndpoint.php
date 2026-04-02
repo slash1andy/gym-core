@@ -182,7 +182,7 @@ class MessageEndpoint {
 		} catch ( \Exception $e ) {
 			return new WP_Error(
 				'processing_error',
-				esc_html__( 'Error processing message.', 'hma-ai-chat' ),
+				$e->getMessage(),
 				array( 'status' => 500 )
 			);
 		}
