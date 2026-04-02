@@ -172,8 +172,11 @@
 		} catch (error) {
 			// eslint-disable-next-line no-console -- User-facing error logging.
 			console.error('Error sending message:', error);
-			const errorDetail = error?.message || error?.data?.message || config.strings.errorMessage;
-			addMessage('assistant', errorDetail);
+			// wp.apiFetch throws the parsed JSON body for non-2xx responses.
+			const errorDetail = (typeof error === 'object' && error !== null)
+				? (error.message || error.code || JSON.stringify(error))
+				: String(error);
+			addMessage('assistant', '**Error:** ' + errorDetail);
 		}
 
 		// Re-enable input and button.
