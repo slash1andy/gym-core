@@ -15,36 +15,6 @@ namespace HMA_AI_Chat\Admin;
 class ChatPage {
 
 	/**
-	 * Initialize the chat page.
-	 *
-	 * @since 0.1.0
-	 */
-	public function __construct() {
-		add_action( 'admin_menu', array( $this, 'register_menu_page' ) );
-	}
-
-	/**
-	 * Register the admin menu page.
-	 *
-	 * @internal
-	 */
-	public function register_menu_page() {
-		// Check user capability first.
-		if ( ! current_user_can( 'edit_posts' ) ) {
-			return;
-		}
-
-		add_submenu_page(
-			'tools.php',
-			esc_html__( 'AI Chat', 'hma-ai-chat' ),
-			esc_html__( 'AI Chat', 'hma-ai-chat' ),
-			'edit_posts',
-			'hma-ai-chat',
-			array( $this, 'render_page' )
-		);
-	}
-
-	/**
 	 * Render the chat page.
 	 *
 	 * @internal
