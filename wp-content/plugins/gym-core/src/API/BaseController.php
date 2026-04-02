@@ -69,11 +69,15 @@ abstract class BaseController extends \WP_REST_Controller {
 	/**
 	 * Registers all REST routes for this controller.
 	 *
+	 * Overrides the parent concrete method. Subclasses must implement this.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
 	 */
-	abstract public function register_routes(): void;
+	public function register_routes(): void {
+		// Intentionally empty — subclasses must override.
+	}
 
 	// -------------------------------------------------------------------------
 	// Permission callbacks
