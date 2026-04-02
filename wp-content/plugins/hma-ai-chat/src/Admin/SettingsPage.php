@@ -51,19 +51,7 @@ class SettingsPage {
 			return;
 		}
 
-		// Register the shared top-level Gym menu if gym-core hasn't already.
-		// WordPress silently ignores duplicate slugs, so this is safe.
-		add_menu_page(
-			esc_html__( 'Gym Dashboard', 'hma-ai-chat' ),
-			esc_html__( 'Gym', 'hma-ai-chat' ),
-			'edit_posts',
-			'gym-core',
-			'__return_null',
-			'dashicons-awards',
-			3
-		);
-
-		// Submenu: Gandalf Chat.
+		// Submenu: Gandalf Chat (parent menu registered by gym-core plugin).
 		add_submenu_page(
 			'gym-core',
 			esc_html__( 'Chat', 'hma-ai-chat' ),

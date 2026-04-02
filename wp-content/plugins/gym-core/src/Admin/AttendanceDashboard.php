@@ -115,17 +115,6 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	public function register_menu(): void {
-		// Register the shared top-level Gym menu (first registrant wins).
-		add_menu_page(
-			__( 'Gym Dashboard', 'gym-core' ),
-			__( 'Gym', 'gym-core' ),
-			'gym_check_in_member',
-			'gym-core',
-			'__return_null',
-			'dashicons-awards',
-			3
-		);
-
 		$this->hook_suffix = add_submenu_page(
 			'gym-core',
 			__( 'Attendance', 'gym-core' ),

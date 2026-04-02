@@ -110,17 +110,6 @@ final class PromotionDashboard {
 	 * @return void
 	 */
 	public function register_menu(): void {
-		// Register the top-level Gym menu (first registrant wins).
-		add_menu_page(
-			__( 'Gym', 'gym-core' ),
-			__( 'Gym', 'gym-core' ),
-			'gym_view_ranks',
-			self::PARENT_SLUG,
-			'__return_null',
-			'dashicons-awards',
-			56
-		);
-
 		$hook = add_submenu_page(
 			self::PARENT_SLUG,
 			__( 'Promotions', 'gym-core' ),

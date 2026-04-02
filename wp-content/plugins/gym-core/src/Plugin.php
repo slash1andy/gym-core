@@ -109,6 +109,7 @@ final class Plugin {
 	public function init(): void {
 		$this->load_textdomain();
 		$this->register_capabilities();
+		$this->register_top_level_menu();
 		$this->register_admin_modules();
 		$this->register_location_modules();
 		$this->register_api_modules();
@@ -393,6 +394,33 @@ final class Plugin {
 		$this->streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
 		$this->badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $this->streak_tracker );
 		$this->badge_engine->register_hooks();
+	}
+
+	/**
+	 * Registers the single top-level Gym admin menu.
+	 *
+	 * All gym-core submenus and hma-ai-chat submenus attach to the
+	 * 'gym-core' slug. This must run before any submenu registration.
+	 *
+	 * @since 3.1.0
+	 *
+	 * @return void
+	 */
+	private function register_top_level_menu(): void {
+		add_action( 'admin_menu', static function (): void {
+			add_menu_page(
+				__( 'Gym Dashboard', 'gym-core' ),
+				__( 'Gym', 'gym-core' ),
+				'read',
+				'gym-core',
+				'__return_null',
+				'dashicons-awards',
+				3
+			);
+
+			// Remove the auto-generated "Gym" submenu that duplicates the top-level item.
+			remove_submenu_page( 'gym-core', 'gym-core' );
+		}, 5 );
 	}
 
 	/**
