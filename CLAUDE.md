@@ -14,27 +14,30 @@ This is a **private, internal project** — not marketplace software.
 
 ## Repository Structure
 
-The repo root mirrors `wp-content/` for Pressable GitHub deploy. Non-deployable files
-(docs, scripts, config) are excluded via `.deployignore`.
+The repo contains a `wp-content/` directory at its root for Pressable legacy Git deploy.
+Pressable rsyncs `wp-content/plugins/` and `wp-content/themes/` to the site. Non-deployable
+files (docs, scripts, config) are excluded via `.deployignore`.
 
 ```
-haanpaa/                           # Repo root → maps to wp-content/ on Pressable
-├── plugins/                       # → wp-content/plugins/
-│   ├── gym-core/                  # Gym management plugin (WooCommerce extension)
-│   │   ├── gym-core.php           # Main plugin file
-│   │   ├── PROJECT_BRIEF.md       # Plugin-level feature specs
-│   │   ├── src/                   # PHP source (PSR-4: Gym_Core\)
-│   │   ├── assets/                # CSS + JS
-│   │   ├── tests/                 # PHPUnit
-│   │   ├── composer.json          # Plugin dependencies
-│   │   └── ...
-│   └── hma-ai-chat/               # AI chat interface plugin (WP 7.0 AI Client)
-│       ├── hma-ai-chat.php        # Main plugin file
-│       ├── SETUP_GUIDE.md         # Full setup + API docs
-│       ├── src/                   # PHP source (PSR-4: HMA_AI_Chat\)
-│       ├── assets/                # CSS + JS
-│       └── ...
-├── themes/                        # → wp-content/themes/ (future custom theme)
+haanpaa/                           # Repo root
+├── wp-content/                    # Synced to wp-content/ on Pressable
+│   ├── plugins/
+│   │   ├── gym-core/              # Gym management plugin (WooCommerce extension)
+│   │   │   ├── gym-core.php       # Main plugin file
+│   │   │   ├── PROJECT_BRIEF.md   # Plugin-level feature specs
+│   │   │   ├── src/               # PHP source (PSR-4: Gym_Core\)
+│   │   │   ├── assets/            # CSS + JS
+│   │   │   ├── tests/             # PHPUnit
+│   │   │   ├── composer.json      # Plugin dependencies
+│   │   │   └── ...
+│   │   └── hma-ai-chat/           # AI chat interface plugin (WP 7.0 AI Client)
+│   │       ├── hma-ai-chat.php    # Main plugin file
+│   │       ├── SETUP_GUIDE.md     # Full setup + API docs
+│   │       ├── src/               # PHP source (PSR-4: HMA_AI_Chat\)
+│   │       ├── assets/            # CSS + JS
+│   │       └── ...
+│   └── themes/
+│       └── team-haanpaa/          # Custom theme
 ├── .deployignore                  # Excludes non-deployable files from Pressable sync
 ├── CLAUDE.md                      # Agent context (excluded from deploy)
 ├── README.md                      # Project overview (excluded from deploy)
@@ -57,11 +60,11 @@ haanpaa/                           # Repo root → maps to wp-content/ on Pressa
 
 ## Deployment
 
-**Pressable GitHub Deploy** — repo root maps to `wp-content/` on the Pressable site.
+**Pressable Legacy Git Deploy** — Pressable rsyncs `wp-content/` from the repo root to the site.
 
 | What | How |
 |------|-----|
-| `gym-core` + `hma-ai-chat` | Auto-deployed via GitHub push → Pressable |
+| `gym-core` + `hma-ai-chat` | Auto-deployed via GitHub push → Pressable rsync |
 | WooCommerce + WooPayments | Installed via WP-CLI or wp-admin |
 | WooCommerce Subscriptions | Installed via WP-CLI (built from `woocommerce/woocommerce-subscriptions`) |
 | Non-deploy files | Excluded by `.deployignore` |
@@ -69,8 +72,6 @@ haanpaa/                           # Repo root → maps to wp-content/ on Pressa
 **Pressable dashboard config:**
 - Repository URL: this repo's HTTPS clone URL
 - Branch: `main`
-- Repository subdirectory: (blank)
-- Destination: `wp-content/`
 - Delete files not in repo: **OFF** (preserves WooCommerce, WooPayments, Subscriptions)
 
 **Provisioning script:** `python3 scripts/provision_pressable.py` (see M1.1)
@@ -113,8 +114,8 @@ See `MILESTONES.md` at repo root. In dependency order:
 | Document | What it answers |
 |----------|-----------------|
 | `MILESTONES.md` | What do I build next? (master roadmap with acceptance criteria) |
-| `plugins/gym-core/PROJECT_BRIEF.md` | What does the gym plugin do? |
-| `plugins/hma-ai-chat/SETUP_GUIDE.md` | How does the AI chat plugin work? |
+| `wp-content/plugins/gym-core/PROJECT_BRIEF.md` | What does the gym plugin do? |
+| `wp-content/plugins/hma-ai-chat/SETUP_GUIDE.md` | How does the AI chat plugin work? |
 | `docs/planning/data-migration-guide.md` | How do we migrate data from Spark/GHL/Wix/USAePay? |
 | `docs/planning/cowork-migration-playbooks.md` | AI agent prompts for extracting data from legacy platform UIs |
 | `docs/planning/systems-consolidation-proposal.md` | Why is this migration happening? |
@@ -144,7 +145,7 @@ See `MILESTONES.md` at repo root. In dependency order:
 
 ## Commands
 
-All commands run from within the plugin directory (e.g., `cd plugins/gym-core`):
+All commands run from within the plugin directory (e.g., `cd wp-content/plugins/gym-core`):
 
 ```bash
 # gym-core
