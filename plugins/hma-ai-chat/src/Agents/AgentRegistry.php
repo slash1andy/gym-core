@@ -140,6 +140,17 @@ class AgentRegistry {
 	}
 
 	/**
+	 * Get all registered agents regardless of capability.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return AgentPersona[]
+	 */
+	public function get_all_agents() {
+		return $this->agents;
+	}
+
+	/**
 	 * Get available agents for a user.
 	 *
 	 * @param int $user_id User ID.

@@ -29,6 +29,13 @@ class Plugin {
 	private $chat_page = null;
 
 	/**
+	 * Settings page instance.
+	 *
+	 * @var Admin\SettingsPage|null
+	 */
+	private $settings_page = null;
+
+	/**
 	 * Tool executor instance.
 	 *
 	 * @var Tools\ToolExecutor|null
@@ -63,7 +70,18 @@ class Plugin {
 	 * @internal
 	 */
 	public function init() {
+		// Admin pages must hook into admin_menu (fires before admin_init).
+		if ( is_admin() ) {
+			$this->settings_page = new Admin\SettingsPage();
+			$this->chat_page     = new Admin\ChatPage();
+
+			add_action( 'admin_menu', array( $this->settings_page, 'register_menu_pages' ) );
+			add_action( 'admin_init', array( $this->settings_page, 'register_settings' ) );
+		}
+
 		add_action( 'admin_init', array( $this, 'register_hooks' ) );
+		add_action( 'admin_init', array( $this, 'handle_admin_actions' ) );
+		add_action( 'admin_notices', array( $this, 'display_admin_notices' ) );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
 
@@ -83,11 +101,6 @@ class Plugin {
 	public function register_hooks() {
 		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
 			return;
-		}
-
-		// Initialize admin pages (single instance, reused in enqueue_admin_scripts).
-		if ( is_admin() && null === $this->chat_page ) {
-			$this->chat_page = new Admin\ChatPage();
 		}
 
 		// Initialize agent registry.
@@ -133,13 +146,25 @@ class Plugin {
 	 * @internal
 	 */
 	public function run_conversation_purge() {
-		$store   = new Data\ConversationStore();
-		$deleted = $store->purge_expired_conversations( 30 );
+		$store          = new Data\ConversationStore();
+		$retention_days = (int) get_option( 'hma_ai_chat_retention_days', 30 );
+		$deleted        = $store->purge_expired_conversations( $retention_days );
 
 		if ( $deleted > 0 && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( sprintf( 'HMA AI Chat: Purged %d conversations older than 30 days.', $deleted ) );
+			error_log( sprintf( 'HMA AI Chat: Purged %d conversations older than %d days.', $deleted, $retention_days ) );
 		}
+	}
+
+	/**
+	 * Get the chat page instance.
+	 *
+	 * @since 0.2.0
+	 *
+	 * @return Admin\ChatPage|null
+	 */
+	public function get_chat_page(): ?Admin\ChatPage {
+		return $this->chat_page;
 	}
 
 	/**
@@ -176,7 +201,7 @@ class Plugin {
 	 * @internal
 	 */
 	public function enqueue_admin_scripts( $hook_suffix ) {
-		if ( 'tools_page_hma-ai-chat' !== $hook_suffix ) {
+		if ( 'toplevel_page_hma-ai-chat' !== $hook_suffix ) {
 			return;
 		}
 
@@ -185,5 +210,31 @@ class Plugin {
 		}
 
 		$this->chat_page->enqueue_assets();
+	}
+
+	/**
+	 * Handle admin actions (e.g., secret rotation).
+	 *
+	 * @since 0.2.0
+	 * @internal
+	 */
+	public function handle_admin_actions() {
+		if ( null === $this->settings_page ) {
+			$this->settings_page = new Admin\SettingsPage();
+		}
+		$this->settings_page->handle_secret_rotation();
+	}
+
+	/**
+	 * Display admin notices from settings actions.
+	 *
+	 * @since 0.2.0
+	 * @internal
+	 */
+	public function display_admin_notices() {
+		if ( null === $this->settings_page ) {
+			$this->settings_page = new Admin\SettingsPage();
+		}
+		$this->settings_page->display_admin_notices();
 	}
 }
