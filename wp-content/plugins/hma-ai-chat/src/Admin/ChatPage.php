@@ -87,15 +87,24 @@ class ChatPage {
 	 * @return array
 	 */
 	private function get_available_agents() {
-		$registry = \HMA_AI_Chat\Agents\AgentRegistry::instance();
-		$agents   = $registry->get_available_agents( get_current_user_id() );
+		$registry  = \HMA_AI_Chat\Agents\AgentRegistry::instance();
+		$agents    = $registry->get_available_agents( get_current_user_id() );
+		$overrides = get_option( 'hma_ai_chat_agent_overrides', array() );
 
 		$available = array();
 		foreach ( $agents as $agent ) {
+			$slug     = $agent->get_slug();
+			$override = $overrides[ $slug ] ?? array();
+
+			// Skip disabled agents.
+			if ( isset( $override['enabled'] ) && ! $override['enabled'] ) {
+				continue;
+			}
+
 			$available[] = array(
-				'slug'        => $agent->get_slug(),
-				'name'        => $agent->get_name(),
-				'description' => $agent->get_description(),
+				'slug'        => $slug,
+				'name'        => ! empty( $override['name'] ) ? $override['name'] : $agent->get_name(),
+				'description' => ! empty( $override['description'] ) ? $override['description'] : $agent->get_description(),
 				'icon'        => $agent->get_icon(),
 			);
 		}
