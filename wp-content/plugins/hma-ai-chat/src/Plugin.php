@@ -99,10 +99,6 @@ class Plugin {
 	 * @internal
 	 */
 	public function register_hooks() {
-		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-			return;
-		}
-
 		// Initialize agent registry.
 		$agent_registry = Agents\AgentRegistry::instance();
 		$agent_registry->register_all_agents();
@@ -123,10 +119,6 @@ class Plugin {
 	 * @internal
 	 */
 	public function register_rest_routes() {
-		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-			return;
-		}
-
 		$message_endpoint   = new API\MessageEndpoint();
 		$heartbeat_endpoint = new API\HeartbeatEndpoint();
 		$action_endpoint    = new API\ActionEndpoint();

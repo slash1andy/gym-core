@@ -52,20 +52,6 @@ function hma_ai_chat_check_requirements() {
 		return false;
 	}
 
-	if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
-		add_action( 'admin_notices', function () {
-			?>
-			<div class="notice notice-error is-dismissible">
-				<p>
-					<?php
-					esc_html_e( 'HMA AI Chat requires WordPress 7.0\'s WP AI Client. Please ensure it is active.', 'hma-ai-chat' );
-					?>
-				</p>
-			</div>
-			<?php
-		} );
-		return false;
-	}
 
 	return true;
 }
