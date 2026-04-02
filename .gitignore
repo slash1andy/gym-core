@@ -11,8 +11,10 @@
 # Node
 node_modules/
 
-# PHP
+# PHP — ignore vendor globally, but allow production autoloaders
 vendor/
+!wp-content/plugins/gym-core/vendor/
+!wp-content/plugins/hma-ai-chat/vendor/
 
 # PHPStan cache
 .phpstan/

@@ -35,7 +35,9 @@ if ( file_exists( HMA_AI_CHAT_PATH . 'vendor/autoload.php' ) ) {
 function hma_ai_chat_check_requirements() {
 	global $wp_version;
 
-	if ( version_compare( $wp_version, '7.0', '<' ) ) {
+	// Strip pre-release suffixes (e.g., '7.0-RC2' → '7.0') so RC/beta/alpha passes.
+	$wp_version_clean = preg_replace( '/[^0-9.].*/', '', $wp_version );
+	if ( version_compare( $wp_version_clean, '7.0', '<' ) ) {
 		add_action( 'admin_notices', function () {
 			?>
 			<div class="notice notice-error is-dismissible">
