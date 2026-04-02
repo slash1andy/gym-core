@@ -154,7 +154,7 @@
 		try {
 			// Send message to server.
 			const response = await wp.apiFetch({
-				path: config.apiUrl + 'message',
+				url: config.apiUrl + 'message',
 				method: 'POST',
 				data: {
 					agent: currentAgent,
@@ -231,7 +231,7 @@
 
 		try {
 			const response = await wp.apiFetch({
-				path: config.apiUrl + 'pending-actions',
+				url: config.apiUrl + 'pending-actions',
 				method: 'GET',
 			});
 
@@ -408,7 +408,7 @@
 	async function approveAction(actionId) {
 		try {
 			const response = await wp.apiFetch({
-				path: config.apiUrl + `actions/${actionId}/approve`,
+				url: config.apiUrl + `actions/${actionId}/approve`,
 				method: 'POST',
 			});
 
@@ -430,7 +430,7 @@
 	async function approveWithChanges(actionId, instructions) {
 		try {
 			const response = await wp.apiFetch({
-				path: config.apiUrl + `actions/${actionId}/approve-with-changes`,
+				url: config.apiUrl + `actions/${actionId}/approve-with-changes`,
 				method: 'POST',
 				data: { instructions },
 			});
@@ -453,7 +453,7 @@
 	async function rejectAction(actionId, reason) {
 		try {
 			const response = await wp.apiFetch({
-				path: config.apiUrl + `actions/${actionId}/reject`,
+				url: config.apiUrl + `actions/${actionId}/reject`,
 				method: 'POST',
 				data: { reason: reason || '' },
 			});
