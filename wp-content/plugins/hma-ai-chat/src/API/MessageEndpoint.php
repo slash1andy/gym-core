@@ -137,19 +137,31 @@ class MessageEndpoint {
 				);
 			}
 
-			// Call WP AI Client.
-			$response = wp_ai_client_prompt()
-				->with_system_prompt( $system_prompt )
-				->with_messages( $messages )
-				->using_model_preference( 'claude-sonnet-4-6' )
-				->request();
+			// Call Claude — use WP AI Client if available, otherwise direct API.
+			if ( function_exists( 'wp_ai_client_prompt' ) ) {
+				$response = wp_ai_client_prompt()
+					->with_system_prompt( $system_prompt )
+					->with_messages( $messages )
+					->using_model_preference( 'claude-sonnet-4-6' )
+					->request();
 
-			if ( is_wp_error( $response ) ) {
-				return $response;
+				if ( is_wp_error( $response ) ) {
+					return $response;
+				}
+
+				$response_text = $response->get_response();
+				$tokens_used   = $response->get_tokens_used();
+			} else {
+				$client = new ClaudeClient();
+				$result = $client->send( $system_prompt, $messages );
+
+				if ( is_wp_error( $result ) ) {
+					return $result;
+				}
+
+				$response_text = $result['response'];
+				$tokens_used   = $result['tokens_used'];
 			}
-
-			$response_text = $response->get_response();
-			$tokens_used   = $response->get_tokens_used();
 
 			// Store assistant message.
 			$conversation_store->save_message(

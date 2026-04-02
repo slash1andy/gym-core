@@ -23,6 +23,7 @@ class ComposerStaticInitfa347bfe4bd76156e47a60cb18d65f45
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
         'HMA_AI_Chat\\API\\ActionEndpoint' => __DIR__ . '/../..' . '/src/API/ActionEndpoint.php',
+        'HMA_AI_Chat\\API\\ClaudeClient' => __DIR__ . '/../..' . '/src/API/ClaudeClient.php',
         'HMA_AI_Chat\\API\\HeartbeatEndpoint' => __DIR__ . '/../..' . '/src/API/HeartbeatEndpoint.php',
         'HMA_AI_Chat\\API\\MessageEndpoint' => __DIR__ . '/../..' . '/src/API/MessageEndpoint.php',
         'HMA_AI_Chat\\Activator' => __DIR__ . '/../..' . '/src/Activator.php',

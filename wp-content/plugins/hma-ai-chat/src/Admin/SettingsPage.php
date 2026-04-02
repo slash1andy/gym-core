@@ -127,6 +127,20 @@ class SettingsPage {
 			self::PAGE_SLUG . '-general'
 		);
 
+		register_setting( self::OPTION_GROUP, \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION, array(
+			'type'              => 'string',
+			'sanitize_callback' => 'sanitize_text_field',
+			'default'           => '',
+		) );
+
+		add_settings_field(
+			'hma_ai_chat_anthropic_api_key',
+			esc_html__( 'Anthropic API Key', 'hma-ai-chat' ),
+			array( $this, 'render_api_key_field' ),
+			self::PAGE_SLUG . '-general',
+			'hma_ai_chat_general'
+		);
+
 		register_setting( self::OPTION_GROUP, 'hma_ai_chat_retention_days', array(
 			'type'              => 'integer',
 			'sanitize_callback' => 'absint',
@@ -340,6 +354,28 @@ class SettingsPage {
 		echo '</tr>';
 
 		echo '</tbody></table>';
+	}
+
+	/**
+	 * Render Anthropic API key field.
+	 *
+	 * @since 0.2.0
+	 * @internal
+	 */
+	public function render_api_key_field() {
+		$key = get_option( \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION, '' );
+		$masked = $key ? substr( $key, 0, 12 ) . str_repeat( '*', 20 ) : '';
+		$has_wp_ai = function_exists( 'wp_ai_client_prompt' );
+		printf(
+			'<input type="password" id="hma_ai_chat_anthropic_api_key" name="%s" value="%s" class="regular-text" autocomplete="off" />',
+			esc_attr( \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION ),
+			esc_attr( $key )
+		);
+		if ( $has_wp_ai ) {
+			echo '<p class="description">' . esc_html__( 'WordPress AI Client is active. This key is only used as a fallback.', 'hma-ai-chat' ) . '</p>';
+		} else {
+			echo '<p class="description">' . esc_html__( 'Required. Used to call the Claude API directly. Get a key at console.anthropic.com.', 'hma-ai-chat' ) . '</p>';
+		}
 	}
 
 	/**

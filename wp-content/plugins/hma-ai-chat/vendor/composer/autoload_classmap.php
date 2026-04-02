@@ -8,6 +8,7 @@ $baseDir = dirname($vendorDir);
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
     'HMA_AI_Chat\\API\\ActionEndpoint' => $baseDir . '/src/API/ActionEndpoint.php',
+    'HMA_AI_Chat\\API\\ClaudeClient' => $baseDir . '/src/API/ClaudeClient.php',
     'HMA_AI_Chat\\API\\HeartbeatEndpoint' => $baseDir . '/src/API/HeartbeatEndpoint.php',
     'HMA_AI_Chat\\API\\MessageEndpoint' => $baseDir . '/src/API/MessageEndpoint.php',
     'HMA_AI_Chat\\Activator' => $baseDir . '/src/Activator.php',
