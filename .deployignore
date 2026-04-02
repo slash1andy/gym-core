@@ -1,8 +1,8 @@
-# Pressable GitHub Deploy — exclude non-deployable files
-# Repo root maps to wp-content/ on Pressable
-# Only plugins/ and themes/ should be synced
+# Pressable Legacy Git Deploy — exclude non-deployable files
+# Pressable rsyncs wp-content/ from repo root to the site
+# Only wp-content/plugins/ and wp-content/themes/ should be synced
 
-# Development & documentation
+# Development & documentation (repo root)
 docs/
 scripts/
 .claude/
@@ -16,8 +16,7 @@ LICENSE
 .gitignore
 .deployignore
 *.md
-!plugins/**/*.md
-!themes/**/*.md
+!wp-content/**/*.md
 
 # Editor & OS
 .vscode/
@@ -50,10 +49,10 @@ tests/
 codecov.yml
 
 # Plugin-level dev files (vendor is built via composer install --no-dev)
-plugins/*/phpcs.xml.dist
-plugins/*/phpstan.neon
-plugins/*/phpstan-bootstrap.php
-plugins/*/phpunit.xml.dist
-plugins/*/.phpunit.result.cache
-plugins/*/PROJECT_BRIEF.md
-plugins/*/CLAUDE.md
+wp-content/plugins/*/phpcs.xml.dist
+wp-content/plugins/*/phpstan.neon
+wp-content/plugins/*/phpstan-bootstrap.php
+wp-content/plugins/*/phpunit.xml.dist
+wp-content/plugins/*/.phpunit.result.cache
+wp-content/plugins/*/PROJECT_BRIEF.md
+wp-content/plugins/*/CLAUDE.md

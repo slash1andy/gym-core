@@ -4,12 +4,12 @@ Custom WordPress/WooCommerce stack for [Haanpaa Martial Arts](https://www.teamha
 
 ## Plugins
 
-### [`plugins/gym-core/`](plugins/gym-core/)
+### [`wp-content/plugins/gym-core/`](wp-content/plugins/gym-core/)
 The operational backbone — multi-location support, membership integration, class scheduling, belt rank tracking, attendance/check-in, gamification, Twilio SMS, and REST API for AI agents.
 
 **Status:** Milestone 1.1 (Locations) complete. See [MILESTONES.md](MILESTONES.md) for the full roadmap.
 
-### [`plugins/hma-ai-chat/`](plugins/hma-ai-chat/)
+### [`wp-content/plugins/hma-ai-chat/`](wp-content/plugins/hma-ai-chat/)
 AI chat interface for the WordPress admin dashboard. Four agent personas (Sales, Coaching, Finance, Admin) powered by WordPress 7.0's WP AI Client. Paperclip webhook integration for autonomous agent scheduling.
 
 **Status:** v0.1.0 scaffolded and production-ready. Wires into real data in Milestone 6.
@@ -34,12 +34,11 @@ AI chat interface for the WordPress admin dashboard. Four agent personas (Sales,
 
 ## Deployment
 
-This repo is deployed to Pressable via GitHub integration. The repo root maps to `wp-content/` — only `plugins/` and `themes/` are synced. Everything else is excluded by `.deployignore`.
+This repo is deployed to Pressable via legacy Git deploy. The repo contains a `wp-content/` directory at its root — Pressable rsyncs `wp-content/plugins/` and `wp-content/themes/` to the site. Everything else is excluded by `.deployignore`.
 
 ```
 Pressable dashboard config:
-  Repo subdirectory: (blank)
-  Destination:       wp-content/
+  Branch:            main
   Delete extra files: OFF
 ```
 
@@ -54,7 +53,7 @@ python3 scripts/provision_pressable.py
 
 ```bash
 # Install gym-core dependencies
-cd plugins/gym-core && composer install
+cd wp-content/plugins/gym-core && composer install
 
 # Run quality checks
 composer test-all

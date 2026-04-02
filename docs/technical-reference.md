@@ -12,15 +12,15 @@ Two WordPress plugins in a monorepo that maps to `wp-content/` via Pressable Git
 
 | Plugin | Namespace | Path | Purpose |
 |--------|-----------|------|---------|
-| `gym-core` | `Gym_Core\` | `plugins/gym-core/` | Core gym management: locations, attendance, ranks, gamification, SMS, scheduling, briefings, CRM |
-| `hma-ai-chat` | `HMA_AI_Chat\` | `plugins/hma-ai-chat/` | Staff-facing AI chat interface ("Gandalf") with tool-calling, pending action approval queue |
+| `gym-core` | `Gym_Core\` | `wp-content/plugins/gym-core/` | Core gym management: locations, attendance, ranks, gamification, SMS, scheduling, briefings, CRM |
+| `hma-ai-chat` | `HMA_AI_Chat\` | `wp-content/plugins/hma-ai-chat/` | Staff-facing AI chat interface ("Gandalf") with tool-calling, pending action approval queue |
 
 ### PSR-4 Autoloading
 
 Both plugins use Composer PSR-4 autoloading:
 
-- `Gym_Core\` maps to `plugins/gym-core/src/`
-- `HMA_AI_Chat\` maps to `plugins/hma-ai-chat/src/`
+- `Gym_Core\` maps to `wp-content/plugins/gym-core/src/`
+- `HMA_AI_Chat\` maps to `wp-content/plugins/hma-ai-chat/src/`
 
 ### Dependency Injection Pattern
 

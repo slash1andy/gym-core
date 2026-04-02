@@ -1060,4 +1060,4 @@ Locations themselves are managed as taxonomy terms under **Products > Gym Locati
 
 ---
 
-*This guide covers Gym Core v3.x and HMA AI Chat v0.2.x. For technical implementation details, see the source code in `plugins/gym-core/src/` and `plugins/hma-ai-chat/src/`.*
+*This guide covers Gym Core v3.x and HMA AI Chat v0.2.x. For technical implementation details, see the source code in `wp-content/plugins/gym-core/src/` and `wp-content/plugins/hma-ai-chat/src/`.*
