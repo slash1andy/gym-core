@@ -44,7 +44,7 @@ class ClaudeClient {
 	 *
 	 * @var string
 	 */
-	private const DEFAULT_MODEL = 'claude-sonnet-4-5-20241022';
+	private const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 	/**
 	 * Send a message to Claude.
