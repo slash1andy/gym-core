@@ -169,7 +169,7 @@ NOTE: Content (copy, photos, testimonials) needs to come from Darby/Amanda.
 
 #### 1.8 — Checkout Flow Testing
 ```
-STATUS: READY
+STATUS: READY — TEST TOOLING COMPLETE
 DESCRIPTION: End-to-end testing of the membership purchase and subscription flow.
 DEPENDS_ON: 1.2, 1.3, 1.4, 1.7
 ACCEPTANCE:
@@ -185,11 +185,16 @@ ACCEPTANCE:
   - All prices include correct tax calculation (if applicable)
   - Drop-in / trial class purchase works as one-time payment
 SKILL: woocommerce-testing
+TOOLING:
+  Automated: python3 scripts/checkout_smoke_test.py (22 API checks)
+  Manual:    python3 scripts/checkout_smoke_test.py --manual (9 scenario checklist)
+NOTE: Automated smoke test validates infrastructure. Manual tests require Andrew
+      to execute on staging with WooPayments test mode. Both must pass before M1.9.
 ```
 
 #### 1.9 — DNS + Go-Live Cutover Plan
 ```
-STATUS: BLOCKED
+STATUS: READY — PLAN DOCUMENTED
 DESCRIPTION: Plan the DNS cutover from Wix to Pressable and document the rollback plan.
 DEPENDS_ON: 1.8
 ACCEPTANCE:
@@ -201,6 +206,7 @@ ACCEPTANCE:
   - Email delivery verified (transactional emails from WordPress)
   - WooPayments switched from test mode to live mode
   - Go/no-go checklist for Darby's sign-off
+PLAN: docs/planning/dns-cutover-plan.md
 NOTE: Do NOT cut over until Darby and Amanda have reviewed staging and signed off.
 ```
 

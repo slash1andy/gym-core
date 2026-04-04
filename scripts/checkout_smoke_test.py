@@ -508,6 +508,212 @@ TOTAL = len(CHECKS)
 
 
 # ---------------------------------------------------------------------------
+# Manual checkout test plan (M1.8 acceptance criteria)
+# ---------------------------------------------------------------------------
+
+MANUAL_TESTS = [
+    {
+        "id": "M1.8-01",
+        "title": "New customer subscription purchase",
+        "prereq": "WooPayments in test mode. Use Stripe test card 4242 4242 4242 4242.",
+        "steps": [
+            "Open the site as a logged-out visitor",
+            "Browse to Programs or Pricing page",
+            "Select a membership product (e.g., Adult BJJ - Rockford)",
+            "Add to cart, proceed to checkout",
+            "Fill in billing details as a new customer",
+            "Enter test card: 4242 4242 4242 4242, any future expiry, any CVC",
+            "Complete purchase",
+        ],
+        "expected": [
+            "Order created with status 'active' or 'processing'",
+            "WooCommerce Subscription created with correct billing schedule",
+            "Customer account created (or existing one linked)",
+            "Order confirmation email received",
+            "My Account > Subscriptions shows the new subscription",
+        ],
+    },
+    {
+        "id": "M1.8-02",
+        "title": "Subscription renewal payment (automatic)",
+        "prereq": "Active subscription from M1.8-01. WP-CLI access to trigger renewal.",
+        "steps": [
+            "Via WP-CLI or WP admin, trigger an early renewal for the test subscription:",
+            "  wp wc subscription update <ID> --status=pending-cancel (then reactivate)",
+            "  Or use Action Scheduler to run the renewal action immediately",
+            "Alternatively: wait for the next scheduled renewal in test mode",
+        ],
+        "expected": [
+            "Renewal order created automatically",
+            "Payment charged via WooPayments (test mode)",
+            "Subscription remains active",
+            "Renewal email notification sent",
+        ],
+    },
+    {
+        "id": "M1.8-03",
+        "title": "Failed payment retry",
+        "prereq": "Use Stripe test card for declines: 4000 0000 0000 0002.",
+        "steps": [
+            "Create a subscription using the decline test card",
+            "Or update an existing subscription's payment method to the decline card",
+            "Trigger a renewal (or wait for scheduled renewal)",
+        ],
+        "expected": [
+            "Renewal payment fails gracefully",
+            "Subscription status changes to 'on-hold' (not immediately cancelled)",
+            "Failed payment email notification sent to customer",
+            "WooCommerce retry schedule activates (check Action Scheduler)",
+            "Admin can see the failed renewal in WooCommerce > Orders",
+        ],
+    },
+    {
+        "id": "M1.8-04",
+        "title": "Subscription cancellation from My Account",
+        "prereq": "Active subscription from M1.8-01.",
+        "steps": [
+            "Log in as the test customer",
+            "Go to My Account > Subscriptions",
+            "Click 'Cancel' on the active subscription",
+            "Confirm the cancellation",
+        ],
+        "expected": [
+            "Subscription status changes to 'pending-cancel' (active until period end)",
+            "Customer sees updated status in My Account",
+            "Cancellation email sent",
+            "No immediate charge or refund",
+        ],
+    },
+    {
+        "id": "M1.8-05",
+        "title": "Subscription tier upgrade/downgrade",
+        "prereq": "Active subscription. Subscription switching enabled in WC settings.",
+        "steps": [
+            "Log in as the test customer",
+            "Go to My Account > Subscriptions",
+            "Click 'Switch' or 'Upgrade' on the active subscription",
+            "Select a different membership tier (e.g., Adult BJJ → All-Access)",
+            "Complete the switch checkout (prorated amount)",
+        ],
+        "expected": [
+            "Old subscription updated or replaced with new tier",
+            "Prorated charge/credit applied correctly",
+            "New billing schedule reflects the new tier's pricing",
+            "Confirmation email sent with new subscription details",
+        ],
+    },
+    {
+        "id": "M1.8-06",
+        "title": "Drop-in / trial class one-time purchase",
+        "prereq": "A simple product (non-subscription) for trial class exists.",
+        "steps": [
+            "Browse to the Free Trial or drop-in product",
+            "Add to cart",
+            "Complete checkout with test card 4242 4242 4242 4242",
+        ],
+        "expected": [
+            "Order created with status 'processing' or 'completed'",
+            "No subscription created (one-time payment only)",
+            "Order confirmation email received",
+            "Product visible in My Account > Orders",
+        ],
+    },
+    {
+        "id": "M1.8-07",
+        "title": "Mobile checkout",
+        "prereq": "Use a mobile device or browser dev tools mobile emulation.",
+        "steps": [
+            "Open the site on a mobile device (or emulated)",
+            "Browse to a membership product",
+            "Add to cart and proceed to checkout",
+            "Verify the checkout form is usable on mobile:",
+            "  - Fields are large enough to tap",
+            "  - Card input is accessible",
+            "  - Keyboard doesn't obscure the form",
+            "Complete purchase with test card",
+        ],
+        "expected": [
+            "Checkout completes successfully on mobile",
+            "No layout issues or overlapping elements",
+            "Success page displays correctly",
+            "Touch targets are at least 44x44px",
+        ],
+    },
+    {
+        "id": "M1.8-08",
+        "title": "Email notifications",
+        "prereq": "Complete M1.8-01 through M1.8-04.",
+        "steps": [
+            "Check the test customer's email inbox for all expected notifications:",
+        ],
+        "expected": [
+            "New order / subscription confirmation (from M1.8-01)",
+            "Subscription renewal receipt (from M1.8-02)",
+            "Failed payment notice (from M1.8-03)",
+            "Subscription cancellation notice (from M1.8-04)",
+            "All emails have correct branding (Haanpaa Martial Arts)",
+            "All emails are mobile-responsive",
+            "Reply-to address is correct",
+        ],
+    },
+    {
+        "id": "M1.8-09",
+        "title": "Tax calculation (if applicable)",
+        "prereq": "If tax is configured for Rockford, IL.",
+        "steps": [
+            "Add a membership product to cart",
+            "Enter a Rockford, IL billing address at checkout",
+            "Check the order summary for tax line items",
+        ],
+        "expected": [
+            "Tax calculated correctly (or no tax if not configured)",
+            "Tax shown in cart and order confirmation",
+            "Tax rate matches Rockford/Beloit jurisdiction (verify with Darby)",
+        ],
+    },
+]
+
+
+def print_manual_test_plan():
+    """Prints the M1.8 manual checkout test plan as a formatted checklist."""
+    print("=" * 70)
+    print("  M1.8 MANUAL CHECKOUT TEST PLAN")
+    print("  Haanpaa Martial Arts — WooCommerce + WooPayments Validation")
+    print("=" * 70)
+    print()
+    print("  Prerequisites:")
+    print("    - WooPayments in TEST MODE (not live)")
+    print("    - Stripe test cards: https://docs.stripe.com/testing#cards")
+    print("    - Access to WP admin on staging")
+    print("    - Access to a test email inbox")
+    print()
+
+    for test in MANUAL_TESTS:
+        print(f"  [{test['id']}] {test['title']}")
+        print(f"  Prereq: {test['prereq']}")
+        print()
+        print("  Steps:")
+        for j, step in enumerate(test["steps"], 1):
+            if step.startswith("  "):
+                print(f"        {step.strip()}")
+            else:
+                print(f"    {j}. {step}")
+        print()
+        print("  Expected:")
+        for exp in test["expected"]:
+            print(f"    [ ] {exp}")
+        print()
+        print("  Result: [ ] PASS  [ ] FAIL  Notes: ________________________")
+        print()
+        print("-" * 70)
+        print()
+
+    print(f"  Total: {len(MANUAL_TESTS)} test scenarios")
+    print(f"  Run the automated smoke test first: python3 scripts/checkout_smoke_test.py")
+    print()
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -519,7 +725,14 @@ def main():
                         help="Print the checks that would run without executing them")
     parser.add_argument("--json", action="store_true", dest="json_output",
                         help="Output results as machine-readable JSON")
+    parser.add_argument("--manual", action="store_true",
+                        help="Print the manual checkout test plan (M1.8 acceptance criteria)")
     args = parser.parse_args()
+
+    # --manual: print the manual test plan
+    if args.manual:
+        print_manual_test_plan()
+        return
 
     # --dry-run: just list checks
     if args.dry_run:
