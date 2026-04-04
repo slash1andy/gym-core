@@ -282,7 +282,7 @@ final class TargetedContent {
 		$user_id = get_current_user_id();
 
 		if ( 0 === $user_id ) {
-			return '<p class="gym-greeting gym-greeting--guest">' . esc_html__( 'Welcome to Haanpaa Martial Arts!', 'gym-core' ) . '</p>';
+			return '<p class="gym-greeting gym-greeting--guest">' . esc_html( sprintf( __( 'Welcome to %s!', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ) . '</p>';
 		}
 
 		$user         = get_userdata( $user_id );

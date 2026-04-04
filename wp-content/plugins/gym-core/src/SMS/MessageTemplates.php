@@ -55,7 +55,11 @@ final class MessageTemplates {
 			),
 			'birthday'               => array(
 				'name'        => __( 'Birthday', 'gym-core' ),
-				'body'        => __( 'Happy birthday {first_name}! From your Haanpaa family. Come celebrate with a class on us this week!', 'gym-core' ),
+				'body'        => sprintf(
+					/* translators: %s: brand name */
+					__( 'Happy birthday {first_name}! From your %s family. Come celebrate with a class on us this week!', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				),
 				'description' => __( 'Sent on the member\'s birthday', 'gym-core' ),
 			),
 			'badge_earned'           => array(
@@ -85,7 +89,11 @@ final class MessageTemplates {
 			),
 			'reengage_90'            => array(
 				'name'        => __( 'Re-Engage (90 days)', 'gym-core' ),
-				'body'        => __( '{first_name}, we\'d love to have you back at Haanpaa. Reply for a special offer to restart your training.', 'gym-core' ),
+				'body'        => sprintf(
+					/* translators: %s: brand name */
+					__( '{first_name}, we\'d love to have you back at %s. Reply for a special offer to restart your training.', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				),
 				'description' => __( 'Sent after 90 days of inactivity', 'gym-core' ),
 			),
 		);

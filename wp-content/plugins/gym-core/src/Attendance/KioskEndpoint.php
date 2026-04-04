@@ -144,7 +144,7 @@ final class KioskEndpoint {
 				'location' => $location,
 				'timeout'  => $timeout,
 				'strings'  => array(
-					'title'          => __( 'Haanpaa Martial Arts', 'gym-core' ),
+					'title'          => \Gym_Core\Utilities\Brand::name(),
 					'subtitle'       => __( 'Tap to check in', 'gym-core' ),
 					'searchLabel'    => __( 'Search by Name', 'gym-core' ),
 					'searchPlaceholder' => __( 'Start typing your name...', 'gym-core' ),
@@ -212,7 +212,7 @@ final class KioskEndpoint {
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title><?php esc_html_e( 'Check in — Haanpaa Martial Arts', 'gym-core' ); ?></title>
+	<title><?php echo esc_html( sprintf( __( 'Check in — %s', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ); ?></title>
 	<?php wp_head(); ?>
 </head>
 <body class="gym-kiosk" data-location="<?php echo esc_attr( $location ); ?>">
@@ -221,7 +221,7 @@ final class KioskEndpoint {
 		<!-- Screen: Search -->
 		<div class="kiosk-screen kiosk-screen--search active" id="kiosk-search">
 			<div class="kiosk-header">
-				<h1 class="kiosk-title"><?php esc_html_e( 'Haanpaa Martial Arts', 'gym-core' ); ?></h1>
+				<h1 class="kiosk-title"><?php echo esc_html( \Gym_Core\Utilities\Brand::name() ); ?></h1>
 				<p class="kiosk-subtitle"><?php echo esc_html( ucfirst( $location ) ); ?></p>
 			</div>
 			<div class="kiosk-search-box">

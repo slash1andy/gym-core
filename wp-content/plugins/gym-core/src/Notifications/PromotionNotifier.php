@@ -83,7 +83,7 @@ final class PromotionNotifier {
 			. '<p>%s</p>'
 			. '<p><strong>%s</strong> — %s</p>'
 			. '<p>%s</p>'
-			. '<p style="margin-top:2em;color:#666;">— Haanpaa Martial Arts</p>'
+			. '<p style="margin-top:2em;color:#666;">— %s</p>'
 			. '</div>',
 			esc_html( $subject ),
 			esc_html( $user->display_name ),
@@ -94,7 +94,8 @@ final class PromotionNotifier {
 				/* translators: %s: date */
 				__( 'Promoted on %s.', 'gym-core' ),
 				wp_date( get_option( 'date_format' ) )
-			) )
+			) ),
+			esc_html( \Gym_Core\Utilities\Brand::name() )
 		);
 
 		$this->send_email( $user->user_email, $subject, $body );
@@ -102,11 +103,12 @@ final class PromotionNotifier {
 		// SMS.
 		if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
 			$sms_body = sprintf(
-				/* translators: 1: name, 2: rank, 3: program */
-				__( 'Congratulations %1$s! You\'ve been promoted to %2$s in %3$s at Haanpaa Martial Arts!', 'gym-core' ),
+				/* translators: 1: name, 2: rank, 3: program, 4: brand name */
+				__( 'Congratulations %1$s! You\'ve been promoted to %2$s in %3$s at %4$s!', 'gym-core' ),
 				$user->display_name,
 				$rank_label,
-				$program_label
+				$program_label,
+				\Gym_Core\Utilities\Brand::name()
 			);
 
 			$this->send_sms( $user_id, $sms_body );
@@ -138,7 +140,7 @@ final class PromotionNotifier {
 			. '<p>%s,</p>'
 			. '<p>%s</p>'
 			. '<p>%s</p>'
-			. '<p style="margin-top:2em;color:#666;">— Haanpaa Martial Arts</p>'
+			. '<p style="margin-top:2em;color:#666;">— %s</p>'
 			. '</div>',
 			esc_html( $subject ),
 			esc_html( $user->display_name ),
@@ -147,7 +149,8 @@ final class PromotionNotifier {
 				/* translators: %d: class count */
 				__( 'You completed %d classes and passed your coach evaluations. Welcome to the mat!', 'gym-core' ),
 				$status['classes_completed'] ?? 0
-			) )
+			) ),
+			esc_html( \Gym_Core\Utilities\Brand::name() )
 		);
 
 		$this->send_email( $user->user_email, $subject, $body );
@@ -156,8 +159,10 @@ final class PromotionNotifier {
 		if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
 			$sms_body = sprintf(
 				/* translators: %s: name */
-				__( 'Great news %s! You\'ve completed Foundations and are cleared for live training at HMA!', 'gym-core' ),
-				$user->display_name
+				/* translators: 1: name, 2: brand name */
+				__( 'Great news %1$s! You\'ve completed Foundations and are cleared for live training at %2$s!', 'gym-core' ),
+				$user->display_name,
+				\Gym_Core\Utilities\Brand::name()
 			);
 
 			$this->send_sms( $user_id, $sms_body );

@@ -158,6 +158,13 @@ final class Plugin {
 			$settings = new Admin\Settings();
 			$settings->register_hooks();
 
+			// CRM white-labeling and menu simplification.
+			$crm_whitelabel = new Admin\CrmWhiteLabel();
+			$crm_whitelabel->register_hooks();
+
+			$menu_manager = new Admin\MenuManager();
+			$menu_manager->register_hooks();
+
 			// Admin dashboards need attendance/rank stores — defer to gym_core_loaded
 			// when stores have been instantiated by register_attendance_modules().
 			add_action( 'gym_core_loaded', function (): void {
@@ -521,6 +528,9 @@ final class Plugin {
 		// Content gating hooks early — it guards purchasability and access.
 		$content_gating = new Member\ContentGating();
 		$content_gating->register_hooks();
+
+		$relationships = new Member\ContactRelationships();
+		$relationships->register_hooks();
 
 		// Dashboard needs stores + gamification, which are created in
 		// register_attendance_modules() and register_gamification_modules().

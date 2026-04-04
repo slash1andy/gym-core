@@ -81,7 +81,7 @@ class AgentRegistry {
 			'finance',
 			new AgentPersona(
 				'finance',
-				esc_html__( 'Joyous', 'hma-ai-chat' ),
+				esc_html__( 'Finance', 'hma-ai-chat' ),
 				esc_html__( 'Financial operations, billing, and revenue reporting', 'hma-ai-chat' ),
 				$this->get_finance_system_prompt(),
 				'manage_options',
@@ -179,9 +179,9 @@ class AgentRegistry {
 	 */
 	private function get_sales_system_prompt() {
 		return <<<PROMPT
-You are the Sales Agent for Haanpaa Martial Arts, an internal tool for the sales and front-desk staff.
+You are the Sales Agent for the gym, an internal tool for the sales and front-desk staff.
 
-Your audience is staff members (Matt, Rachel, Amanda) — never speak as if you are talking to a prospective student.
+Your audience is the sales and front-desk team — never speak as if you are talking to a prospective student.
 
 Your responsibilities:
 - Help staff qualify leads and prioritize follow-ups
@@ -199,7 +199,7 @@ When responding:
 - Recommend next steps with specific actions (call, text, schedule trial)
 
 Never draft external-facing messages without marking them clearly for staff review.
-Escalate complex pricing exceptions or contract questions to Darby via action requests.
+Escalate complex pricing exceptions or contract questions to the owner via action requests.
 PROMPT;
 	}
 
@@ -210,7 +210,7 @@ PROMPT;
 	 */
 	private function get_coaching_system_prompt() {
 		return <<<PROMPT
-You are the Coaching Agent for Haanpaa Martial Arts, an internal tool for instructors and head coaches (Darby, staff coaches).
+You are the Coaching Agent for the gym, an internal tool for instructors and head coaches.
 
 Your audience is coaching staff — never speak as if you are talking directly to a student.
 
@@ -230,7 +230,7 @@ When responding:
 - Support multi-program coaches (BJJ, kickboxing, kids) with program-specific context
 
 Do not diagnose injuries or replace medical advice. Recommend referring students to a medical professional.
-Escalate promotion disputes or parent concerns to Darby via action requests.
+Escalate promotion disputes or parent concerns to the head instructor via action requests.
 PROMPT;
 	}
 
@@ -241,7 +241,7 @@ PROMPT;
 	 */
 	private function get_finance_system_prompt() {
 		return <<<PROMPT
-You are the Finance Agent for Haanpaa Martial Arts, responsible for financial operations and reporting.
+You are the Finance Agent for the gym, responsible for financial operations and reporting.
 
 Your responsibilities:
 - Process and manage billing inquiries
@@ -272,7 +272,7 @@ PROMPT;
 	 */
 	private function get_admin_system_prompt() {
 		return <<<PROMPT
-You are the Admin Agent for Haanpaa Martial Arts, overseeing operational management.
+You are the Admin Agent for the gym, overseeing operational management.
 
 Your responsibilities:
 - Manage staff scheduling and assignments

@@ -28,11 +28,6 @@ final class StaffDashboard {
 	private const MENU_SLUG = 'gym-core';
 
 	/**
-	 * Joy's user login for default agent override.
-	 */
-	private const JOY_LOGIN = 'joy';
-
-	/**
 	 * Attendance store.
 	 *
 	 * @var AttendanceStore
@@ -223,15 +218,6 @@ final class StaffDashboard {
 	private function get_default_agent(): string {
 		$context = $this->get_role_context();
 
-		// Joy override: default to finance regardless of admin role.
-		if ( 'admin' === $context ) {
-			$user = wp_get_current_user();
-			if ( str_contains( strtolower( $user->user_login ), self::JOY_LOGIN )
-				|| str_contains( strtolower( $user->user_email ), self::JOY_LOGIN ) ) {
-				return 'finance';
-			}
-		}
-
 		$map = array(
 			'admin'   => 'admin',
 			'coach'   => 'coaching',
@@ -286,7 +272,7 @@ final class StaffDashboard {
 			echo '</div>';
 		} else {
 			echo '<div class="gym-dashboard-notice">';
-			echo '<p>' . esc_html__( 'AI Chat is not available. Install and activate the HMA AI Chat plugin.', 'gym-core' ) . '</p>';
+			echo '<p>' . esc_html( sprintf( __( 'AI Chat is not available. Install and activate the %s AI Chat plugin.', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ) . '</p>';
 			echo '</div>';
 		}
 
@@ -334,14 +320,20 @@ final class StaffDashboard {
 		echo '<div class="gym-stat-cards">';
 
 		// Today's attendance.
-		$rockford = $this->attendance->get_today_by_location( 'rockford' );
-		$beloit   = $this->attendance->get_today_by_location( 'beloit' );
-		$total    = count( $rockford ) + count( $beloit );
+		$locations       = \Gym_Core\Location\Taxonomy::get_location_labels();
+		$total           = 0;
+		$location_counts = array();
+		foreach ( $locations as $slug => $label ) {
+			$records                    = $this->attendance->get_today_by_location( $slug );
+			$location_counts[ $label ] = count( $records );
+			$total                     += count( $records );
+		}
 		$this->render_stat_card( (string) $total, __( 'Check-ins Today', 'gym-core' ) );
 
 		// Location breakdown.
-		$this->render_stat_card( (string) count( $rockford ), __( 'Rockford', 'gym-core' ) );
-		$this->render_stat_card( (string) count( $beloit ), __( 'Beloit', 'gym-core' ) );
+		foreach ( $location_counts as $label => $count ) {
+			$this->render_stat_card( (string) $count, $label );
+		}
 
 		// Active subscriptions.
 		$subs_count = $this->get_active_subscriptions_count();
@@ -372,10 +364,11 @@ final class StaffDashboard {
 		echo '<div class="gym-stat-cards">';
 
 		// Attendance by location.
-		$rockford = $this->attendance->get_today_by_location( 'rockford' );
-		$beloit   = $this->attendance->get_today_by_location( 'beloit' );
-		$this->render_stat_card( (string) count( $rockford ), __( 'Rockford Today', 'gym-core' ) );
-		$this->render_stat_card( (string) count( $beloit ), __( 'Beloit Today', 'gym-core' ) );
+		$locations = \Gym_Core\Location\Taxonomy::get_location_labels();
+		foreach ( $locations as $slug => $label ) {
+			$records = $this->attendance->get_today_by_location( $slug );
+			$this->render_stat_card( (string) count( $records ), $label . ' ' . __( 'Today', 'gym-core' ) );
+		}
 
 		// Promotion candidates.
 		$programs  = array( 'adult-bjj', 'kids-bjj', 'kickboxing' );
@@ -438,9 +431,12 @@ final class StaffDashboard {
 		$this->render_stat_card( (string) $new, __( 'New Orders (Month)', 'gym-core' ) );
 
 		// Today's attendance (sales context: foot traffic).
-		$rockford = $this->attendance->get_today_by_location( 'rockford' );
-		$beloit   = $this->attendance->get_today_by_location( 'beloit' );
-		$total    = count( $rockford ) + count( $beloit );
+		$locations = \Gym_Core\Location\Taxonomy::get_location_labels();
+		$total     = 0;
+		foreach ( $locations as $slug => $label ) {
+			$records = $this->attendance->get_today_by_location( $slug );
+			$total  += count( $records );
+		}
 		$this->render_stat_card( (string) $total, __( 'Visits Today', 'gym-core' ) );
 
 		echo '</div>';

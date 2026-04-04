@@ -41,6 +41,8 @@ final class Activator {
 		// Record activation timestamp for onboarding and upgrade logic.
 		update_option( 'gym_core_activated', gmdate( 'Y-m-d H:i:s' ) );
 		update_option( 'gym_core_version', GYM_CORE_VERSION );
+
+		self::maybe_create_comp_product();
 	}
 
 	/**
@@ -111,5 +113,46 @@ final class Activator {
 		if ( ! wp_next_scheduled( 'gym_core_daily_maintenance' ) ) {
 			wp_schedule_event( time(), 'daily', 'gym_core_daily_maintenance' );
 		}
+	}
+
+	/**
+	 * Creates the hidden "Comp Membership" product if it does not already exist.
+	 *
+	 * Uses WC_Product_Subscription when WooCommerce Subscriptions is active,
+	 * otherwise falls back to WC_Product_Simple.
+	 *
+	 * @return void
+	 */
+	private static function maybe_create_comp_product(): void {
+		if ( ! class_exists( 'WC_Product' ) ) {
+			return;
+		}
+
+		$existing = wc_get_product_id_by_sku( 'comp-membership' );
+		if ( $existing ) {
+			return;
+		}
+
+		if ( class_exists( 'WC_Product_Subscription' ) ) {
+			$product = new \WC_Product_Subscription();
+		} else {
+			$product = new \WC_Product_Simple();
+		}
+
+		$product->set_name( 'Comp Membership' );
+		$product->set_slug( 'comp-membership' );
+		$product->set_status( 'publish' );
+		$product->set_catalog_visibility( 'hidden' );
+		$product->set_regular_price( '0' );
+		$product->set_sku( 'comp-membership' );
+		$product->set_virtual( true );
+
+		if ( $product instanceof \WC_Product_Subscription ) {
+			$product->update_meta_data( '_subscription_price', '0' );
+			$product->update_meta_data( '_subscription_period', 'year' );
+			$product->update_meta_data( '_subscription_period_interval', '1' );
+		}
+
+		$product->save();
 	}
 }

@@ -62,10 +62,27 @@ class Taxonomy {
 	 * @return array<string, string> Slug => label.
 	 */
 	public static function get_location_labels(): array {
-		return array(
-			self::ROCKFORD => __( 'Rockford', 'gym-core' ),
-			self::BELOIT   => __( 'Beloit', 'gym-core' ),
+		$cached = wp_cache_get( 'gym_location_labels', 'gym_core' );
+		if ( false !== $cached ) {
+			return $cached;
+		}
+		$terms = get_terms(
+			array(
+				'taxonomy'   => self::SLUG,
+				'hide_empty' => false,
+				'orderby'    => 'name',
+				'order'      => 'ASC',
+			)
 		);
+		if ( is_wp_error( $terms ) || empty( $terms ) ) {
+			return array();
+		}
+		$labels = array();
+		foreach ( $terms as $term ) {
+			$labels[ $term->slug ] = $term->name;
+		}
+		wp_cache_set( 'gym_location_labels', $labels, 'gym_core', 300 );
+		return $labels;
 	}
 
 	/**
@@ -164,6 +181,7 @@ class Taxonomy {
 	 * @return bool True if the slug is a valid location, false otherwise.
 	 */
 	public static function is_valid( string $slug ): bool {
-		return in_array( $slug, self::VALID_LOCATIONS, true );
+		$locations = self::get_location_labels();
+		return isset( $locations[ $slug ] );
 	}
 }

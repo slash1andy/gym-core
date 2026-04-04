@@ -43,14 +43,13 @@ final class AttendanceDashboard {
 	private const LOCATION_META = '_gym_dashboard_location';
 
 	/**
-	 * Available locations.
+	 * Returns available locations from the taxonomy.
 	 *
-	 * @var array<string, string>
+	 * @return array<string, string> Slug => label.
 	 */
-	private const LOCATIONS = array(
-		'rockford' => 'Rockford',
-		'beloit'   => 'Beloit',
-	);
+	private static function get_locations(): array {
+		return \Gym_Core\Location\Taxonomy::get_location_labels();
+	}
 
 	/**
 	 * Attendance data store.
@@ -453,7 +452,15 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	private function render_today_tab( string $location ): void {
-		$records = $this->store->get_today_by_location( $location );
+		// "All" mode: merge attendance from every location.
+		if ( 'all' === $location || '' === $location ) {
+			$records = array();
+			foreach ( self::get_locations() as $slug => $label ) {
+				$records = array_merge( $records, $this->store->get_today_by_location( $slug ) );
+			}
+		} else {
+			$records = $this->store->get_today_by_location( $location );
+		}
 
 		// Group records by class.
 		$by_class = array();
@@ -533,8 +540,19 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	private function render_location_toggle( string $active ): void {
+		$locations = self::get_locations();
+
 		echo '<div class="gym-location-toggle">';
-		foreach ( self::LOCATIONS as $slug => $label ) {
+
+		// "All" button.
+		$all_class = ( '' === $active || 'all' === $active ) ? 'gym-loc-btn active' : 'gym-loc-btn';
+		printf(
+			'<button type="button" class="%s" data-location="all">%s</button>',
+			esc_attr( $all_class ),
+			esc_html__( 'All', 'gym-core' )
+		);
+
+		foreach ( $locations as $slug => $label ) {
 			$class = ( $slug === $active ) ? 'gym-loc-btn active' : 'gym-loc-btn';
 			printf(
 				'<button type="button" class="%s" data-location="%s">%s</button>',
@@ -754,7 +772,7 @@ final class AttendanceDashboard {
 		echo '<label for="gym-location-filter">' . esc_html__( 'Location', 'gym-core' ) . '</label>';
 		echo '<select id="gym-location-filter" name="location" onchange="this.form.submit();">';
 		echo '<option value="">' . esc_html__( 'All Locations', 'gym-core' ) . '</option>';
-		foreach ( self::LOCATIONS as $slug => $label ) {
+		foreach ( self::get_locations() as $slug => $label ) {
 			printf(
 				'<option value="%s" %s>%s</option>',
 				esc_attr( $slug ),
@@ -935,23 +953,25 @@ final class AttendanceDashboard {
 	 * @return string Location slug.
 	 */
 	private function get_current_location(): string {
-		$user_id = get_current_user_id();
+		$user_id   = get_current_user_id();
+		$locations = self::get_locations();
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( isset( $_GET['location'] ) ) {
 			$location = sanitize_key( wp_unslash( $_GET['location'] ) ); // phpcs:ignore WordPress.Security.NonceVerification.Recommended
-			if ( isset( self::LOCATIONS[ $location ] ) ) {
+			if ( 'all' === $location || isset( $locations[ $location ] ) ) {
 				update_user_meta( $user_id, self::LOCATION_META, $location );
 				return $location;
 			}
 		}
 
 		$saved = get_user_meta( $user_id, self::LOCATION_META, true );
-		if ( is_string( $saved ) && isset( self::LOCATIONS[ $saved ] ) ) {
+		if ( is_string( $saved ) && ( 'all' === $saved || isset( $locations[ $saved ] ) ) ) {
 			return $saved;
 		}
 
-		return 'rockford';
+		// Default to "all" so staff see combined view on first visit.
+		return 'all';
 	}
 
 	/**
@@ -977,17 +997,21 @@ final class AttendanceDashboard {
 					'value' => 'active',
 				),
 			),
-			'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
+			'orderby'        => 'meta_value',
+			'meta_key'       => '_gym_class_start_time', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+			'order'          => 'ASC',
+		);
+
+		// Filter by location unless showing all.
+		if ( 'all' !== $location && '' !== $location ) {
+			$args['tax_query'] = array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				array(
 					'taxonomy' => 'gym_location',
 					'field'    => 'slug',
 					'terms'    => $location,
 				),
-			),
-			'orderby'        => 'meta_value',
-			'meta_key'       => '_gym_class_start_time', // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
-			'order'          => 'ASC',
-		);
+			);
+		}
 
 		return get_posts( $args );
 	}
