@@ -109,8 +109,5 @@ add_action(
 
 		// Register WP-CLI commands when running in CLI mode.
 		Gym_Core\CLI\ImportCommand::register();
-
-		// TEMPORARY: Register CRM bulk sync REST endpoint. DELETE after sync.
-		Gym_Core\API\TempCrmSyncController::register();
 	}
 );
