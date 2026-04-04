@@ -1,0 +1,720 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Gym Core REST API",
+    "description": "REST API for Haanpaa Martial Arts gym management. All endpoints use the gym/v1 namespace and return a standard envelope: { success: true, data: <payload>, meta?: { pagination? } }.",
+    "version": "2.1.0",
+    "contact": {
+      "name": "Andrew Wikel"
+    }
+  },
+  "servers": [
+    {
+      "url": "/wp-json/gym/v1",
+      "description": "WordPress REST API (gym/v1 namespace)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-WP-Nonce",
+        "description": "WordPress REST nonce (cookie authentication)"
+      },
+      "applicationPassword": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "WordPress Application Password"
+      }
+    },
+    "schemas": {
+      "SuccessEnvelope": {
+        "type": "object",
+        "required": ["success", "data"],
+        "properties": {
+          "success": { "type": "boolean", "enum": [true] },
+          "data": {},
+          "meta": {
+            "type": "object",
+            "properties": {
+              "pagination": { "$ref": "#/components/schemas/Pagination" }
+            }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "total": { "type": "integer" },
+          "total_pages": { "type": "integer" },
+          "page": { "type": "integer" },
+          "per_page": { "type": "integer" }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "string" },
+          "message": { "type": "string" },
+          "data": {
+            "type": "object",
+            "properties": {
+              "status": { "type": "integer" }
+            }
+          }
+        }
+      },
+      "CheckIn": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "user_id": { "type": "integer" },
+          "class_id": { "type": "integer" },
+          "location": { "type": "string" },
+          "method": { "type": "string", "enum": ["qr_scan", "member_id", "name_search", "manual"] },
+          "checked_in_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Rank": {
+        "type": "object",
+        "properties": {
+          "program": { "type": "string" },
+          "belt": { "type": "string" },
+          "stripes": { "type": "integer" },
+          "promoted_at": { "type": "string", "format": "date-time" },
+          "attendance_since_promotion": { "type": "integer" },
+          "next_belt": { "type": "string", "nullable": true }
+        }
+      },
+      "RankHistoryEntry": {
+        "type": "object",
+        "properties": {
+          "program": { "type": "string" },
+          "from_belt": { "type": "string" },
+          "from_stripes": { "type": "integer", "nullable": true },
+          "to_belt": { "type": "string" },
+          "to_stripes": { "type": "integer" },
+          "promoted_at": { "type": "string", "format": "date-time" },
+          "promoted_by": {
+            "type": "object",
+            "nullable": true,
+            "properties": {
+              "id": { "type": "integer" },
+              "name": { "type": "string" }
+            }
+          },
+          "notes": { "type": "string" }
+        }
+      },
+      "Badge": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "icon_url": { "type": "string" },
+          "category": { "type": "string" },
+          "criteria_summary": { "type": "string" },
+          "earned": { "type": "boolean" },
+          "earned_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      },
+      "Streak": {
+        "type": "object",
+        "properties": {
+          "current_streak": { "type": "integer" },
+          "longest_streak": { "type": "integer" },
+          "streak_started_at": { "type": "string", "format": "date" },
+          "freezes_remaining": { "type": "integer" },
+          "last_check_in_date": { "type": "string", "format": "date" },
+          "streak_status": { "type": "string", "enum": ["active", "frozen", "broken"] }
+        }
+      },
+      "Location": {
+        "type": "object",
+        "properties": {
+          "slug": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "product_count": { "type": "integer" }
+        }
+      },
+      "Briefing": {
+        "type": "object",
+        "properties": {
+          "class": { "type": "object" },
+          "roster": { "type": "array", "items": { "type": "object" } },
+          "attendance_stats": { "type": "object" },
+          "new_students": { "type": "array", "items": { "type": "object" } },
+          "announcements": { "type": "array", "items": { "type": "object" } },
+          "promotion_eligible": { "type": "array", "items": { "type": "object" } }
+        }
+      },
+      "Announcement": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "title": { "type": "string" },
+          "content": { "type": "string" },
+          "type": { "type": "string", "enum": ["global", "location", "program"] },
+          "target_location": { "type": "string" },
+          "target_program": { "type": "string" },
+          "start_date": { "type": "string", "format": "date" },
+          "end_date": { "type": "string", "format": "date" },
+          "pinned": { "type": "boolean" },
+          "author": { "type": "string" }
+        }
+      },
+      "FoundationsStatus": {
+        "type": "object",
+        "properties": {
+          "user_id": { "type": "integer" },
+          "enrolled": { "type": "boolean" },
+          "coach_rolls": { "type": "integer" },
+          "required_rolls": { "type": "integer" },
+          "cleared": { "type": "boolean" },
+          "cleared_at": { "type": "string", "format": "date-time", "nullable": true }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/check-in": {
+      "post": {
+        "summary": "Record member check-in",
+        "tags": ["Attendance"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "class_id", "method"],
+                "properties": {
+                  "user_id": { "type": "integer" },
+                  "class_id": { "type": "integer" },
+                  "method": { "type": "string", "enum": ["qr_scan", "member_id", "name_search", "manual"] },
+                  "location": { "type": "string", "description": "Location slug fallback for Open Mat" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Check-in recorded" },
+          "401": { "description": "Not authenticated" },
+          "403": { "description": "Requires gym_check_in_member or manage_options" }
+        }
+      }
+    },
+    "/attendance/{user_id}": {
+      "get": {
+        "summary": "Get member attendance history",
+        "tags": ["Attendance"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "from", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "to", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated attendance records" }
+        }
+      }
+    },
+    "/attendance/today": {
+      "get": {
+        "summary": "Get today's check-ins",
+        "tags": ["Attendance"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "location", "in": "query", "schema": { "type": "string" } },
+          { "name": "class_id", "in": "query", "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Today's check-in records" },
+          "403": { "description": "Requires gym_view_attendance or manage_woocommerce" }
+        }
+      }
+    },
+    "/classes": {
+      "get": {
+        "summary": "List all classes",
+        "tags": ["Schedule"],
+        "parameters": [
+          { "name": "location", "in": "query", "schema": { "type": "string" } },
+          { "name": "program", "in": "query", "schema": { "type": "string" } },
+          { "name": "instructor", "in": "query", "schema": { "type": "integer" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated class list" }
+        }
+      }
+    },
+    "/classes/{id}": {
+      "get": {
+        "summary": "Get single class detail",
+        "tags": ["Schedule"],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Class detail" },
+          "404": { "description": "Class not found" }
+        }
+      }
+    },
+    "/schedule": {
+      "get": {
+        "summary": "Weekly schedule view",
+        "tags": ["Schedule"],
+        "parameters": [
+          { "name": "location", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "week_of", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "program", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Weekly schedule grouped by day" }
+        }
+      }
+    },
+    "/members/me/dashboard": {
+      "get": {
+        "summary": "Aggregated member dashboard",
+        "tags": ["Members"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "responses": {
+          "200": { "description": "Dashboard data: member info, memberships, billing, upcoming classes, rank, gamification" },
+          "401": { "description": "Not authenticated" }
+        }
+      }
+    },
+    "/members/{id}/rank": {
+      "get": {
+        "summary": "Get member's current rank",
+        "tags": ["Rank"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "program", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Current rank by program" }
+        }
+      }
+    },
+    "/members/{id}/rank-history": {
+      "get": {
+        "summary": "Get member's promotion history",
+        "tags": ["Rank"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "program", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated promotion history" }
+        }
+      }
+    },
+    "/ranks/promote": {
+      "post": {
+        "summary": "Promote member to next rank/stripe",
+        "tags": ["Rank"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "program"],
+                "properties": {
+                  "user_id": { "type": "integer" },
+                  "program": { "type": "string" },
+                  "belt": { "type": "string" },
+                  "stripes": { "type": "integer" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Updated rank" },
+          "403": { "description": "Requires gym_promote_student" }
+        }
+      }
+    },
+    "/promotions/eligible": {
+      "get": {
+        "summary": "List promotion-eligible members",
+        "tags": ["Promotions"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "program", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated eligible members" },
+          "403": { "description": "Requires manage_woocommerce" }
+        }
+      }
+    },
+    "/promotions/recommend": {
+      "post": {
+        "summary": "Set coach recommendation for promotion",
+        "tags": ["Promotions"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id", "program"],
+                "properties": {
+                  "user_id": { "type": "integer" },
+                  "program": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Recommendation set" },
+          "403": { "description": "Requires gym_promote_student" },
+          "404": { "description": "Member not found" }
+        }
+      }
+    },
+    "/badges": {
+      "get": {
+        "summary": "List all badge definitions",
+        "tags": ["Gamification"],
+        "parameters": [
+          { "name": "category", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Badge definitions (earned state included if authenticated)" }
+        }
+      }
+    },
+    "/members/{id}/badges": {
+      "get": {
+        "summary": "Get badges earned by member",
+        "tags": ["Gamification"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated earned badges" }
+        }
+      }
+    },
+    "/members/{id}/streak": {
+      "get": {
+        "summary": "Get member's training streak",
+        "tags": ["Gamification"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Current and longest streak data" }
+        }
+      }
+    },
+    "/locations": {
+      "get": {
+        "summary": "List all gym locations",
+        "tags": ["Locations"],
+        "responses": {
+          "200": { "description": "All locations" }
+        }
+      }
+    },
+    "/locations/{slug}": {
+      "get": {
+        "summary": "Get single location",
+        "tags": ["Locations"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Location detail" },
+          "404": { "description": "Location not found" }
+        }
+      }
+    },
+    "/locations/{slug}/products": {
+      "get": {
+        "summary": "Get products at a location",
+        "tags": ["Locations"],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated product list" }
+        }
+      }
+    },
+    "/user/location": {
+      "get": {
+        "summary": "Get current user's saved location",
+        "tags": ["Locations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "responses": {
+          "200": { "description": "User's location preference" }
+        }
+      },
+      "put": {
+        "summary": "Update user's location preference",
+        "tags": ["Locations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "responses": {
+          "200": { "description": "Location preference updated" }
+        }
+      }
+    },
+    "/briefings/class/{class_id}": {
+      "get": {
+        "summary": "Generate briefing for a specific class",
+        "tags": ["Briefings"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "class_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Class briefing with roster, stats, announcements" },
+          "403": { "description": "Requires gym_view_briefing or manage_woocommerce" }
+        }
+      }
+    },
+    "/briefings/today": {
+      "get": {
+        "summary": "Get briefings for all today's classes",
+        "tags": ["Briefings"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "location", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "All briefings for today, sorted by start time" }
+        }
+      }
+    },
+    "/announcements": {
+      "get": {
+        "summary": "List active announcements",
+        "tags": ["Briefings"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "location", "in": "query", "schema": { "type": "string" } },
+          { "name": "program", "in": "query", "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "schema": { "type": "integer", "default": 1 } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 10, "maximum": 100 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated active announcements" }
+        }
+      },
+      "post": {
+        "summary": "Create an announcement",
+        "tags": ["Briefings"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "content": { "type": "string" },
+                  "type": { "type": "string", "enum": ["global", "location", "program"], "default": "global" },
+                  "target_location": { "type": "string" },
+                  "target_program": { "type": "string" },
+                  "start_date": { "type": "string", "format": "date" },
+                  "end_date": { "type": "string", "format": "date" },
+                  "pinned": { "type": "boolean", "default": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Announcement created" },
+          "403": { "description": "Requires gym_manage_announcements" }
+        }
+      }
+    },
+    "/foundations/{user_id}": {
+      "get": {
+        "summary": "Get Foundations clearance status",
+        "tags": ["Foundations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "parameters": [
+          { "name": "user_id", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Foundations status" }
+        }
+      }
+    },
+    "/foundations/enroll": {
+      "post": {
+        "summary": "Enroll student in Foundations",
+        "tags": ["Foundations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id"],
+                "properties": {
+                  "user_id": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Student enrolled" },
+          "403": { "description": "Requires gym_promote_student" }
+        }
+      }
+    },
+    "/foundations/coach-roll": {
+      "post": {
+        "summary": "Record supervised coach roll",
+        "tags": ["Foundations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id"],
+                "properties": {
+                  "user_id": { "type": "integer" },
+                  "notes": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Coach roll recorded" },
+          "403": { "description": "Requires gym_promote_student" }
+        }
+      }
+    },
+    "/foundations/clear": {
+      "post": {
+        "summary": "Clear student for live training",
+        "tags": ["Foundations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["user_id"],
+                "properties": {
+                  "user_id": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Student cleared" },
+          "403": { "description": "Requires gym_promote_student" }
+        }
+      }
+    },
+    "/foundations/active": {
+      "get": {
+        "summary": "List students in Foundations",
+        "tags": ["Foundations"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "responses": {
+          "200": { "description": "Active Foundations students" },
+          "403": { "description": "Requires gym_view_ranks or manage_woocommerce" }
+        }
+      }
+    },
+    "/sms/send": {
+      "post": {
+        "summary": "Send SMS to contact (rate-limited)",
+        "tags": ["SMS"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["phone"],
+                "properties": {
+                  "phone": { "type": "string", "description": "E.164 format" },
+                  "message": { "type": "string", "maxLength": 1600 },
+                  "template_slug": { "type": "string" },
+                  "variables": { "type": "object" },
+                  "contact_id": { "type": "integer" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "SMS sent" },
+          "403": { "description": "Requires manage_options or gym_send_sms" },
+          "429": { "description": "Rate limit exceeded" }
+        }
+      }
+    },
+    "/sms/templates": {
+      "get": {
+        "summary": "List available SMS templates",
+        "tags": ["SMS"],
+        "security": [{ "cookieAuth": [] }, { "applicationPassword": [] }],
+        "responses": {
+          "200": { "description": "SMS templates" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Attendance", "description": "Check-in and attendance history" },
+    { "name": "Schedule", "description": "Class listings and weekly schedule" },
+    { "name": "Members", "description": "Member dashboard" },
+    { "name": "Rank", "description": "Belt rank and promotion history" },
+    { "name": "Promotions", "description": "Promotion eligibility and recommendations" },
+    { "name": "Gamification", "description": "Badges and training streaks" },
+    { "name": "Locations", "description": "Gym locations and products" },
+    { "name": "Briefings", "description": "Coach briefings and announcements" },
+    { "name": "Foundations", "description": "Foundations clearance program" },
+    { "name": "SMS", "description": "SMS messaging and templates" }
+  ]
+}

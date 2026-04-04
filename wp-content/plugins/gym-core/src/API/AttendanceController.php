@@ -68,18 +68,20 @@ class AttendanceController extends BaseController {
 				'callback'            => array( $this, 'check_in' ),
 				'permission_callback' => array( $this, 'permissions_check_in' ),
 				'args'                => array(
-					'user_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-					'class_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'user_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'class_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 					'method'   => array(
 						'type'              => 'string',
 						'required'          => true,
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 						'enum'              => array( 'qr_scan', 'member_id', 'name_search', 'manual' ),
 					),
 					'location' => array(
 						'type'              => 'string',
 						'required'          => false,
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 						'description'       => __( 'Location slug. Used as fallback when class_id is 0 (Open Mat).', 'gym-core' ),
 					),
 				),
@@ -96,9 +98,9 @@ class AttendanceController extends BaseController {
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(
-						'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-						'from'    => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
-						'to'      => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
+						'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+						'from'    => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+						'to'      => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
 					)
 				),
 			)
@@ -112,8 +114,8 @@ class AttendanceController extends BaseController {
 				'callback'            => array( $this, 'get_today' ),
 				'permission_callback' => array( $this, 'permissions_view_all_attendance' ),
 				'args'                => array(
-					'location' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
-					'class_id' => array( 'type' => 'integer', 'sanitize_callback' => 'absint' ),
+					'location' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+					'class_id' => array( 'type' => 'integer', 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);

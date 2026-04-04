@@ -60,8 +60,8 @@ class RankController extends BaseController {
 				'callback'            => array( $this, 'get_rank' ),
 				'permission_callback' => array( $this, 'permissions_view_rank' ),
 				'args'                => array(
-					'id'      => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-					'program' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
+					'id'      => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'program' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);
@@ -76,8 +76,8 @@ class RankController extends BaseController {
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(
-						'id'      => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-						'program' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
+						'id'      => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+						'program' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
 					)
 				),
 			)
@@ -91,11 +91,11 @@ class RankController extends BaseController {
 				'callback'            => array( $this, 'promote' ),
 				'permission_callback' => array( $this, 'permissions_promote' ),
 				'args'                => array(
-					'user_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-					'program'  => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
-					'belt'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field' ),
-					'stripes'  => array( 'type' => 'integer', 'sanitize_callback' => 'absint' ),
-					'notes'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field' ),
+					'user_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'program'  => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+					'belt'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+					'stripes'  => array( 'type' => 'integer', 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'notes'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);
@@ -161,8 +161,10 @@ class RankController extends BaseController {
 	 * @return \WP_REST_Response
 	 */
 	public function get_rank_history( \WP_REST_Request $request ): \WP_REST_Response {
-		$user_id = $request->get_param( 'id' );
-		$program = $request->get_param( 'program' ) ?: '';
+		$user_id  = $request->get_param( 'id' );
+		$program  = $request->get_param( 'program' ) ?: '';
+		$page     = (int) $request->get_param( 'page' );
+		$per_page = (int) $request->get_param( 'per_page' );
 
 		$history = $this->ranks->get_history( $user_id, $program );
 
@@ -184,7 +186,14 @@ class RankController extends BaseController {
 			$history
 		);
 
-		return $this->success_response( $formatted );
+		$total       = count( $formatted );
+		$total_pages = (int) ceil( $total / $per_page );
+		$formatted   = array_slice( $formatted, ( $page - 1 ) * $per_page, $per_page );
+
+		return $this->success_response(
+			$formatted,
+			$this->pagination_meta( $total, $total_pages, $page, $per_page )
+		);
 	}
 
 	/**

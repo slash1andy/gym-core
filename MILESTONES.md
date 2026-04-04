@@ -1071,7 +1071,7 @@ ACCEPTANCE:
 
 #### 6.10 — gym/v1 Endpoint Completeness Audit
 ```
-STATUS: READY
+STATUS: COMPLETE
 DESCRIPTION: Verify that all gym/v1 REST API endpoints required by the AI agent tool
              definitions (6.1) are complete, documented, and return consistent schemas.
              This is a gate task — M6 agent tools cannot be wired up until the read

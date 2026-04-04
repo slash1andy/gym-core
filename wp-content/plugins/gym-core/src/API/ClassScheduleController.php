@@ -50,14 +50,17 @@ class ClassScheduleController extends BaseController {
 						'location'   => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'program'    => array(
 							'type'              => 'string',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'instructor' => array(
 							'type'              => 'integer',
 							'sanitize_callback' => 'absint',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 					)
 				),
@@ -76,6 +79,7 @@ class ClassScheduleController extends BaseController {
 						'type'              => 'integer',
 						'required'          => true,
 						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
 			)
@@ -93,15 +97,18 @@ class ClassScheduleController extends BaseController {
 						'type'              => 'string',
 						'required'          => true,
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 					),
 					'week_of'  => array(
 						'type'              => 'string',
 						'default'           => '',
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 					),
 					'program'  => array(
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
 			)

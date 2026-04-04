@@ -61,6 +61,7 @@ class BriefingController extends BaseController {
 						'type'              => 'integer',
 						'required'          => true,
 						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
 			)
@@ -77,6 +78,7 @@ class BriefingController extends BaseController {
 					'location' => array(
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 						'description'       => __( 'Filter by location slug.', 'gym-core' ),
 					),
 				),
@@ -91,17 +93,22 @@ class BriefingController extends BaseController {
 					'methods'             => \WP_REST_Server::READABLE,
 					'callback'            => array( $this, 'get_announcements' ),
 					'permission_callback' => array( $this, 'permissions_view_briefing' ),
-					'args'                => array(
-						'location' => array(
-							'type'              => 'string',
-							'sanitize_callback' => 'sanitize_text_field',
-							'description'       => __( 'Filter by location slug.', 'gym-core' ),
-						),
-						'program'  => array(
-							'type'              => 'string',
-							'sanitize_callback' => 'sanitize_text_field',
-							'description'       => __( 'Filter by program slug.', 'gym-core' ),
-						),
+					'args'                => array_merge(
+						$this->pagination_route_args(),
+						array(
+							'location' => array(
+								'type'              => 'string',
+								'sanitize_callback' => 'sanitize_text_field',
+								'validate_callback' => 'rest_validate_request_arg',
+								'description'       => __( 'Filter by location slug.', 'gym-core' ),
+							),
+							'program'  => array(
+								'type'              => 'string',
+								'sanitize_callback' => 'sanitize_text_field',
+								'validate_callback' => 'rest_validate_request_arg',
+								'description'       => __( 'Filter by program slug.', 'gym-core' ),
+							),
+						)
 					),
 				),
 				array(
@@ -113,18 +120,21 @@ class BriefingController extends BaseController {
 							'type'              => 'string',
 							'required'          => true,
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'content'         => array(
 							'type'              => 'string',
 							'required'          => false,
 							'default'           => '',
 							'sanitize_callback' => 'wp_kses_post',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'type'            => array(
 							'type'              => 'string',
 							'required'          => false,
 							'default'           => 'global',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 							'enum'              => array( 'global', 'location', 'program' ),
 						),
 						'target_location' => array(
@@ -132,18 +142,21 @@ class BriefingController extends BaseController {
 							'required'          => false,
 							'default'           => '',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'target_program'  => array(
 							'type'              => 'string',
 							'required'          => false,
 							'default'           => '',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 						'start_date'      => array(
 							'type'              => 'string',
 							'required'          => false,
 							'default'           => '',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 							'description'       => __( 'Start date in Y-m-d format.', 'gym-core' ),
 						),
 						'end_date'        => array(
@@ -151,12 +164,14 @@ class BriefingController extends BaseController {
 							'required'          => false,
 							'default'           => '',
 							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
 							'description'       => __( 'End date in Y-m-d format.', 'gym-core' ),
 						),
 						'pinned'          => array(
 							'type'              => 'boolean',
 							'required'          => false,
 							'default'           => false,
+							'validate_callback' => 'rest_validate_request_arg',
 						),
 					),
 				),
@@ -249,9 +264,11 @@ class BriefingController extends BaseController {
 			}
 		);
 
+		$total = count( $briefings );
+
 		return $this->success_response(
 			$briefings,
-			array( 'total' => count( $briefings ) )
+			$this->pagination_meta( $total, 1, 1, $total ?: 1 )
 		);
 	}
 
@@ -266,12 +283,18 @@ class BriefingController extends BaseController {
 	public function get_announcements( \WP_REST_Request $request ): \WP_REST_Response {
 		$location = $request->get_param( 'location' ) ?: '';
 		$program  = $request->get_param( 'program' ) ?: '';
+		$page     = (int) $request->get_param( 'page' );
+		$per_page = (int) $request->get_param( 'per_page' );
 
 		$announcements = AnnouncementPostType::get_active_announcements( $location, $program );
 
+		$total       = count( $announcements );
+		$total_pages = (int) ceil( $total / $per_page );
+		$announcements = array_slice( $announcements, ( $page - 1 ) * $per_page, $per_page );
+
 		return $this->success_response(
 			$announcements,
-			array( 'total' => count( $announcements ) )
+			$this->pagination_meta( $total, $total_pages, $page, $per_page )
 		);
 	}
 

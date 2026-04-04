@@ -49,12 +49,16 @@ class PromotionController extends BaseController {
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_eligible' ),
 				'permission_callback' => array( $this, 'permissions_manage' ),
-				'args'                => array(
-					'program' => array(
-						'type'              => 'string',
-						'required'          => true,
-						'sanitize_callback' => 'sanitize_text_field',
-					),
+				'args'                => array_merge(
+					$this->pagination_route_args(),
+					array(
+						'program' => array(
+							'type'              => 'string',
+							'required'          => true,
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
+					)
 				),
 			)
 		);
@@ -67,8 +71,8 @@ class PromotionController extends BaseController {
 				'callback'            => array( $this, 'recommend' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-					'program' => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field' ),
+					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'program' => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);
@@ -95,12 +99,19 @@ class PromotionController extends BaseController {
 	 * @return \WP_REST_Response
 	 */
 	public function get_eligible( \WP_REST_Request $request ): \WP_REST_Response {
-		$program = $request->get_param( 'program' );
+		$program  = $request->get_param( 'program' );
+		$page     = (int) $request->get_param( 'page' );
+		$per_page = (int) $request->get_param( 'per_page' );
+
 		$members = $this->eligibility->get_eligible_members( $program );
+
+		$total       = count( $members );
+		$total_pages = (int) ceil( $total / $per_page );
+		$members     = array_slice( $members, ( $page - 1 ) * $per_page, $per_page );
 
 		return $this->success_response(
 			$members,
-			array( 'total' => count( $members ) )
+			$this->pagination_meta( $total, $total_pages, $page, $per_page )
 		);
 	}
 
