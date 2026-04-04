@@ -64,6 +64,7 @@ class ChatPage {
 				'apiUrl'       => rest_url( 'hma-ai-chat/v1/' ),
 				'nonce'        => wp_create_nonce( 'wp_rest' ),
 				'userRole'     => $this->get_user_role(),
+				'canManageActions' => current_user_can( 'manage_options' ),
 				'agents'       => $this->get_available_agents(),
 				'currentUserId' => get_current_user_id(),
 				'strings'      => $this->get_strings(),
@@ -136,6 +137,9 @@ class ChatPage {
 			'actionApproved'       => esc_html__( 'Action approved. Executing now.', 'hma-ai-chat' ),
 			'actionApprovedChanges' => esc_html__( 'Action approved with changes. Agent will revise and execute.', 'hma-ai-chat' ),
 			'actionRejected'       => esc_html__( 'Action rejected and discarded.', 'hma-ai-chat' ),
+			'selectAll'            => esc_html__( 'Select All', 'hma-ai-chat' ),
+			'bulkApprove'          => esc_html__( 'Approve Selected', 'hma-ai-chat' ),
+			'bulkReject'           => esc_html__( 'Reject Selected', 'hma-ai-chat' ),
 		);
 	}
 }

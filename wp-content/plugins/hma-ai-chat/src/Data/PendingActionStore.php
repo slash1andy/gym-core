@@ -293,6 +293,178 @@ class PendingActionStore {
 	}
 
 	/**
+	 * Get the count of pending actions.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @return int
+	 */
+	public function get_pending_count() {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'hma_ai_pending_actions';
+
+		// Check object cache first to avoid duplicate queries per request.
+		$cache_key = 'hma_ai_pending_count';
+		$count     = wp_cache_get( $cache_key );
+
+		if ( false === $count ) {
+			$count = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM $table WHERE status = %s",
+					'pending'
+				)
+			);
+			wp_cache_set( $cache_key, $count, '', 60 );
+		}
+
+		return (int) $count;
+	}
+
+	/**
+	 * Get all actions for the audit log with optional filters.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @param array $args {
+	 *     Optional. Query arguments.
+	 *
+	 *     @type string $status   Filter by status (pending, approved, rejected, etc.).
+	 *     @type string $agent    Filter by agent slug.
+	 *     @type int    $per_page Results per page. Default 20.
+	 *     @type int    $page     Page number. Default 1.
+	 * }
+	 * @return array{ items: array, total: int, total_pages: int }
+	 */
+	public function get_all_actions( $args = array() ) {
+		global $wpdb;
+
+		$table    = $wpdb->prefix . 'hma_ai_pending_actions';
+		$defaults = array(
+			'status'   => '',
+			'agent'    => '',
+			'per_page' => 20,
+			'page'     => 1,
+		);
+		$args     = wp_parse_args( $args, $defaults );
+
+		$where  = array( '1=1' );
+		$values = array();
+
+		if ( ! empty( $args['status'] ) ) {
+			$where[]  = 'status = %s';
+			$values[] = sanitize_text_field( $args['status'] );
+		}
+
+		if ( ! empty( $args['agent'] ) ) {
+			$where[]  = 'agent = %s';
+			$values[] = sanitize_text_field( $args['agent'] );
+		}
+
+		$where_clause = 'WHERE ' . implode( ' AND ', $where );
+
+		// Get total count.
+		if ( ! empty( $values ) ) {
+			$total = (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM $table $where_clause", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+					...$values
+				)
+			);
+		} else {
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $table is from $wpdb->prefix, WHERE is static 1=1.
+			$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table $where_clause" );
+		}
+
+		$results = $wpdb->get_results( $query, ARRAY_A );
+
+		if ( ! $results ) {
+			$results = array();
+		}
+
+		foreach ( $results as &$action ) {
+			$action['action_data'] = json_decode( $action['action_data'], true );
+		}
+
+		return array(
+			'items'       => $results,
+			'total'       => $total,
+			'total_pages' => (int) ceil( $total / $per_page ),
+		);
+	}
+
+	/**
+	 * Bulk approve pending actions.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @param array $action_ids Array of action IDs to approve.
+	 * @param int   $user_id    User ID approving the actions.
+	 * @return array{ approved: int[], failed: int[] }
+	 */
+	public function bulk_approve( $action_ids, $user_id ) {
+		$approved = array();
+		$failed   = array();
+
+		foreach ( $action_ids as $action_id ) {
+			$action_id = absint( $action_id );
+			$action    = $this->get_action( $action_id );
+
+			if ( ! $action || 'pending' !== $action['status'] ) {
+				$failed[] = $action_id;
+				continue;
+			}
+
+			if ( $this->approve_action( $action_id, $user_id ) ) {
+				$approved[] = $action_id;
+			} else {
+				$failed[] = $action_id;
+			}
+		}
+
+		return array(
+			'approved' => $approved,
+			'failed'   => $failed,
+		);
+	}
+
+	/**
+	 * Bulk reject pending actions.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @param array  $action_ids Array of action IDs to reject.
+	 * @param int    $user_id    User ID rejecting the actions.
+	 * @param string $reason     Optional rejection reason.
+	 * @return array{ rejected: int[], failed: int[] }
+	 */
+	public function bulk_reject( $action_ids, $user_id, $reason = '' ) {
+		$rejected = array();
+		$failed   = array();
+
+		foreach ( $action_ids as $action_id ) {
+			$action_id = absint( $action_id );
+			$action    = $this->get_action( $action_id );
+
+			if ( ! $action || 'pending' !== $action['status'] ) {
+				$failed[] = $action_id;
+				continue;
+			}
+
+			if ( $this->reject_action( $action_id, $user_id, $reason ) ) {
+				$rejected[] = $action_id;
+			} else {
+				$failed[] = $action_id;
+			}
+		}
+
+		return array(
+			'rejected' => $rejected,
+			'failed'   => $failed,
+		);
+	}
+
+	/**
 	 * Get a single pending action.
 	 *
 	 * @param int $action_id Action ID.

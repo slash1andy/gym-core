@@ -116,6 +116,80 @@ class ActionEndpoint {
 			)
 		);
 
+		// POST: Bulk approve or reject actions.
+		register_rest_route(
+			self::ROUTE,
+			'/actions/bulk',
+			array(
+				'methods'             => WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'bulk_action' ),
+				'permission_callback' => array( $this, 'check_permission' ),
+				'args'                => array(
+					'action_ids' => array(
+						'type'              => 'array',
+						'required'          => true,
+						'items'             => array( 'type' => 'integer' ),
+						'sanitize_callback' => static function ( $ids ) {
+							return array_map( 'absint', (array) $ids );
+						},
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'operation' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'enum'              => array( 'approve', 'reject' ),
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'reason'    => array(
+						'type'              => 'string',
+						'required'          => false,
+						'sanitize_callback' => 'sanitize_textarea_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+				),
+			)
+		);
+
+		// GET: Audit log — all actions with filters.
+		register_rest_route(
+			self::ROUTE,
+			'/actions/log',
+			array(
+				'methods'             => WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_audit_log' ),
+				'permission_callback' => array( $this, 'check_permission' ),
+				'args'                => array(
+					'status'   => array(
+						'type'              => 'string',
+						'required'          => false,
+						'enum'              => array( '', 'pending', 'approved', 'approved_with_changes', 'completed', 'rejected' ),
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'agent'    => array(
+						'type'              => 'string',
+						'required'          => false,
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'per_page' => array(
+						'type'              => 'integer',
+						'required'          => false,
+						'default'           => 20,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'page'     => array(
+						'type'              => 'integer',
+						'required'          => false,
+						'default'           => 1,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+				),
+			)
+		);
+
 		// GET: Get a single action's current status (for Paperclip polling).
 		register_rest_route(
 			self::ROUTE,
@@ -416,5 +490,97 @@ class ActionEndpoint {
 		}
 
 		return rest_ensure_response( $response_data );
+	}
+
+	/**
+	 * Bulk approve or reject actions.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response|WP_Error
+	 */
+	public function bulk_action( WP_REST_Request $request ) {
+		$action_ids = $request->get_param( 'action_ids' );
+		$operation  = $request->get_param( 'operation' );
+		$reason     = $request->get_param( 'reason' ) ?? '';
+		$store      = new \HMA_AI_Chat\Data\PendingActionStore();
+		$user_id    = get_current_user_id();
+
+		if ( empty( $action_ids ) ) {
+			return new WP_Error(
+				'empty_ids',
+				esc_html__( 'No action IDs provided.', 'hma-ai-chat' ),
+				array( 'status' => 400 )
+			);
+		}
+
+		if ( 'approve' === $operation ) {
+			$result = $store->bulk_approve( $action_ids, $user_id );
+
+			return rest_ensure_response(
+				array(
+					'success'  => true,
+					'approved' => $result['approved'],
+					'failed'   => $result['failed'],
+					'message'  => sprintf(
+						/* translators: 1: approved count, 2: failed count */
+						esc_html__( '%1$d approved, %2$d failed.', 'hma-ai-chat' ),
+						count( $result['approved'] ),
+						count( $result['failed'] )
+					),
+				)
+			);
+		}
+
+		$result = $store->bulk_reject( $action_ids, $user_id, $reason );
+
+		return rest_ensure_response(
+			array(
+				'success'  => true,
+				'rejected' => $result['rejected'],
+				'failed'   => $result['failed'],
+				'message'  => sprintf(
+					/* translators: 1: rejected count, 2: failed count */
+					esc_html__( '%1$d rejected, %2$d failed.', 'hma-ai-chat' ),
+					count( $result['rejected'] ),
+					count( $result['failed'] )
+				),
+			)
+		);
+	}
+
+	/**
+	 * Get the audit log of all actions.
+	 *
+	 * @since 0.3.0
+	 *
+	 * @param WP_REST_Request $request The request object.
+	 * @return WP_REST_Response
+	 */
+	public function get_audit_log( WP_REST_Request $request ) {
+		$store  = new \HMA_AI_Chat\Data\PendingActionStore();
+		$result = $store->get_all_actions(
+			array(
+				'status'   => $request->get_param( 'status' ) ?? '',
+				'agent'    => $request->get_param( 'agent' ) ?? '',
+				'per_page' => $request->get_param( 'per_page' ),
+				'page'     => $request->get_param( 'page' ),
+			)
+		);
+
+		// Enrich items with approver display names.
+		foreach ( $result['items'] as &$item ) {
+			if ( ! empty( $item['approved_by'] ) ) {
+				$user = get_userdata( (int) $item['approved_by'] );
+				$item['approved_by_name'] = $user ? $user->display_name : __( 'Unknown', 'hma-ai-chat' );
+			}
+		}
+
+		$response = rest_ensure_response( $result['items'] );
+		$response->header( 'X-WP-Total', $result['total'] );
+		$response->header( 'X-WP-TotalPages', $result['total_pages'] );
+
+		return $response;
 	}
 }

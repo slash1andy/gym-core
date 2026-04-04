@@ -52,13 +52,37 @@ class SettingsPage {
 		}
 
 		// Submenu: Gandalf Chat (parent menu registered by gym-core plugin).
+		$pending_count = 0;
+		if ( current_user_can( 'manage_options' ) ) {
+			$store         = new \HMA_AI_Chat\Data\PendingActionStore();
+			$pending_count = $store->get_pending_count();
+		}
+
+		$gandalf_label = esc_html__( 'Gandalf', 'hma-ai-chat' );
+		if ( $pending_count > 0 ) {
+			$gandalf_label .= sprintf(
+				' <span class="awaiting-mod">%d</span>',
+				$pending_count
+			);
+		}
+
 		add_submenu_page(
 			'gym-core',
 			esc_html__( 'Chat', 'hma-ai-chat' ),
-			esc_html__( 'Gandalf', 'hma-ai-chat' ),
+			$gandalf_label,
 			'edit_posts',
 			'hma-ai-chat',
 			array( $this, 'render_chat_page' )
+		);
+
+		// Submenu: Audit Log (admin only).
+		add_submenu_page(
+			'gym-core',
+			esc_html__( 'Audit Log', 'hma-ai-chat' ),
+			esc_html__( 'Audit Log', 'hma-ai-chat' ),
+			'manage_options',
+			AuditLogPage::PAGE_SLUG,
+			array( new AuditLogPage(), 'render_page' )
 		);
 
 		// Submenu: Settings (admin only).
@@ -434,10 +458,39 @@ class SettingsPage {
 	/**
 	 * Display admin notices for this settings page.
 	 *
+	 * Shows pending action alerts on all admin pages and
+	 * settings-specific notices on the settings page.
+	 *
 	 * @since 0.2.0
 	 * @internal
 	 */
 	public function display_admin_notices() {
+		// Pending actions notice — shown on all admin pages for admins.
+		if ( current_user_can( 'manage_options' ) ) {
+			$store         = new \HMA_AI_Chat\Data\PendingActionStore();
+			$pending_count = $store->get_pending_count();
+
+			if ( $pending_count > 0 ) {
+				$chat_url = admin_url( 'admin.php?page=hma-ai-chat' );
+				printf(
+					'<div class="notice notice-warning is-dismissible"><p>%s</p></div>',
+					sprintf(
+						/* translators: 1: pending count, 2: link open tag, 3: link close tag */
+						esc_html( _n(
+							'Gandalf has %1$d action awaiting your approval. %2$sReview now%3$s',
+							'Gandalf has %1$d actions awaiting your approval. %2$sReview now%3$s',
+							$pending_count,
+							'hma-ai-chat'
+						) ),
+						$pending_count,
+						'<a href="' . esc_url( $chat_url ) . '">',
+						'</a>'
+					)
+				);
+			}
+		}
+
+		// Settings page-specific notices below.
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( ! isset( $_GET['page'] ) || self::PAGE_SLUG !== $_GET['page'] ) {
 			return;

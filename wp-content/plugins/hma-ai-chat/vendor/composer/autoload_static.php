@@ -27,6 +27,7 @@ class ComposerStaticInitfa347bfe4bd76156e47a60cb18d65f45
         'HMA_AI_Chat\\API\\HeartbeatEndpoint' => __DIR__ . '/../..' . '/src/API/HeartbeatEndpoint.php',
         'HMA_AI_Chat\\API\\MessageEndpoint' => __DIR__ . '/../..' . '/src/API/MessageEndpoint.php',
         'HMA_AI_Chat\\Activator' => __DIR__ . '/../..' . '/src/Activator.php',
+        'HMA_AI_Chat\\Admin\\AuditLogPage' => __DIR__ . '/../..' . '/src/Admin/AuditLogPage.php',
         'HMA_AI_Chat\\Admin\\ChatPage' => __DIR__ . '/../..' . '/src/Admin/ChatPage.php',
         'HMA_AI_Chat\\Admin\\SettingsPage' => __DIR__ . '/../..' . '/src/Admin/SettingsPage.php',
         'HMA_AI_Chat\\Agents\\AgentPersona' => __DIR__ . '/../..' . '/src/Agents/AgentPersona.php',

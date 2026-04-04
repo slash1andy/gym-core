@@ -1035,8 +1035,11 @@ ACCEPTANCE:
 
 #### 6.2 — LibreChat Integration
 ```
-STATUS: READY
+STATUS: SKIPPED
 DESCRIPTION: Deploy LibreChat as the AI orchestration layer with MCP support.
+SKIP_REASON: WP AI Client + ClaudeClient fallback in hma-ai-chat covers the use case.
+             The built-in chat UI with direct Claude API integration makes LibreChat
+             unnecessary for this project's scale.
 DEPENDS_ON: 6.1
 ACCEPTANCE:
   - LibreChat self-hosted instance deployed
@@ -1054,7 +1057,7 @@ ACCEPTANCE:
 
 #### 6.3 — Staff Approval Flow Polish
 ```
-STATUS: READY
+STATUS: COMPLETE
 DESCRIPTION: Complete the three-path approval flow UI and add notification delivery.
 DEPENDS_ON: 6.1
 ACCEPTANCE:
