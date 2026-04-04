@@ -4,12 +4,6 @@
  *
  * DELETE THIS FILE after the sync is complete.
  *
- * Trigger via:
- *   curl -X POST https://haanpaa-staging.mystagingwebsite.com/wp-json/gym/v1/import/crm-sync \
- *     -H "X-Import-Token: <token>"
- *
- * Add ?dry_run=1 for a dry run.
- *
  * @package Gym_Core
  */
 
@@ -47,6 +41,17 @@ final class TempCrmSyncController {
 				'permission_callback' => array( self::class, 'check_token' ),
 			)
 		);
+
+		// Diagnostic endpoint to check what CRM functions/globals are available.
+		register_rest_route(
+			'gym/v1',
+			'/import/crm-check',
+			array(
+				'methods'             => 'GET',
+				'callback'            => array( self::class, 'handle_check' ),
+				'permission_callback' => array( self::class, 'check_token' ),
+			)
+		);
 	}
 
 	/**
@@ -64,6 +69,37 @@ final class TempCrmSyncController {
 	}
 
 	/**
+	 * Diagnostic: check what CRM APIs are available.
+	 *
+	 * @param \WP_REST_Request $request The request.
+	 * @return \WP_REST_Response
+	 */
+	public static function handle_check( \WP_REST_Request $request ): \WP_REST_Response {
+		global $zbs;
+
+		$checks = array(
+			'zbs_global_exists'                          => isset( $zbs ),
+			'zbs_is_object'                              => isset( $zbs ) && is_object( $zbs ),
+			'zbs_DAL_exists'                             => isset( $zbs ) && isset( $zbs->DAL ),
+			'zbs_DAL_contacts_exists'                    => isset( $zbs ) && isset( $zbs->DAL ) && isset( $zbs->DAL->contacts ),
+			'fn_zeroBS_integrations_addOrUpdateContact'  => function_exists( 'zeroBS_integrations_addOrUpdateContact' ),
+			'fn_zeroBS_getCustomerIDWithEmail'           => function_exists( 'zeroBS_getCustomerIDWithEmail' ),
+			'fn_zeroBSCRM_getContactIDFromEmail'         => function_exists( 'zeroBSCRM_getContactIDFromEmail' ),
+			'fn_zeroBS_getContactByEmail'                => function_exists( 'zeroBS_getContactByEmail' ),
+			'class_ZeroBSCRM'                            => class_exists( 'ZeroBSCRM' ),
+			'class_zbsDAL'                               => class_exists( 'zbsDAL' ),
+		);
+
+		// Check DAL method availability.
+		if ( isset( $zbs ) && isset( $zbs->DAL ) && isset( $zbs->DAL->contacts ) ) {
+			$checks['DAL_contacts_addUpdateContact'] = method_exists( $zbs->DAL->contacts, 'addUpdateContact' );
+			$checks['DAL_contacts_getContact']       = method_exists( $zbs->DAL->contacts, 'getContact' );
+		}
+
+		return new \WP_REST_Response( $checks, 200 );
+	}
+
+	/**
 	 * Sync all customer/subscriber WP users to Jetpack CRM contacts.
 	 *
 	 * @param \WP_REST_Request $request The request.
@@ -75,15 +111,25 @@ final class TempCrmSyncController {
 
 		$dry_run = (bool) $request->get_param( 'dry_run' );
 
-		// Check Jetpack CRM is available.
-		if ( ! function_exists( 'zeroBS_integrations_addOrUpdateContact' ) ) {
+		global $zbs;
+
+		// Check for DAL (preferred modern approach).
+		$use_dal = isset( $zbs ) && isset( $zbs->DAL ) && isset( $zbs->DAL->contacts )
+			&& method_exists( $zbs->DAL->contacts, 'addUpdateContact' );
+
+		// Fallback to legacy function.
+		$use_legacy = function_exists( 'zeroBS_integrations_addOrUpdateContact' );
+
+		if ( ! $use_dal && ! $use_legacy ) {
 			return new \WP_REST_Response(
-				array( 'error' => 'Jetpack CRM function zeroBS_integrations_addOrUpdateContact not available.' ),
+				array(
+					'error'  => 'No Jetpack CRM contact creation API available.',
+					'method' => 'none',
+				),
 				500
 			);
 		}
 
-		// Get all customer and subscriber users.
 		$users = get_users(
 			array(
 				'role__in' => array( 'customer', 'subscriber' ),
@@ -97,6 +143,7 @@ final class TempCrmSyncController {
 		$updated  = 0;
 		$skipped  = 0;
 		$warnings = array();
+		$method   = $use_dal ? 'DAL' : 'legacy';
 
 		foreach ( $users as $user ) {
 			$email = $user->user_email;
@@ -107,7 +154,6 @@ final class TempCrmSyncController {
 				continue;
 			}
 
-			// Check if contact already exists in CRM.
 			$existing_id = self::get_crm_contact_id( $email );
 
 			if ( $dry_run ) {
@@ -123,38 +169,68 @@ final class TempCrmSyncController {
 				?: get_user_meta( $user->ID, 'billing_phone', true )
 				?: '';
 
-			$contact_data = array(
-				'email'   => $email,
-				'fname'   => $user->first_name ?: '',
-				'lname'   => $user->last_name ?: '',
-				'hometel' => $phone,
-				'tags'    => array( 'member', 'source: spark-import' ),
-			);
+			if ( $use_dal ) {
+				$contact_data = array(
+					'data' => array(
+						'email'   => $email,
+						'fname'   => $user->first_name ?: '',
+						'lname'   => $user->last_name ?: '',
+						'hometel' => $phone,
+						'status'  => 'Customer',
+					),
+					'tags' => array(
+						array( 'name' => 'member' ),
+						array( 'name' => 'source: spark-import' ),
+					),
+				);
 
-			$result = zeroBS_integrations_addOrUpdateContact(
-				'gym-core-spark-import',
-				$email,
-				$contact_data
-			);
-
-			if ( is_array( $result ) && ! empty( $result['id'] ) ) {
 				if ( $existing_id ) {
-					++$updated;
-				} else {
-					++$created;
+					$contact_data['id'] = $existing_id;
 				}
-			} else {
-				// Verify it was created by looking it up.
-				$check_id = self::get_crm_contact_id( $email );
-				if ( $check_id ) {
+
+				// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+				$result_id = $zbs->DAL->contacts->addUpdateContact( $contact_data );
+
+				if ( $result_id && (int) $result_id > 0 ) {
 					if ( $existing_id ) {
 						++$updated;
 					} else {
 						++$created;
 					}
 				} else {
-					$warnings[] = "User {$user->ID} ({$email}): CRM contact creation returned unexpected result.";
+					$warnings[] = "User {$user->ID} ({$email}): DAL returned " . var_export( $result_id, true );
 					++$skipped;
+				}
+			} else {
+				// Legacy path.
+				$contact_data = array(
+					'email'   => $email,
+					'fname'   => $user->first_name ?: '',
+					'lname'   => $user->last_name ?: '',
+					'hometel' => $phone,
+					'tags'    => array( 'member', 'source: spark-import' ),
+				);
+
+				$result = zeroBS_integrations_addOrUpdateContact(
+					'gym-core-spark-import',
+					$email,
+					$contact_data
+				);
+
+				if ( is_array( $result ) && ! empty( $result['id'] ) ) {
+					if ( $existing_id ) {
+						++$updated;
+					} else {
+						++$created;
+					}
+				} else {
+					$check_id = self::get_crm_contact_id( $email );
+					if ( $check_id ) {
+						++( $existing_id ? $updated : $created );
+					} else {
+						$warnings[] = "User {$user->ID} ({$email}): creation failed.";
+						++$skipped;
+					}
 				}
 			}
 		}
@@ -162,6 +238,7 @@ final class TempCrmSyncController {
 		return new \WP_REST_Response(
 			array(
 				'dry_run'  => $dry_run,
+				'method'   => $method,
 				'total'    => count( $users ),
 				'created'  => $created,
 				'updated'  => $updated,
@@ -179,6 +256,19 @@ final class TempCrmSyncController {
 	 * @return int|false
 	 */
 	private static function get_crm_contact_id( string $email ) {
+		global $zbs;
+
+		// DAL approach.
+		if ( isset( $zbs ) && isset( $zbs->DAL ) && isset( $zbs->DAL->contacts )
+			&& method_exists( $zbs->DAL->contacts, 'getContact' ) ) {
+			// phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
+			$contact = $zbs->DAL->contacts->getContact( -1, array( 'email' => $email, 'onlyID' => true ) );
+			if ( $contact && (int) $contact > 0 ) {
+				return (int) $contact;
+			}
+		}
+
+		// Legacy functions.
 		if ( function_exists( 'zeroBS_getCustomerIDWithEmail' ) ) {
 			$id = zeroBS_getCustomerIDWithEmail( $email );
 			return $id ? (int) $id : false;
