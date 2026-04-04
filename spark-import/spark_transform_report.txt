@@ -1,0 +1,78 @@
+Spark → gym-core Transform Report
+Generated: 2026-04-03 22:45:05
+============================================================
+
+MEMBER SUMMARY
+  Total members: 180
+  With email: 154
+  Missing email (placeholder assigned): 26
+
+RANK SUMMARY
+
+  adult-bjj:
+    blue: 11
+    brown: 6
+    purple: 4
+    white: 44
+
+  kickboxing:
+    level-1: 63
+    level-2: 4
+
+  kids-bjj:
+    grey: 13
+    grey-black: 3
+    grey-white: 10
+    white: 30
+    yellow: 1
+
+  Foundations students: 12
+  Total rank records: 189
+  Matched to users: 187
+  Unmatched: 2
+
+USER WARNINGS
+  Row 12: Amara Dirks has no email — will be created with placeholder
+  Row 13: Anaizabel Esparza has no email — will be created with placeholder
+  Row 18: Anthony Shyam has no email — will be created with placeholder
+  Row 20: Archer Wikel has no email — will be created with placeholder
+  Row 39: Catalina Marks has no email — will be created with placeholder
+  Row 46: Daisy Perez has no email — will be created with placeholder
+  Row 57: Ellie Kliebe has no email — will be created with placeholder
+  Row 58: Ellie Slaubaugh has no email — will be created with placeholder
+  Row 72: Fiona Breen has no email — will be created with placeholder
+  Row 77: Hudson Camardo has no email — will be created with placeholder
+  Row 80: Isaiah Williams has no email — will be created with placeholder
+  Row 91: Jose Recendez has no email — will be created with placeholder
+  Row 96: Judah Garcia has no email — will be created with placeholder
+  Row 98: Karolina Wikel has no email — will be created with placeholder
+  Row 99: Keith Hoover has no email — will be created with placeholder
+  Row 106: Kyle Owens has no email — will be created with placeholder
+  Row 109: LeAnthony Lilly has no email — will be created with placeholder
+  Row 110: Leilani Rodriquez has no email — will be created with placeholder
+  Row 111: Lena Haanpaa has no email — will be created with placeholder
+  Row 113: Leonardo Duran has no email — will be created with placeholder
+  Row 120: Ma’zyah Palmer has no email — will be created with placeholder
+  Row 127: Mallory Wikel has no email — will be created with placeholder
+  Row 141: Michael Handegan has no email — will be created with placeholder
+  Row 144: MIkael Stoyanov has no email — will be created with placeholder
+  Row 156: Nora Clark has no email — will be created with placeholder
+  Row 161: Parker Camardo has no email — will be created with placeholder
+
+RANK MATCH WARNINGS (no user found by name)
+  No user match for rank: Winnie Hopkins (adult-bjj/white)
+  No user match for rank: Evan Schultz (kids-bjj/white)
+
+IMPORT WORKFLOW
+  1. Review this report for warnings
+  2. Dry-run user import:
+     wp gym import users --file=spark_users.csv --dry-run
+  3. Import users:
+     wp gym import users --file=spark_users.csv --skip-existing
+  4. Resolve email→user_id:
+     wp eval-file scripts/spark_resolve_ids.php spark_belt_ranks_by_email.csv spark_belt_ranks.csv
+  5. Dry-run rank import:
+     wp gym import belt-ranks --file=spark_belt_ranks.csv --dry-run
+  6. Import ranks:
+     wp gym import belt-ranks --file=spark_belt_ranks.csv --skip-existing
+  7. Spot-check 20 members in wp-admin

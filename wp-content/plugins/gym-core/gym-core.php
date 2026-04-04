@@ -109,8 +109,5 @@ add_action(
 
 		// Register WP-CLI commands when running in CLI mode.
 		Gym_Core\CLI\ImportCommand::register();
-
-		// TEMPORARY: Register Spark import REST endpoint. DELETE after import.
-		Gym_Core\API\TempImportController::register();
 	}
 );
