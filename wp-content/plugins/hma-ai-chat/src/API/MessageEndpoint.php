@@ -128,27 +128,33 @@ class MessageEndpoint {
 			// Build system prompt.
 			$system_prompt = $agent->get_system_prompt();
 
-			// Convert history to conversation format for wp_ai_client_prompt.
-			$messages = array();
-			foreach ( $history as $msg ) {
-				$messages[] = array(
-					'role'    => $msg['role'],
-					'content' => $msg['content'],
-				);
+			// Call AI — use WP AI Client if available, otherwise direct ClaudeClient.
+			if ( function_exists( 'wp_ai_client_prompt' ) ) {
+				$response_text = $this->call_wp_ai_client( $system_prompt, $history, $message );
+				$tokens_used   = 0; // WP AI Client does not expose token counts.
+			} else {
+				$messages = array();
+				foreach ( $history as $msg ) {
+					$messages[] = array(
+						'role'    => $msg['role'],
+						'content' => $msg['content'],
+					);
+				}
+
+				$client = new ClaudeClient();
+				$result = $client->send( $system_prompt, $messages );
+
+				if ( is_wp_error( $result ) ) {
+					return $result;
+				}
+
+				$response_text = $result['response'];
+				$tokens_used   = $result['tokens_used'];
 			}
 
-			// Call Claude via direct API client.
-			// Note: WP AI Client (wp_ai_client_prompt) builder API does not yet
-			// support the request/response pattern needed here; use ClaudeClient.
-			$client = new ClaudeClient();
-			$result = $client->send( $system_prompt, $messages );
-
-			if ( is_wp_error( $result ) ) {
-				return $result;
+			if ( is_wp_error( $response_text ) ) {
+				return $response_text;
 			}
-
-			$response_text = $result['response'];
-			$tokens_used   = $result['tokens_used'];
 
 			// Store assistant message.
 			$conversation_store->save_message(
@@ -173,6 +179,61 @@ class MessageEndpoint {
 				array( 'status' => 500 )
 			);
 		}
+	}
+
+	/**
+	 * Call the WP AI Client with conversation history.
+	 *
+	 * Uses the WordPress 7.0 WP AI Client PromptBuilder API:
+	 * - using_system_instruction() for system prompt
+	 * - with_history() with Message DTOs for prior messages
+	 * - with_text() for the current user message
+	 * - generate_text() to get a plain string response
+	 *
+	 * @param string               $system_prompt System prompt content.
+	 * @param array<array<string>> $history       Conversation history from ConversationStore.
+	 * @param string               $current_message The latest user message.
+	 * @return string|\WP_Error Response text or WP_Error on failure.
+	 */
+	private function call_wp_ai_client( string $system_prompt, array $history, string $current_message ) {
+		$message_class = 'WordPress\\AiClient\\Messages\\DTO\\Message';
+
+		$builder = wp_ai_client_prompt()
+			->using_system_instruction( $system_prompt )
+			->using_model_preference( 'claude-sonnet-4-6' );
+
+		// Convert conversation history (excluding the latest user message we just
+		// stored) into Message DTOs. The WP AI Client uses "model" for assistant.
+		$history_messages = array();
+		foreach ( $history as $msg ) {
+			// Skip the latest message — it goes via with_text().
+			if ( end( $history ) === $msg && 'user' === $msg['role'] ) {
+				continue;
+			}
+
+			$role = 'assistant' === $msg['role'] ? 'model' : $msg['role'];
+
+			$history_messages[] = $message_class::fromArray(
+				array(
+					'role'  => $role,
+					'parts' => array( array( 'text' => $msg['content'] ) ),
+				)
+			);
+		}
+
+		if ( ! empty( $history_messages ) ) {
+			$builder = $builder->with_history( ...$history_messages );
+		}
+
+		$response = $builder
+			->with_text( $current_message )
+			->generate_text();
+
+		if ( is_wp_error( $response ) ) {
+			return $response;
+		}
+
+		return (string) $response;
 	}
 
 	/**
