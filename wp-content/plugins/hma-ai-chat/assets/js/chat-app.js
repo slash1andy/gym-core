@@ -213,9 +213,14 @@
 			minute: '2-digit',
 		});
 
+		// Render markdown for assistant messages, escape user messages.
+		const rendered = role === 'assistant'
+			? renderMarkdown(content)
+			: escapeHtml(content);
+
 		messageDiv.className = `hma-ai-message ${role}`;
 		messageDiv.innerHTML = `
-			<div class="hma-ai-message-bubble">${escapeHtml(content)}</div>
+			<div class="hma-ai-message-bubble">${rendered}</div>
 			<div class="hma-ai-message-timestamp">${timestamp}</div>
 		`;
 
@@ -581,6 +586,78 @@
 			// eslint-disable-next-line no-console -- User-facing error logging.
 			console.error('Bulk action error:', error);
 		}
+	}
+
+	/**
+	 * Render a subset of Markdown to HTML for assistant messages.
+	 *
+	 * Supports: headings, bold, italic, inline code, code blocks,
+	 * unordered/ordered lists, horizontal rules, links, and paragraphs.
+	 *
+	 * @param {string} text Raw markdown text.
+	 * @return {string} HTML string.
+	 */
+	function renderMarkdown(text) {
+		if (!text) return '';
+
+		var s = escapeHtml(text);
+
+		// Code blocks (``` ... ```)
+		s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
+			return '<pre><code' + (lang ? ' class="language-' + lang + '"' : '') + '>' + code.trim() + '</code></pre>';
+		});
+
+		// Inline code (`...`)
+		s = s.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+		// Headings (### ... at start of line)
+		s = s.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+		s = s.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+		s = s.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+
+		// Horizontal rule
+		s = s.replace(/^---$/gm, '<hr>');
+
+		// Bold + italic
+		s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+		s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+		s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+		// Unordered lists — consecutive lines starting with - or *
+		s = s.replace(/((?:^[\t ]*[-*] .+$\n?)+)/gm, function(block) {
+			var items = block.trim().split('\n').map(function(line) {
+				return '<li>' + line.replace(/^[\t ]*[-*] /, '') + '</li>';
+			}).join('');
+			return '<ul>' + items + '</ul>';
+		});
+
+		// Ordered lists — consecutive lines starting with 1. 2. etc
+		s = s.replace(/((?:^[\t ]*\d+\. .+$\n?)+)/gm, function(block) {
+			var items = block.trim().split('\n').map(function(line) {
+				return '<li>' + line.replace(/^[\t ]*\d+\. /, '') + '</li>';
+			}).join('');
+			return '<ol>' + items + '</ol>';
+		});
+
+		// Links [text](url)
+		s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+		// Paragraphs — double newlines become paragraph breaks
+		s = s.replace(/\n{2,}/g, '</p><p>');
+		// Single newlines become <br> (except inside block elements)
+		s = s.replace(/\n/g, '<br>');
+
+		// Wrap in paragraph if not already a block element
+		if (!/^<(h[1-6]|ul|ol|pre|hr|p)/.test(s)) {
+			s = '<p>' + s + '</p>';
+		}
+
+		// Clean up empty paragraphs and breaks adjacent to block elements
+		s = s.replace(/<p><\/p>/g, '');
+		s = s.replace(/<br>\s*(<\/?(?:ul|ol|li|h[1-6]|pre|hr|p)>)/g, '$1');
+		s = s.replace(/(<\/?(?:ul|ol|li|h[1-6]|pre|hr|p)>)\s*<br>/g, '$1');
+
+		return s;
 	}
 
 	/**

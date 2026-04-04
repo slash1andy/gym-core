@@ -188,6 +188,86 @@
 	box-shadow: 0 0 0 3px rgba(0, 115, 170, 0.3);
 }
 
+/* ── Markdown typography inside assistant bubbles ── */
+
+.hma-ai-message.assistant .hma-ai-message-bubble h3,
+.hma-ai-message.assistant .hma-ai-message-bubble h4 {
+	font-size: 13px;
+	font-weight: 600;
+	margin: 8px 0 4px;
+	line-height: 1.4;
+	color: #1d2327;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble h3:first-child,
+.hma-ai-message.assistant .hma-ai-message-bubble h4:first-child {
+	margin-top: 0;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble p {
+	margin: 0 0 8px;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble p:last-child {
+	margin-bottom: 0;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble ul,
+.hma-ai-message.assistant .hma-ai-message-bubble ol {
+	margin: 4px 0 8px;
+	padding-left: 20px;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble li {
+	margin-bottom: 2px;
+	line-height: 1.5;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble code {
+	background: #f0f0f0;
+	padding: 1px 5px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-family: Menlo, Monaco, Consolas, monospace;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble pre {
+	background: #23282d;
+	color: #eee;
+	padding: 10px 12px;
+	border-radius: 4px;
+	overflow-x: auto;
+	margin: 6px 0;
+	font-size: 12px;
+	line-height: 1.5;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble pre code {
+	background: none;
+	padding: 0;
+	color: inherit;
+	font-size: inherit;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble strong {
+	font-weight: 600;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble hr {
+	border: none;
+	border-top: 1px solid #ddd;
+	margin: 8px 0;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble a {
+	color: #0073aa;
+	text-decoration: underline;
+}
+
+.hma-ai-message.assistant .hma-ai-message-bubble a:hover {
+	color: #005a87;
+}
+
 /* Pending Actions Panel */
 .hma-ai-pending-actions {
 	margin-top: 20px;
