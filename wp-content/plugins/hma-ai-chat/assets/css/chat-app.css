@@ -382,6 +382,51 @@
 	to { opacity: 1; transform: translateY(0); }
 }
 
+/* Bulk action bar */
+.hma-ai-pending-actions-header {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 12px;
+}
+
+.hma-ai-bulk-bar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.hma-ai-bulk-select-all {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 13px;
+	color: #555;
+	cursor: pointer;
+}
+
+.hma-ai-bulk-btn {
+	font-size: 11px;
+	padding: 4px 10px;
+}
+
+/* Action checkboxes */
+.hma-ai-action-checkbox {
+	display: flex;
+	align-items: center;
+	padding-right: 8px;
+	flex-shrink: 0;
+}
+
+.hma-ai-action-checkbox input[type="checkbox"] {
+	margin: 0;
+	width: 16px;
+	height: 16px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
 	.hma-ai-chat-panel {
@@ -402,6 +447,51 @@
 
 	.hma-ai-chat-send-btn {
 		flex-basis: auto;
+	}
+
+	/* Pending actions — stack vertically on mobile */
+	.hma-ai-pending-action-item {
+		flex-direction: column;
+		align-items: stretch;
+	}
+
+	.hma-ai-pending-actions-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.hma-ai-action-controls {
+		justify-content: stretch;
+		margin-top: 8px;
+	}
+
+	.hma-ai-action-btn {
+		flex: 1;
+		text-align: center;
+		padding: 10px 8px;
+		font-size: 13px;
+	}
+
+	.hma-ai-action-checkbox {
+		position: absolute;
+		top: 12px;
+		right: 12px;
+	}
+
+	.hma-ai-pending-action-item {
+		position: relative;
+	}
+
+	.hma-ai-bulk-bar {
+		width: 100%;
+		justify-content: space-between;
+	}
+
+	.hma-ai-bulk-btn {
+		flex: 1;
+		text-align: center;
+		padding: 8px;
+		font-size: 13px;
 	}
 }
 

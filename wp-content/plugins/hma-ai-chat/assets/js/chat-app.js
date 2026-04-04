@@ -78,7 +78,21 @@
 			</div>
 
 			<div id="hma-pending-actions" class="hma-ai-pending-actions" style="display: none;">
-				<h3 class="hma-ai-pending-actions-title">${config.strings.pendingActions}</h3>
+				<div class="hma-ai-pending-actions-header">
+					<h3 class="hma-ai-pending-actions-title">${config.strings.pendingActions}</h3>
+					<div id="hma-bulk-bar" class="hma-ai-bulk-bar" style="display: none;">
+						<label class="hma-ai-bulk-select-all">
+							<input type="checkbox" id="hma-select-all" aria-label="Select all actions" />
+							<span>${config.strings.selectAll || 'Select All'}</span>
+						</label>
+						<button class="hma-ai-action-btn hma-ai-action-approve hma-ai-bulk-btn" id="hma-bulk-approve">
+							${config.strings.bulkApprove || 'Approve Selected'}
+						</button>
+						<button class="hma-ai-action-btn hma-ai-action-reject hma-ai-bulk-btn" id="hma-bulk-reject">
+							${config.strings.bulkReject || 'Reject Selected'}
+						</button>
+					</div>
+				</div>
 				<div id="hma-actions-list"></div>
 			</div>
 		`;
@@ -222,10 +236,7 @@
 	 */
 	async function loadPendingActions() {
 		// Check if user has permissions to approve actions.
-		if (
-			config.userRole !== 'administrator' &&
-			config.userRole !== 'editor'
-		) {
+		if ( ! config.canManageActions ) {
 			return;
 		}
 
@@ -263,10 +274,20 @@
 			return;
 		}
 
+		// Show bulk bar when there are multiple actions.
+		const bulkBar = document.getElementById('hma-bulk-bar');
+		if (bulkBar) {
+			bulkBar.style.display = actions.length >= 2 ? 'flex' : 'none';
+		}
+
 		list.innerHTML = actions
 			.map(
 				(action) => `
 			<div class="hma-ai-pending-action-item" data-action-id="${action.id}">
+				<div class="hma-ai-action-checkbox">
+					<input type="checkbox" class="hma-ai-action-select" data-action-id="${action.id}"
+						aria-label="Select action ${action.id}" />
+				</div>
 				<div class="hma-ai-action-info">
 					<div class="hma-ai-action-agent">${escapeHtml(action.agent)}</div>
 					<div class="hma-ai-action-type">${escapeHtml(action.action_type)}</div>
@@ -381,6 +402,34 @@
 			});
 		});
 
+		// Bulk select-all checkbox.
+		const selectAll = document.getElementById('hma-select-all');
+		if (selectAll) {
+			selectAll.checked = false;
+			selectAll.addEventListener('change', () => {
+				list.querySelectorAll('.hma-ai-action-select').forEach((cb) => {
+					cb.checked = selectAll.checked;
+				});
+			});
+		}
+
+		// Bulk approve.
+		const bulkApproveBtn = document.getElementById('hma-bulk-approve');
+		if (bulkApproveBtn) {
+			// Remove old listener by replacing the node.
+			const newBtn = bulkApproveBtn.cloneNode(true);
+			bulkApproveBtn.parentNode.replaceChild(newBtn, bulkApproveBtn);
+			newBtn.addEventListener('click', () => bulkAction('approve'));
+		}
+
+		// Bulk reject.
+		const bulkRejectBtn = document.getElementById('hma-bulk-reject');
+		if (bulkRejectBtn) {
+			const newBtn = bulkRejectBtn.cloneNode(true);
+			bulkRejectBtn.parentNode.replaceChild(newBtn, bulkRejectBtn);
+			newBtn.addEventListener('click', () => bulkAction('reject'));
+		}
+
 		panel.style.display = 'block';
 	}
 
@@ -491,12 +540,60 @@
 	}
 
 	/**
+	 * Get selected action IDs from checkboxes.
+	 *
+	 * @return {number[]} Array of selected action IDs.
+	 */
+	function getSelectedIds() {
+		const checkboxes = document.querySelectorAll(
+			'.hma-ai-action-select:checked'
+		);
+		return Array.from(checkboxes).map((cb) =>
+			parseInt(cb.dataset.actionId, 10)
+		);
+	}
+
+	/**
+	 * Execute a bulk approve or reject operation.
+	 *
+	 * @param {string} operation Either 'approve' or 'reject'.
+	 */
+	async function bulkAction(operation) {
+		const ids = getSelectedIds();
+		if (ids.length === 0) {
+			return;
+		}
+
+		try {
+			const response = await wp.apiFetch({
+				url: config.apiUrl + 'actions/bulk',
+				method: 'POST',
+				data: {
+					action_ids: ids,
+					operation,
+				},
+			});
+
+			if (response.success) {
+				loadPendingActions();
+			}
+		} catch (error) {
+			// eslint-disable-next-line no-console -- User-facing error logging.
+			console.error('Bulk action error:', error);
+		}
+	}
+
+	/**
 	 * Escape HTML to prevent XSS.
 	 *
 	 * @param {string} text The text to escape.
 	 * @return {string} The escaped text.
 	 */
 	function escapeHtml(text) {
+		if (!text) {
+			return '';
+		}
+		const str = String(text);
 		const map = {
 			'&': '&amp;',
 			'<': '&lt;',
@@ -504,7 +601,7 @@
 			'"': '&quot;',
 			"'": '&#039;',
 		};
-		return text.replace(/[&<>"']/g, (m) => map[m]);
+		return str.replace(/[&<>"']/g, (m) => map[m]);
 	}
 
 	/**

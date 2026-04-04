@@ -12,6 +12,7 @@ return array(
     'HMA_AI_Chat\\API\\HeartbeatEndpoint' => $baseDir . '/src/API/HeartbeatEndpoint.php',
     'HMA_AI_Chat\\API\\MessageEndpoint' => $baseDir . '/src/API/MessageEndpoint.php',
     'HMA_AI_Chat\\Activator' => $baseDir . '/src/Activator.php',
+    'HMA_AI_Chat\\Admin\\AuditLogPage' => $baseDir . '/src/Admin/AuditLogPage.php',
     'HMA_AI_Chat\\Admin\\ChatPage' => $baseDir . '/src/Admin/ChatPage.php',
     'HMA_AI_Chat\\Admin\\SettingsPage' => $baseDir . '/src/Admin/SettingsPage.php',
     'HMA_AI_Chat\\Agents\\AgentPersona' => $baseDir . '/src/Agents/AgentPersona.php',
