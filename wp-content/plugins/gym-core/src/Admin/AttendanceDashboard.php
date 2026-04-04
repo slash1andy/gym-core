@@ -149,13 +149,9 @@ final class AttendanceDashboard {
 			'2.1.0'
 		);
 
-		wp_enqueue_script(
-			'gym-admin-dashboard',
-			'', // Inline script — no external file needed.
-			array( 'jquery' ),
-			'2.1.0',
-			true
-		);
+		// Register a virtual script handle so wp_localize_script can attach data.
+		wp_register_script( 'gym-admin-dashboard', false, array( 'jquery' ), '2.1.0', true ); // phpcs:ignore WordPress.WP.EnqueuedResourceParameters.MissingVersion
+		wp_enqueue_script( 'gym-admin-dashboard' );
 
 		wp_localize_script(
 			'gym-admin-dashboard',
