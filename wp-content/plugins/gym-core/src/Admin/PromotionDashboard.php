@@ -787,9 +787,13 @@ final class PromotionListTable extends \WP_List_Table {
 	 */
 	protected function get_sortable_columns(): array {
 		return array(
-			'name'         => array( 'name', false ),
-			'attendance'   => array( 'attendance', true ),
-			'days_at_rank' => array( 'days_at_rank', false ),
+			'name'           => array( 'name', false ),
+			'current_belt'   => array( 'current_belt', false ),
+			'stripes'        => array( 'stripes', true ),
+			'program'        => array( 'program', false ),
+			'attendance'     => array( 'attendance', true ),
+			'days_at_rank'   => array( 'days_at_rank', false ),
+			'recommendation' => array( 'recommendation', false ),
 		);
 	}
 
@@ -852,7 +856,9 @@ final class PromotionListTable extends \WP_List_Table {
 			$this->get_sortable_columns(),
 		);
 
-		$members = $this->eligibility->get_eligible_members( $this->program );
+		// "All" status shows every ranked member (approach threshold 0 = no minimum).
+		$approach = 'all' === $this->status ? 0.0 : 0.8;
+		$members  = $this->eligibility->get_eligible_members( $this->program, $approach );
 
 		// Merge Foundations students for "approaching" and "all" views.
 		if ( in_array( $this->status, array( 'approaching', 'all' ), true ) && 'adult-bjj' === $this->program && null !== $this->foundations ) {
@@ -881,13 +887,28 @@ final class PromotionListTable extends \WP_List_Table {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$order   = isset( $_GET['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ? 'asc' : 'desc';
 
+		$program = $this->program;
 		usort(
 			$members,
-			static function ( array $a, array $b ) use ( $orderby, $order ): int {
+			static function ( array $a, array $b ) use ( $orderby, $order, $program ): int {
 				$cmp = 0;
 				switch ( $orderby ) {
 					case 'name':
 						$cmp = strcasecmp( $a['display_name'], $b['display_name'] );
+						break;
+					case 'current_belt':
+						$pos_a = RankDefinitions::get_belt_position( $program, $a['belt'] ) ?? 0;
+						$pos_b = RankDefinitions::get_belt_position( $program, $b['belt'] ) ?? 0;
+						$cmp   = $pos_a <=> $pos_b;
+						break;
+					case 'stripes':
+						$cmp = ( (int) $a['stripes'] ) <=> ( (int) $b['stripes'] );
+						break;
+					case 'program':
+						$cmp = strcasecmp( $a['belt'], $b['belt'] );
+						break;
+					case 'recommendation':
+						$cmp = ( ! empty( $b['has_recommendation'] ) ? 1 : 0 ) <=> ( ! empty( $a['has_recommendation'] ) ? 1 : 0 );
 						break;
 					case 'days_at_rank':
 						$cmp = $a['days_at_rank'] <=> $b['days_at_rank'];
