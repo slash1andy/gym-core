@@ -53,7 +53,7 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'get_status' ),
 				'permission_callback' => array( $this, 'permissions_view' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);
@@ -66,7 +66,7 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'enroll' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);
@@ -79,8 +79,8 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'record_coach_roll' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
-					'notes'   => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'default' => '' ),
+					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'notes'   => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg', 'default' => '' ),
 				),
 			)
 		);
@@ -93,7 +93,7 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'clear' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);

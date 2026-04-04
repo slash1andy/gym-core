@@ -63,6 +63,7 @@ class GamificationController extends BaseController {
 					'category' => array(
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
 			)
@@ -78,7 +79,7 @@ class GamificationController extends BaseController {
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(
-						'id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+						'id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 					)
 				),
 			)
@@ -92,7 +93,7 @@ class GamificationController extends BaseController {
 				'callback'            => array( $this, 'get_member_streak' ),
 				'permission_callback' => array( $this, 'permissions_view_badges' ),
 				'args'                => array(
-					'id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint' ),
+					'id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
 				),
 			)
 		);
