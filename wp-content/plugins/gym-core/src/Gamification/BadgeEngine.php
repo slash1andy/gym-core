@@ -89,8 +89,11 @@ final class BadgeEngine {
 			return;
 		}
 
-		if ( function_exists( 'as_schedule_single_action' ) ) {
-			as_schedule_single_action( time(), self::ASYNC_CHECKIN_HOOK, array( $user_id ), 'gym-core' );
+		if ( function_exists( 'as_enqueue_async_action' ) ) {
+			// Deduplicate: skip if an evaluation is already pending for this user.
+			if ( ! as_has_scheduled_action( self::ASYNC_CHECKIN_HOOK, array( $user_id ), 'gym-core' ) ) {
+				as_enqueue_async_action( self::ASYNC_CHECKIN_HOOK, array( $user_id ), 'gym-core' );
+			}
 		} else {
 			// Fallback to synchronous if Action Scheduler is unavailable.
 			$this->evaluate_on_checkin( $user_id );

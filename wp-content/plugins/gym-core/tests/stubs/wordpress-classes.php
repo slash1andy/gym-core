@@ -168,73 +168,8 @@ if ( ! class_exists( 'WP_REST_Response' ) ) {
 	}
 }
 
-if ( ! class_exists( 'WP_Error' ) ) {
-	/**
-	 * Stub for WP_Error — returned by controller error helpers.
-	 */
-	class WP_Error { // phpcs:ignore
-		/**
-		 * Machine-readable error code.
-		 *
-		 * @var string
-		 */
-		private string $code;
-
-		/**
-		 * Human-readable error message.
-		 *
-		 * @var string
-		 */
-		private string $message;
-
-		/**
-		 * Additional error data (typically contains 'status' key for REST).
-		 *
-		 * @var mixed
-		 */
-		private mixed $data;
-
-		/**
-		 * Constructor.
-		 *
-		 * @param string $code    Error code.
-		 * @param string $message Error message.
-		 * @param mixed  $data    Additional data.
-		 */
-		public function __construct( string $code = '', string $message = '', mixed $data = '' ) {
-			$this->code    = $code;
-			$this->message = $message;
-			$this->data    = $data;
-		}
-
-		/**
-		 * Returns the error code.
-		 *
-		 * @return string
-		 */
-		public function get_error_code(): string {
-			return $this->code;
-		}
-
-		/**
-		 * Returns the error message.
-		 *
-		 * @return string
-		 */
-		public function get_error_message(): string {
-			return $this->message;
-		}
-
-		/**
-		 * Returns the additional error data.
-		 *
-		 * @return mixed
-		 */
-		public function get_error_data(): mixed {
-			return $this->data;
-		}
-	}
-}
+// WP_Error is defined in tests/stubs/WP_Error.php (loaded first by bootstrap.php).
+// Do not redefine it here to avoid fragile load-order dependencies.
 
 // -------------------------------------------------------------------------
 // WordPress taxonomy / term classes
