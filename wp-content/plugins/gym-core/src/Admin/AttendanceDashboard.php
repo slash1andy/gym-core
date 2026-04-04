@@ -902,7 +902,10 @@ final class AttendanceDashboard {
 		$tables    = TableManager::get_table_names();
 		$threshold = gmdate( 'Y-m-d H:i:s', strtotime( '-14 days' ) );
 
-		// Find users who have attendance records but none in the last 14 days.
+		// Find users with active memberships who have attendance but none in 14+ days.
+		// Only report members who should be attending — not former members or non-members.
+		$membership_table = $wpdb->posts;
+
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$at_risk = $wpdb->get_results(
 			$wpdb->prepare(
@@ -911,6 +914,10 @@ final class AttendanceDashboard {
 						MAX(a.checked_in_at) AS last_checkin
 				FROM {$tables['attendance']} a
 				INNER JOIN {$wpdb->users} u ON a.user_id = u.ID
+				INNER JOIN {$membership_table} m
+					ON m.post_author = a.user_id
+					AND m.post_type = 'wc_user_membership'
+					AND m.post_status IN ('wcm-active', 'wcm-complimentary', 'wcm-pending')
 				GROUP BY a.user_id
 				HAVING MAX(a.checked_in_at) < %s
 				ORDER BY last_checkin ASC
