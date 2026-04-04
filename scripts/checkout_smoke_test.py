@@ -46,15 +46,15 @@ PRESSABLE_WPCLI_URL = f"https://my.pressable.com/v1/sites/{PRESSABLE_SITE_ID}/wo
 EXPECTED_PAGES = [
     "Home",
     "About",
-    "Schedule",
+    "Class Schedule",
     "Fitness Kickboxing",
-    "Kids",
+    "Kids Martial Arts",
     "Personal Training",
     "Contact",
     "Blog",
-    "Free Trial",
+    "Free Trial Class",
     "Shop",
-    "My Account",
+    "My account",
 ]
 
 # Expected product categories
