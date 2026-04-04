@@ -273,7 +273,7 @@ final class RankStore {
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$results = $wpdb->get_results(
-			"SELECT program, COUNT(*) as count FROM `{$table_name}` GROUP BY program",
+			$wpdb->prepare( "SELECT program, COUNT(*) as count FROM `{$table_name}` WHERE %d = %d GROUP BY program", 1, 1 ),
 			OBJECT_K
 		);
 

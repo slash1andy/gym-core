@@ -49,21 +49,32 @@ final class BadgeEngine {
 	}
 
 	/**
+	 * Action Scheduler hook name for async badge evaluation.
+	 *
+	 * @var string
+	 */
+	private const ASYNC_CHECKIN_HOOK = 'gym_core_async_evaluate_badges';
+
+	/**
 	 * Registers hooks for automatic badge evaluation.
+	 *
+	 * Check-in evaluation is deferred via Action Scheduler to avoid
+	 * running 5+ queries synchronously during the check-in request.
 	 *
 	 * @since 1.3.0
 	 *
 	 * @return void
 	 */
 	public function register_hooks(): void {
-		add_action( 'gym_core_attendance_recorded', array( $this, 'evaluate_on_checkin' ), 10, 5 );
+		add_action( 'gym_core_attendance_recorded', array( $this, 'schedule_checkin_evaluation' ), 10, 5 );
+		add_action( self::ASYNC_CHECKIN_HOOK, array( $this, 'evaluate_on_checkin' ), 10, 1 );
 		add_action( 'gym_core_rank_changed', array( $this, 'evaluate_on_promotion' ), 10, 6 );
 	}
 
 	/**
-	 * Evaluates badges after a check-in event.
+	 * Schedules async badge evaluation after a check-in event.
 	 *
-	 * @since 1.3.0
+	 * @since 1.4.0
 	 *
 	 * @param int    $record_id Attendance record ID.
 	 * @param int    $user_id   Member user ID.
@@ -72,12 +83,29 @@ final class BadgeEngine {
 	 * @param string $method    Check-in method.
 	 * @return void
 	 */
-	public function evaluate_on_checkin( int $record_id, int $user_id, int $class_id, string $location, string $method ): void {
+	public function schedule_checkin_evaluation( int $record_id, int $user_id, int $class_id, string $location, string $method ): void {
 		// Skip imported records — don't retroactively award badges for historical data.
 		if ( 'imported' === $method ) {
 			return;
 		}
 
+		if ( function_exists( 'as_schedule_single_action' ) ) {
+			as_schedule_single_action( time(), self::ASYNC_CHECKIN_HOOK, array( $user_id ), 'gym-core' );
+		} else {
+			// Fallback to synchronous if Action Scheduler is unavailable.
+			$this->evaluate_on_checkin( $user_id );
+		}
+	}
+
+	/**
+	 * Evaluates badges for a user (runs asynchronously via Action Scheduler).
+	 *
+	 * @since 1.3.0
+	 *
+	 * @param int $user_id Member user ID.
+	 * @return void
+	 */
+	public function evaluate_on_checkin( int $user_id ): void {
 		$this->check_attendance_milestones( $user_id );
 		$this->check_streak_milestones( $user_id );
 		$this->check_multi_program( $user_id );

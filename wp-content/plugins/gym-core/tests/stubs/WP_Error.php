@@ -22,15 +22,24 @@ if ( ! class_exists( 'WP_Error' ) ) {
 		private array $errors = array();
 
 		/**
+		 * Additional error data (typically contains 'status' key for REST).
+		 *
+		 * @var mixed
+		 */
+		private mixed $data;
+
+		/**
 		 * Constructor.
 		 *
 		 * @param string $code    Optional error code.
 		 * @param string $message Optional error message.
+		 * @param mixed  $data    Optional additional data.
 		 */
-		public function __construct( string $code = '', string $message = '' ) {
+		public function __construct( string $code = '', string $message = '', mixed $data = '' ) {
 			if ( '' !== $code ) {
 				$this->add( $code, $message );
 			}
+			$this->data = $data;
 		}
 
 		/**
@@ -80,6 +89,15 @@ if ( ! class_exists( 'WP_Error' ) ) {
 		public function get_error_message(): string {
 			$code = $this->get_error_code();
 			return $this->errors[ $code ][0] ?? '';
+		}
+
+		/**
+		 * Returns the additional error data.
+		 *
+		 * @return mixed
+		 */
+		public function get_error_data(): mixed {
+			return $this->data;
 		}
 	}
 }
