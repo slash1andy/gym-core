@@ -51,29 +51,7 @@ class SettingsPage {
 			return;
 		}
 
-		// Submenu: Gandalf Chat (parent menu registered by gym-core plugin).
-		$pending_count = 0;
-		if ( current_user_can( 'manage_options' ) ) {
-			$store         = new \HMA_AI_Chat\Data\PendingActionStore();
-			$pending_count = $store->get_pending_count();
-		}
-
-		$gandalf_label = esc_html__( 'Gandalf', 'hma-ai-chat' );
-		if ( $pending_count > 0 ) {
-			$gandalf_label .= sprintf(
-				' <span class="awaiting-mod">%d</span>',
-				$pending_count
-			);
-		}
-
-		add_submenu_page(
-			'gym-core',
-			esc_html__( 'Chat', 'hma-ai-chat' ),
-			$gandalf_label,
-			'edit_posts',
-			'hma-ai-chat',
-			array( $this, 'render_chat_page' )
-		);
+		// Chat is now served by StaffDashboard on the gym-core page.
 
 		// Submenu: Audit Log (admin only).
 		add_submenu_page(
@@ -471,7 +449,7 @@ class SettingsPage {
 			$pending_count = $store->get_pending_count();
 
 			if ( $pending_count > 0 ) {
-				$chat_url = admin_url( 'admin.php?page=hma-ai-chat' );
+				$chat_url = admin_url( 'admin.php?page=gym-core' );
 				printf(
 					'<div class="notice notice-warning is-dismissible"><p>%s</p></div>',
 					sprintf(

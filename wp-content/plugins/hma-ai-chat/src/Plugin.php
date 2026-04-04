@@ -195,7 +195,8 @@ class Plugin {
 	 * @internal
 	 */
 	public function enqueue_admin_scripts( $hook_suffix ) {
-		if ( 'gym_page_hma-ai-chat' !== $hook_suffix ) {
+		$allowed_pages = array( 'gym_page_hma-ai-chat', 'toplevel_page_gym-core' );
+		if ( ! in_array( $hook_suffix, $allowed_pages, true ) ) {
 			return;
 		}
 

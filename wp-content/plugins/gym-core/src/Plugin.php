@@ -175,6 +175,14 @@ final class Plugin {
 					);
 					$dashboard->register_hooks();
 				}
+
+				// Staff Dashboard — role-aware landing page with chat + widgets.
+				$staff_dashboard = new Admin\StaffDashboard(
+					$this->attendance_store,
+					$this->rank_store,
+					$this->promotion_eligibility
+				);
+				$staff_dashboard->register_hooks();
 			} );
 		}
 
@@ -418,8 +426,7 @@ final class Plugin {
 				3
 			);
 
-			// Remove the auto-generated "Gym" submenu that duplicates the top-level item.
-			remove_submenu_page( 'gym-core', 'gym-core' );
+			// StaffDashboard replaces this submenu at priority 20.
 		}, 5 );
 	}
 

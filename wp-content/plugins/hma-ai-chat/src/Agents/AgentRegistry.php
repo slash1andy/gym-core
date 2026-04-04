@@ -81,8 +81,8 @@ class AgentRegistry {
 			'finance',
 			new AgentPersona(
 				'finance',
-				esc_html__( 'Finance Agent', 'hma-ai-chat' ),
-				esc_html__( 'Manages billing, invoicing, and financial reports', 'hma-ai-chat' ),
+				esc_html__( 'Joyous', 'hma-ai-chat' ),
+				esc_html__( 'Financial operations, billing, and revenue reporting', 'hma-ai-chat' ),
 				$this->get_finance_system_prompt(),
 				'manage_options',
 				'💰'
