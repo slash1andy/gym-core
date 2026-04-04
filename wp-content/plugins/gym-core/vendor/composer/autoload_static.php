@@ -35,8 +35,12 @@ class ComposerStaticInit8364db0f07d45be4603923055fcb947f
         'Gym_Core\\API\\SMSController' => __DIR__ . '/../..' . '/src/API/SMSController.php',
         'Gym_Core\\Activator' => __DIR__ . '/../..' . '/src/Activator.php',
         'Gym_Core\\Admin\\AttendanceDashboard' => __DIR__ . '/../..' . '/src/Admin/AttendanceDashboard.php',
+        'Gym_Core\\Admin\\CrmWhiteLabel' => __DIR__ . '/../..' . '/src/Admin/CrmWhiteLabel.php',
+        'Gym_Core\\Admin\\MenuManager' => __DIR__ . '/../..' . '/src/Admin/MenuManager.php',
         'Gym_Core\\Admin\\PromotionDashboard' => __DIR__ . '/../..' . '/src/Admin/PromotionDashboard.php',
         'Gym_Core\\Admin\\Settings' => __DIR__ . '/../..' . '/src/Admin/Settings.php',
+        'Gym_Core\\Admin\\StaffDashboard' => __DIR__ . '/../..' . '/src/Admin/StaffDashboard.php',
+        'Gym_Core\\Admin\\TargetedContentMetaBox' => __DIR__ . '/../..' . '/src/Admin/TargetedContentMetaBox.php',
         'Gym_Core\\Admin\\UserProfileRank' => __DIR__ . '/../..' . '/src/Admin/UserProfileRank.php',
         'Gym_Core\\Attendance\\AttendanceStore' => __DIR__ . '/../..' . '/src/Attendance/AttendanceStore.php',
         'Gym_Core\\Attendance\\CheckInValidator' => __DIR__ . '/../..' . '/src/Attendance/CheckInValidator.php',
@@ -66,6 +70,7 @@ class ComposerStaticInit8364db0f07d45be4603923055fcb947f
         'Gym_Core\\Location\\ProductFilter' => __DIR__ . '/../..' . '/src/Location/ProductFilter.php',
         'Gym_Core\\Location\\StoreApiExtension' => __DIR__ . '/../..' . '/src/Location/StoreApiExtension.php',
         'Gym_Core\\Location\\Taxonomy' => __DIR__ . '/../..' . '/src/Location/Taxonomy.php',
+        'Gym_Core\\Member\\ContactRelationships' => __DIR__ . '/../..' . '/src/Member/ContactRelationships.php',
         'Gym_Core\\Member\\ContentGating' => __DIR__ . '/../..' . '/src/Member/ContentGating.php',
         'Gym_Core\\Member\\MemberDashboard' => __DIR__ . '/../..' . '/src/Member/MemberDashboard.php',
         'Gym_Core\\Notifications\\PromotionNotifier' => __DIR__ . '/../..' . '/src/Notifications/PromotionNotifier.php',
@@ -79,6 +84,7 @@ class ComposerStaticInit8364db0f07d45be4603923055fcb947f
         'Gym_Core\\Schedule\\ICalFeed' => __DIR__ . '/../..' . '/src/Schedule/ICalFeed.php',
         'Gym_Core\\Social\\PromotionPost' => __DIR__ . '/../..' . '/src/Social/PromotionPost.php',
         'Gym_Core\\Social\\SocialPostManager' => __DIR__ . '/../..' . '/src/Social/SocialPostManager.php',
+        'Gym_Core\\Utilities\\Brand' => __DIR__ . '/../..' . '/src/Utilities/Brand.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

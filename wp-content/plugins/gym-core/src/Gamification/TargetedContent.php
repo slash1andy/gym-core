@@ -24,6 +24,7 @@ use Gym_Core\Rank\RankStore;
 use Gym_Core\Rank\RankDefinitions;
 use Gym_Core\Attendance\AttendanceStore;
 use Gym_Core\Attendance\FoundationsClearance;
+use Gym_Core\Location\Manager as LocationManager;
 use Gym_Core\Member\ContentGating;
 
 /**
@@ -72,26 +73,43 @@ final class TargetedContent {
 	private FoundationsClearance $foundations;
 
 	/**
+	 * Location manager.
+	 *
+	 * @var LocationManager
+	 */
+	private LocationManager $location_manager;
+
+	/**
+	 * Post meta key for content targeting rules.
+	 *
+	 * @since 5.3.0
+	 */
+	public const META_KEY = '_gym_content_target_rules';
+
+	/**
 	 * Constructor.
 	 *
-	 * @param RankStore            $ranks       Rank data store.
-	 * @param AttendanceStore      $attendance  Attendance data store.
-	 * @param StreakTracker        $streaks     Streak tracker.
-	 * @param BadgeEngine          $badges      Badge engine.
-	 * @param FoundationsClearance $foundations Foundations clearance gate.
+	 * @param RankStore            $ranks            Rank data store.
+	 * @param AttendanceStore      $attendance       Attendance data store.
+	 * @param StreakTracker        $streaks          Streak tracker.
+	 * @param BadgeEngine          $badges           Badge engine.
+	 * @param FoundationsClearance $foundations      Foundations clearance gate.
+	 * @param LocationManager      $location_manager Location manager.
 	 */
 	public function __construct(
 		RankStore $ranks,
 		AttendanceStore $attendance,
 		StreakTracker $streaks,
 		BadgeEngine $badges,
-		FoundationsClearance $foundations
+		FoundationsClearance $foundations,
+		LocationManager $location_manager
 	) {
-		$this->ranks       = $ranks;
-		$this->attendance  = $attendance;
-		$this->streaks     = $streaks;
-		$this->badges      = $badges;
-		$this->foundations = $foundations;
+		$this->ranks            = $ranks;
+		$this->attendance       = $attendance;
+		$this->streaks          = $streaks;
+		$this->badges           = $badges;
+		$this->foundations      = $foundations;
+		$this->location_manager = $location_manager;
 	}
 
 	/**
@@ -107,8 +125,12 @@ final class TargetedContent {
 		}
 
 		add_shortcode( 'gym_targeted', array( $this, 'render_targeted' ) );
+		add_shortcode( 'gym_targeted_content', array( $this, 'render_targeted' ) );
 		add_shortcode( 'gym_member_greeting', array( $this, 'render_member_greeting' ) );
 		add_shortcode( 'gym_progress_card', array( $this, 'render_progress_card' ) );
+
+		// Filter the_content based on post meta targeting rules.
+		add_filter( 'the_content', array( $this, 'filter_content_by_rules' ), 5 );
 	}
 
 	/**
@@ -150,20 +172,23 @@ final class TargetedContent {
 	}
 
 	/**
-	 * Renders the [gym_targeted] shortcode.
+	 * Renders the [gym_targeted] / [gym_targeted_content] shortcode.
 	 *
 	 * Shows enclosed content only if the current user matches ALL specified
 	 * criteria. If the user does not match, an optional fallback message is
 	 * shown instead.
 	 *
 	 * Attributes:
-	 *   - program         (string) Program slug: adult-bjj, kids-bjj, kickboxing.
+	 *   - program         (string) Comma-separated program slugs: adult-bjj, kids-bjj, kickboxing.
 	 *   - min_belt        (string) Minimum belt slug (inclusive).
 	 *   - max_belt        (string) Maximum belt slug (inclusive).
 	 *   - min_classes     (int)    Minimum total class count.
 	 *   - min_streak      (int)    Minimum current streak (weeks).
 	 *   - foundations_only (bool)   Show only to members currently in Foundations.
 	 *   - members_only    (bool)   Show only to members with an active membership.
+	 *   - logged_in       (bool)   If true, only show to logged-in users.
+	 *   - role            (string) Comma-separated WP roles (e.g., customer,subscriber).
+	 *   - location        (string) Comma-separated location slugs (e.g., rockford,beloit).
 	 *   - fallback        (string) Message shown when criteria are not met.
 	 *
 	 * @since 5.3.0
@@ -182,6 +207,9 @@ final class TargetedContent {
 				'min_streak'       => '',
 				'foundations_only' => '',
 				'members_only'    => '',
+				'logged_in'        => '',
+				'role'             => '',
+				'location'         => '',
 				'fallback'         => '',
 			),
 			$atts,
@@ -190,9 +218,47 @@ final class TargetedContent {
 
 		$user_id = get_current_user_id();
 
-		// Not logged in — show fallback.
-		if ( 0 === $user_id ) {
+		// Logged-in gate — if logged_in="true", require authentication.
+		if ( $this->is_truthy( $atts['logged_in'] ) && 0 === $user_id ) {
 			return $this->fallback_output( $atts['fallback'] );
+		}
+
+		// Not logged in — show fallback for criteria that require a user.
+		if ( 0 === $user_id ) {
+			// If any user-specific criterion is set, fail for guests.
+			$user_criteria = array( 'program', 'min_belt', 'max_belt', 'min_classes', 'min_streak', 'role', 'location' );
+			foreach ( $user_criteria as $key ) {
+				if ( '' !== $atts[ $key ] ) {
+					return $this->fallback_output( $atts['fallback'] );
+				}
+			}
+			if ( $this->is_truthy( $atts['members_only'] ) || $this->is_truthy( $atts['foundations_only'] ) ) {
+				return $this->fallback_output( $atts['fallback'] );
+			}
+
+			// No user-specific criteria — show content.
+			return do_shortcode( (string) $content );
+		}
+
+		// Role gate — check if user has one of the specified roles.
+		if ( '' !== $atts['role'] ) {
+			$allowed_roles = array_map( 'trim', explode( ',', sanitize_text_field( $atts['role'] ) ) );
+			$allowed_roles = array_filter( $allowed_roles );
+			$user          = get_userdata( $user_id );
+			if ( ! $user || empty( array_intersect( $allowed_roles, $user->roles ) ) ) {
+				return $this->fallback_output( $atts['fallback'] );
+			}
+		}
+
+		// Location gate — check if user's home location matches one of the specified slugs.
+		if ( '' !== $atts['location'] ) {
+			$allowed_locations = array_map( 'trim', explode( ',', sanitize_text_field( $atts['location'] ) ) );
+			$allowed_locations = array_filter( $allowed_locations );
+			$user_location     = $this->location_manager->get_user_location( $user_id );
+
+			if ( '' === $user_location || ! in_array( $user_location, $allowed_locations, true ) ) {
+				return $this->fallback_output( $atts['fallback'] );
+			}
 		}
 
 		// Members only gate.
@@ -208,26 +274,39 @@ final class TargetedContent {
 			}
 		}
 
-		// Program and belt checks.
-		$program = sanitize_text_field( $atts['program'] );
+		// Program and belt checks — program now supports comma-separated values.
+		$program_attr = sanitize_text_field( $atts['program'] );
 
-		if ( '' !== $program ) {
-			$rank = $this->ranks->get_rank( $user_id, $program );
+		if ( '' !== $program_attr ) {
+			$programs = array_map( 'trim', explode( ',', $program_attr ) );
+			$programs = array_filter( $programs );
 
-			// User has no rank in this program — fail.
-			if ( ! $rank ) {
+			// User must have a rank in at least one of the specified programs.
+			$matched_program = '';
+			$matched_rank    = null;
+
+			foreach ( $programs as $prog ) {
+				$rank = $this->ranks->get_rank( $user_id, $prog );
+				if ( $rank ) {
+					$matched_program = $prog;
+					$matched_rank    = $rank;
+					break;
+				}
+			}
+
+			if ( ! $matched_rank ) {
 				return $this->fallback_output( $atts['fallback'] );
 			}
 
-			$user_position = RankDefinitions::get_belt_position( $program, $rank->belt );
+			$user_position = RankDefinitions::get_belt_position( $matched_program, $matched_rank->belt );
 
 			if ( null === $user_position ) {
 				return $this->fallback_output( $atts['fallback'] );
 			}
 
-			// Min belt check.
+			// Min belt check (uses the matched program's hierarchy).
 			if ( '' !== $atts['min_belt'] ) {
-				$min_position = RankDefinitions::get_belt_position( $program, sanitize_text_field( $atts['min_belt'] ) );
+				$min_position = RankDefinitions::get_belt_position( $matched_program, sanitize_text_field( $atts['min_belt'] ) );
 				if ( null !== $min_position && $user_position < $min_position ) {
 					return $this->fallback_output( $atts['fallback'] );
 				}
@@ -235,7 +314,7 @@ final class TargetedContent {
 
 			// Max belt check.
 			if ( '' !== $atts['max_belt'] ) {
-				$max_position = RankDefinitions::get_belt_position( $program, sanitize_text_field( $atts['max_belt'] ) );
+				$max_position = RankDefinitions::get_belt_position( $matched_program, sanitize_text_field( $atts['max_belt'] ) );
 				if ( null !== $max_position && $user_position > $max_position ) {
 					return $this->fallback_output( $atts['fallback'] );
 				}
@@ -483,6 +562,168 @@ final class TargetedContent {
 		$output .= '</div>'; // .gym-progress-card
 
 		return $output;
+	}
+
+	/**
+	 * Filters `the_content` based on post meta targeting rules.
+	 *
+	 * If the current post/page has `_gym_content_target_rules` meta, the
+	 * rules are evaluated against the current viewer. If the viewer does
+	 * not match, the entire content is replaced with an empty string (the
+	 * post effectively becomes invisible in the loop).
+	 *
+	 * @since 5.3.0
+	 *
+	 * @param string $content The post content.
+	 * @return string Filtered content or empty string.
+	 */
+	public function filter_content_by_rules( string $content ): string {
+		if ( ! is_singular() || ! in_the_loop() || ! is_main_query() ) {
+			return $content;
+		}
+
+		$post_id = get_the_ID();
+		if ( ! $post_id ) {
+			return $content;
+		}
+
+		$rules = get_post_meta( $post_id, self::META_KEY, true );
+		if ( empty( $rules ) || ! is_array( $rules ) ) {
+			return $content;
+		}
+
+		if ( ! $this->evaluate_rules( $rules ) ) {
+			return '';
+		}
+
+		return $content;
+	}
+
+	/**
+	 * Evaluates a set of targeting rules against the current user.
+	 *
+	 * Rules are stored as an associative array with keys matching the
+	 * shortcode attributes: logged_in, role, location, program, min_belt,
+	 * members_only, foundations_only, min_classes, min_streak.
+	 * All specified criteria use AND logic.
+	 *
+	 * @since 5.3.0
+	 *
+	 * @param array<string, string> $rules Targeting rules.
+	 * @return bool True if the current user matches all rules.
+	 */
+	public function evaluate_rules( array $rules ): bool {
+		$user_id = get_current_user_id();
+
+		// Logged-in gate.
+		$logged_in = $rules['logged_in'] ?? '';
+		if ( $this->is_truthy( $logged_in ) && 0 === $user_id ) {
+			return false;
+		}
+
+		// For the remaining checks, if user is not logged in and any
+		// user-specific rule is set, deny access.
+		if ( 0 === $user_id ) {
+			$user_keys = array( 'role', 'location', 'program', 'min_belt', 'min_classes', 'min_streak' );
+			foreach ( $user_keys as $key ) {
+				if ( ! empty( $rules[ $key ] ) ) {
+					return false;
+				}
+			}
+			if ( $this->is_truthy( $rules['members_only'] ?? '' ) || $this->is_truthy( $rules['foundations_only'] ?? '' ) ) {
+				return false;
+			}
+			return true;
+		}
+
+		// Role gate.
+		$role_value = $rules['role'] ?? '';
+		if ( '' !== $role_value ) {
+			$allowed_roles = array_map( 'trim', explode( ',', $role_value ) );
+			$allowed_roles = array_filter( $allowed_roles );
+			$user          = get_userdata( $user_id );
+			if ( ! $user || empty( array_intersect( $allowed_roles, $user->roles ) ) ) {
+				return false;
+			}
+		}
+
+		// Location gate.
+		$location_value = $rules['location'] ?? '';
+		if ( '' !== $location_value ) {
+			$allowed_locations = array_map( 'trim', explode( ',', $location_value ) );
+			$allowed_locations = array_filter( $allowed_locations );
+			$user_location     = $this->location_manager->get_user_location( $user_id );
+			if ( '' === $user_location || ! in_array( $user_location, $allowed_locations, true ) ) {
+				return false;
+			}
+		}
+
+		// Members only gate.
+		if ( $this->is_truthy( $rules['members_only'] ?? '' ) && ! ContentGating::has_active_membership( $user_id ) ) {
+			return false;
+		}
+
+		// Foundations only gate.
+		if ( $this->is_truthy( $rules['foundations_only'] ?? '' ) ) {
+			$foundations_status = $this->foundations->get_status( $user_id );
+			if ( ! $foundations_status['in_foundations'] ) {
+				return false;
+			}
+		}
+
+		// Program and belt checks.
+		$program_value = $rules['program'] ?? '';
+		if ( '' !== $program_value ) {
+			$programs = array_map( 'trim', explode( ',', $program_value ) );
+			$programs = array_filter( $programs );
+
+			$matched_program = '';
+			$matched_rank    = null;
+			foreach ( $programs as $prog ) {
+				$rank = $this->ranks->get_rank( $user_id, $prog );
+				if ( $rank ) {
+					$matched_program = $prog;
+					$matched_rank    = $rank;
+					break;
+				}
+			}
+
+			if ( ! $matched_rank ) {
+				return false;
+			}
+
+			$min_belt = $rules['min_belt'] ?? '';
+			if ( '' !== $min_belt ) {
+				$user_position = RankDefinitions::get_belt_position( $matched_program, $matched_rank->belt );
+				$min_position  = RankDefinitions::get_belt_position( $matched_program, $min_belt );
+				if ( null === $user_position || ( null !== $min_position && $user_position < $min_position ) ) {
+					return false;
+				}
+			}
+		} elseif ( ! empty( $rules['min_belt'] ) ) {
+			// Belt without program is invalid — deny.
+			return false;
+		}
+
+		// Min classes check.
+		$min_classes = $rules['min_classes'] ?? '';
+		if ( '' !== $min_classes ) {
+			$total_count = $this->attendance->get_total_count( $user_id );
+			if ( $total_count < absint( $min_classes ) ) {
+				return false;
+			}
+		}
+
+		// Min streak check.
+		$min_streak = $rules['min_streak'] ?? '';
+		if ( '' !== $min_streak ) {
+			$streak_data = $this->streaks->get_streak( $user_id );
+			if ( $streak_data['current_streak'] < absint( $min_streak ) ) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
 	/**

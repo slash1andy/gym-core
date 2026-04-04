@@ -165,6 +165,10 @@ final class Plugin {
 			$menu_manager = new Admin\MenuManager();
 			$menu_manager->register_hooks();
 
+			// Targeted content meta box on posts and pages.
+			$targeted_meta_box = new Admin\TargetedContentMetaBox();
+			$targeted_meta_box->register_hooks();
+
 			// Admin dashboards need attendance/rank stores — defer to gym_core_loaded
 			// when stores have been instantiated by register_attendance_modules().
 			add_action( 'gym_core_loaded', function (): void {
@@ -409,6 +413,17 @@ final class Plugin {
 		$this->streak_tracker = new Gamification\StreakTracker( $this->attendance_store );
 		$this->badge_engine   = new Gamification\BadgeEngine( $this->attendance_store, $this->streak_tracker );
 		$this->badge_engine->register_hooks();
+
+		// Targeted content shortcodes and the_content filter.
+		$targeted_content = new Gamification\TargetedContent(
+			$this->rank_store,
+			$this->attendance_store,
+			$this->streak_tracker,
+			$this->badge_engine,
+			$this->foundations_clearance,
+			$this->get_location_manager()
+		);
+		$targeted_content->register_hooks();
 	}
 
 	/**
