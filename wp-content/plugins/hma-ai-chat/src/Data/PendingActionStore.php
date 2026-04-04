@@ -376,7 +376,22 @@ class PendingActionStore {
 			$total = (int) $wpdb->get_var( "SELECT COUNT(*) FROM $table $where_clause" );
 		}
 
-		$results = $wpdb->get_results( $query, ARRAY_A );
+		$offset = ( $args['page'] - 1 ) * $args['per_page'];
+
+		if ( ! empty( $values ) ) {
+			$query = $wpdb->prepare(
+				"SELECT * FROM $table $where_clause ORDER BY created_at DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				...array_merge( $values, array( $args['per_page'], $offset ) )
+			);
+		} else {
+			$query = $wpdb->prepare(
+				"SELECT * FROM $table $where_clause ORDER BY created_at DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$args['per_page'],
+				$offset
+			);
+		}
+
+		$results = $wpdb->get_results( $query, ARRAY_A ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared -- prepared above.
 
 		if ( ! $results ) {
 			$results = array();
@@ -389,7 +404,7 @@ class PendingActionStore {
 		return array(
 			'items'       => $results,
 			'total'       => $total,
-			'total_pages' => (int) ceil( $total / $per_page ),
+			'total_pages' => (int) ceil( $total / $args['per_page'] ),
 		);
 	}
 
