@@ -240,6 +240,9 @@ class ManagerTest extends TestCase {
 			->with( 7, Manager::USER_META_KEY, Taxonomy::ROCKFORD );
 
 		$this->sut->set_location( Taxonomy::ROCKFORD );
+
+		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
+		$this->assertTrue( true );
 	}
 
 	// ----- set_user_location -----

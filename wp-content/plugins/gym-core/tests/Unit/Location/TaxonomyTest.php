@@ -129,6 +129,9 @@ class TaxonomyTest extends TestCase {
 		Functions\expect( 'wp_insert_term' )->never();
 
 		Taxonomy::seed_terms();
+
+		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
+		$this->assertTrue( true );
 	}
 
 	/**
@@ -152,6 +155,9 @@ class TaxonomyTest extends TestCase {
 			->andReturnFirstArg(); // Passthrough translations.
 
 		Taxonomy::seed_terms();
+
+		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
+		$this->assertTrue( true );
 	}
 
 	/**
@@ -173,5 +179,8 @@ class TaxonomyTest extends TestCase {
 			->andReturnFirstArg();
 
 		Taxonomy::seed_terms();
+
+		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
+		$this->assertTrue( true );
 	}
 }

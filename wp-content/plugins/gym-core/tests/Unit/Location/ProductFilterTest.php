@@ -15,12 +15,15 @@ use Gym_Core\Location\Manager;
 use Gym_Core\Location\ProductFilter;
 use Gym_Core\Location\Taxonomy;
 use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 
 /**
  * Tests for the ProductFilter class.
  */
 class ProductFilterTest extends TestCase {
+
+	use MockeryPHPUnitIntegration;
 
 	/**
 	 * The System Under Test.

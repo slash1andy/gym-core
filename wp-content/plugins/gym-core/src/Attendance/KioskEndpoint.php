@@ -145,16 +145,16 @@ final class KioskEndpoint {
 				'timeout'  => $timeout,
 				'strings'  => array(
 					'title'          => __( 'Haanpaa Martial Arts', 'gym-core' ),
-					'subtitle'       => __( 'Tap to Check In', 'gym-core' ),
+					'subtitle'       => __( 'Tap to check in', 'gym-core' ),
 					'searchLabel'    => __( 'Search by Name', 'gym-core' ),
 					'searchPlaceholder' => __( 'Start typing your name...', 'gym-core' ),
 					'checkingIn'     => __( 'Checking in...', 'gym-core' ),
-					'success'        => __( 'Checked In!', 'gym-core' ),
+					'success'        => __( 'Checked in!', 'gym-core' ),
 					'welcomeBack'    => __( 'Welcome back,', 'gym-core' ),
-					'error'          => __( 'Check-in Failed', 'gym-core' ),
+					'error'          => __( 'Check-in failed', 'gym-core' ),
 					'tryAgain'       => __( 'Tap to try again', 'gym-core' ),
 					'noResults'      => __( 'No members found', 'gym-core' ),
-					'selectClass'    => __( 'Select Your Class', 'gym-core' ),
+					'selectClass'    => __( 'Select your class', 'gym-core' ),
 					/* translators: %d: number of consecutive weeks */
 					'weekStreak'     => __( 'Week %d streak!', 'gym-core' ),
 				),
@@ -212,7 +212,7 @@ final class KioskEndpoint {
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title><?php esc_html_e( 'Check In — Haanpaa Martial Arts', 'gym-core' ); ?></title>
+	<title><?php esc_html_e( 'Check in — Haanpaa Martial Arts', 'gym-core' ); ?></title>
 	<?php wp_head(); ?>
 </head>
 <body class="gym-kiosk" data-location="<?php echo esc_attr( $location ); ?>">
@@ -248,7 +248,7 @@ final class KioskEndpoint {
 		<div class="kiosk-screen kiosk-screen--classes" id="kiosk-classes">
 			<div class="kiosk-header">
 				<h2 class="kiosk-title" id="kiosk-member-name"></h2>
-				<p class="kiosk-subtitle"><?php esc_html_e( 'Select Your Class', 'gym-core' ); ?></p>
+				<p class="kiosk-subtitle"><?php esc_html_e( 'Select your class', 'gym-core' ); ?></p>
 			</div>
 			<div id="kiosk-class-list" class="kiosk-class-list" role="listbox" aria-label="<?php esc_attr_e( 'Available classes', 'gym-core' ); ?>"></div>
 			<button type="button" class="kiosk-btn kiosk-btn--back" id="kiosk-back">
@@ -259,7 +259,7 @@ final class KioskEndpoint {
 		<!-- Screen: Success -->
 		<div class="kiosk-screen kiosk-screen--success" id="kiosk-success">
 			<div class="kiosk-success-icon" aria-hidden="true">&#10003;</div>
-			<h2 class="kiosk-title"><?php esc_html_e( 'Checked In!', 'gym-core' ); ?></h2>
+			<h2 class="kiosk-title"><?php esc_html_e( 'Checked in!', 'gym-core' ); ?></h2>
 			<p class="kiosk-welcome" id="kiosk-welcome-msg"></p>
 			<p class="kiosk-streak" id="kiosk-streak-display" style="display:none;"></p>
 			<p class="kiosk-rank" id="kiosk-rank-display"></p>
@@ -268,10 +268,10 @@ final class KioskEndpoint {
 		<!-- Screen: Error -->
 		<div class="kiosk-screen kiosk-screen--error" id="kiosk-error">
 			<div class="kiosk-error-icon" aria-hidden="true">&#10007;</div>
-			<h2 class="kiosk-title"><?php esc_html_e( 'Check-in Failed', 'gym-core' ); ?></h2>
+			<h2 class="kiosk-title"><?php esc_html_e( 'Check-in failed', 'gym-core' ); ?></h2>
 			<p class="kiosk-error-msg" id="kiosk-error-msg"></p>
 			<button type="button" class="kiosk-btn" id="kiosk-retry">
-				<?php esc_html_e( 'Tap to Try Again', 'gym-core' ); ?>
+				<?php esc_html_e( 'Tap to try again', 'gym-core' ); ?>
 			</button>
 		</div>
 

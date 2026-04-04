@@ -15,6 +15,7 @@ use Gym_Core\Location\Manager;
 use Gym_Core\Location\OrderLocation;
 use Gym_Core\Location\Taxonomy;
 use Mockery;
+use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 use WC_Order;
 
@@ -22,6 +23,8 @@ use WC_Order;
  * Tests for the OrderLocation class.
  */
 class OrderLocationTest extends TestCase {
+
+	use MockeryPHPUnitIntegration;
 
 	/**
 	 * The System Under Test.

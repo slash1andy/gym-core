@@ -74,7 +74,12 @@ class RankDefinitionsTest extends TestCase {
 
 		foreach ( $belts as $belt ) {
 			$this->assertArrayHasKey( 'max_stripes', $belt );
-			$this->assertSame( 4, $belt['max_stripes'] );
+			if ( 'black' === $belt['slug'] ) {
+				// Black belt uses degrees (up to 10) instead of 4 stripes.
+				$this->assertSame( 10, $belt['max_stripes'] );
+			} else {
+				$this->assertSame( 4, $belt['max_stripes'] );
+			}
 		}
 	}
 

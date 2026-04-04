@@ -271,7 +271,8 @@ final class RankStore {
 
 		$table_name = esc_sql( $tables['ranks'] );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		// No user input in this query — table name is from internal config, escaped above.
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.PreparedSQL.NotPrepared
 		$results = $wpdb->get_results(
 			"SELECT program, COUNT(*) as count FROM `{$table_name}` GROUP BY program",
 			OBJECT_K

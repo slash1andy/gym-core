@@ -123,6 +123,15 @@ class GamificationController extends BaseController {
 
 		$result = array();
 
+		// Fetch all earned badges once to avoid N+1 queries.
+		$earned_map = array();
+		if ( $user_id > 0 ) {
+			$user_badges = $this->badges->get_user_badges( $user_id );
+			foreach ( $user_badges as $ub ) {
+				$earned_map[ $ub->badge_slug ] = $ub->earned_at;
+			}
+		}
+
 		foreach ( $definitions as $slug => $badge ) {
 			if ( $category && $badge['category'] !== $category ) {
 				continue;
@@ -139,18 +148,8 @@ class GamificationController extends BaseController {
 
 			// Include earned state if user is logged in.
 			if ( $user_id > 0 ) {
-				$item['earned']    = $this->badges->has_badge( $user_id, $slug );
-				$item['earned_at'] = null;
-
-				if ( $item['earned'] ) {
-					$user_badges = $this->badges->get_user_badges( $user_id );
-					foreach ( $user_badges as $ub ) {
-						if ( $ub->badge_slug === $slug ) {
-							$item['earned_at'] = $ub->earned_at;
-							break;
-						}
-					}
-				}
+				$item['earned']    = isset( $earned_map[ $slug ] );
+				$item['earned_at'] = $earned_map[ $slug ] ?? null;
 			}
 
 			$result[] = $item;

@@ -78,36 +78,40 @@ haanpaa/                           # Repo root
 
 ## Current State
 
-**Milestone 1.1 (Locations) complete.** Everything else is scaffolded or planned.
+**Milestones 1–6 code-complete.** All 20 finalization tasks resolved. Testing gate in progress.
 
-### gym-core plugin — what's built
-- Plugin scaffold (activation, deactivation, uninstall, PSR-4 autoloading)
-- HPOS + Cart/Checkout Blocks compatibility
-- `gym_location` taxonomy with Rockford/Beloit terms
-- Location state management (cookies + user meta)
-- Product query filtering, order location recording
-- WooCommerce Blocks + Store API integration
-- Frontend location selector banner
-- CI pipeline (PHPCS, PHPStan level 6, PHPUnit, ESLint)
+### gym-core plugin (v1.0.0) — what's built
+- **8 core modules**: Locations, Schedule, Members, Attendance, Ranks, Gamification, SMS, Integrations
+- **11 REST controllers** under `gym/v1` namespace (20+ endpoints)
+- Multi-location architecture (Rockford/Beloit) with taxonomy, product filtering, Store API
+- Belt rank system with promotion eligibility engine and admin dashboards
+- Attendance check-in with kiosk endpoint, QR support, milestone tracking
+- Gamification: badges, streaks (quarterly freeze reset), targeted content shortcodes
+- Twilio SMS integration with 2-way messaging and TCPA compliance
+- CRM bridges: Jetpack CRM, AutomateWoo, MailPoet
+- iCal feed for class schedules
+- 60+ unit tests, PHPStan level 6, PHPCS, ESLint CI pipeline
+- Badge evaluation deferred via Action Scheduler for check-in performance
+- HPOS + Cart/Checkout Blocks compatibility declared
 
-### hma-ai-chat plugin — what's built
-- Plugin scaffold (v0.1.0, production-ready)
-- Four agent personas (Sales, Coaching, Finance, Admin)
-- REST API endpoints (message + Paperclip heartbeat webhook)
-- Conversation persistence (custom DB tables)
-- Pending action approval queue
-- Webhook security (constant-time comparison, IP allowlist)
-- 10 code quality issues found and fixed (see `testing-report.md`)
+### hma-ai-chat plugin (v0.3.1) — what's built
+- Four agent personas (Sales, Coaching, Finance, Admin) with tool registry
+- WordPress 7.0 WP AI Client integration + direct Claude API fallback
+- GymContextProvider injects real gym-core data into agent conversations
+- Conversation memory with persistent history per agent
+- Pending action approval queue (approve / approve-with-changes / reject)
+- REST API: message, heartbeat (Paperclip webhook), action endpoints
+- Webhook security (constant-time signature comparison)
+- Gandalf social post tool for promotion celebrations
 
 ### What's next
-See `MILESTONES.md` at repo root. In dependency order:
-1. **M1.2–1.9**: Billing engine (WooPayments, Subscriptions, site design, go-live)
-2. **M2**: Replace GoHighLevel (Jetpack CRM, Twilio SMS, AutomateWoo)
-3. **M3**: Member portal + content gating
-4. **M4**: Belt rank + attendance tracking
-5. **M5**: Gamification (badges, streaks)
-6. **M6**: AI operations layer (wire hma-ai-chat into real data)
-7. **M7**: Media migration + Spark decommission
+See `MILESTONES.md` at repo root. Remaining work:
+1. **M1.8**: Checkout flow E2E testing (READY)
+2. **M1.9**: DNS + go-live cutover (BLOCKED — awaiting client sign-off)
+3. **M6.3**: Staff approval flow polish (READY)
+4. **M6.10**: gym/v1 endpoint completeness audit (READY)
+5. **M6.2**: ~~LibreChat~~ SKIPPED — WP AI Client + ClaudeClient fallback is sufficient
+6. **M7.1–7.4**: Media migration, Spark data import, staff training, parallel run (NOT STARTED)
 
 ## Key Documents
 

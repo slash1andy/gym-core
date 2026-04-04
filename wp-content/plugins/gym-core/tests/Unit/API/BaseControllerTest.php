@@ -377,7 +377,7 @@ class BaseControllerTest extends TestCase {
 	 * @testdox check_rate_limit should return true when under the limit.
 	 */
 	public function test_check_rate_limit_returns_true_under_limit(): void {
-		Functions\when( 'get_transient' )->justReturn( 0 );
+		Functions\when( 'get_transient' )->justReturn( false );
 		Functions\when( 'set_transient' )->justReturn( true );
 
 		$result = $this->sut->call_check_rate_limit( 'test_key', 5, 60 );
@@ -389,7 +389,7 @@ class BaseControllerTest extends TestCase {
 	 * @testdox check_rate_limit should return false when count equals the max.
 	 */
 	public function test_check_rate_limit_returns_false_when_limit_reached(): void {
-		Functions\when( 'get_transient' )->justReturn( 5 );
+		Functions\when( 'get_transient' )->justReturn( array( 'count' => 5, 'start' => time() ) );
 
 		$result = $this->sut->call_check_rate_limit( 'test_key', 5, 60 );
 
@@ -400,7 +400,7 @@ class BaseControllerTest extends TestCase {
 	 * @testdox check_rate_limit should return false when count exceeds the max.
 	 */
 	public function test_check_rate_limit_returns_false_when_limit_exceeded(): void {
-		Functions\when( 'get_transient' )->justReturn( 10 );
+		Functions\when( 'get_transient' )->justReturn( array( 'count' => 10, 'start' => time() ) );
 
 		$result = $this->sut->call_check_rate_limit( 'test_key', 5, 60 );
 
@@ -411,14 +411,16 @@ class BaseControllerTest extends TestCase {
 	 * @testdox check_rate_limit should increment the transient counter on each allowed call.
 	 */
 	public function test_check_rate_limit_increments_counter(): void {
-		Functions\when( 'get_transient' )->justReturn( 3 );
+		$start = time();
+		Functions\when( 'get_transient' )->justReturn( array( 'count' => 3, 'start' => $start ) );
 
 		Functions\expect( 'set_transient' )
 			->once()
 			->andReturnUsing(
-				function ( string $key, int $value, int $window ): bool {
+				function ( string $key, array $value, int $window ) use ( $start ): bool {
 					// Counter should be incremented from 3 to 4.
-					TestCase::assertSame( 4, $value );
+					TestCase::assertSame( 4, $value['count'] );
+					TestCase::assertSame( $start, $value['start'] );
 					return true;
 				}
 			);
