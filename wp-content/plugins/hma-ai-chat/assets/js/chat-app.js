@@ -165,6 +165,9 @@
 		addMessage('user', message);
 		messageInput.value = '';
 
+		// Show typing indicator while waiting.
+		const typingId = showTypingIndicator();
+
 		try {
 			// Send message to server.
 			const response = await wp.apiFetch({
@@ -177,6 +180,8 @@
 				},
 			});
 
+			removeTypingIndicator(typingId);
+
 			if (response.success) {
 				currentConversationId = response.conversation_id;
 				addMessage('assistant', response.response);
@@ -184,6 +189,8 @@
 				addMessage('assistant', config.strings.errorMessage);
 			}
 		} catch (error) {
+			removeTypingIndicator(typingId);
+
 			// eslint-disable-next-line no-console -- User-facing error logging.
 			console.error('Error sending message:', error);
 			// wp.apiFetch throws the parsed JSON body for non-2xx responses.
@@ -589,6 +596,39 @@
 	}
 
 	/**
+	 * Show a typing indicator in the messages area.
+	 *
+	 * @return {string} The indicator element ID for removal.
+	 */
+	function showTypingIndicator() {
+		const messagesContainer = document.getElementById('hma-messages');
+		const id = 'hma-typing-' + Date.now();
+		const div = document.createElement('div');
+		div.id = id;
+		div.className = 'hma-ai-message assistant';
+		div.innerHTML = `
+			<div class="hma-ai-message-bubble hma-ai-typing-bubble">
+				<span class="hma-ai-typing-dot"></span>
+				<span class="hma-ai-typing-dot"></span>
+				<span class="hma-ai-typing-dot"></span>
+			</div>
+		`;
+		messagesContainer.appendChild(div);
+		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+		return id;
+	}
+
+	/**
+	 * Remove a typing indicator by ID.
+	 *
+	 * @param {string} id The indicator element ID.
+	 */
+	function removeTypingIndicator(id) {
+		const el = document.getElementById(id);
+		if (el) el.remove();
+	}
+
+	/**
 	 * Render a subset of Markdown to HTML for assistant messages.
 	 *
 	 * Supports: headings, bold, italic, inline code, code blocks,
@@ -618,10 +658,10 @@
 		// Horizontal rule
 		s = s.replace(/^---$/gm, '<hr>');
 
-		// Bold + italic
+		// Bold + italic (use word-boundary-aware patterns to avoid matching list markers)
 		s = s.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
 		s = s.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-		s = s.replace(/\*(.+?)\*/g, '<em>$1</em>');
+		s = s.replace(/(?<![\\*\w])\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
 
 		// Unordered lists — consecutive lines starting with - or *
 		s = s.replace(/((?:^[\t ]*[-*] .+$\n?)+)/gm, function(block) {
