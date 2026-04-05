@@ -94,6 +94,7 @@ Tags: block-theme, full-site-editing, one-column, custom-colors, custom-menu, ed
 
 /* ---------- Value card subtle lift ---------- */
 .value-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .value-card:hover {

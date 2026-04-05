@@ -130,9 +130,9 @@ final class UserProfileRank {
 		}
 
 		// Determine if this is an Adult BJJ student for Foundations rendering.
-		$has_adult_bjj       = isset( $rank_map['adult-bjj'] );
-		$foundations_status   = $has_adult_bjj ? $this->foundations->get_status( $user->ID ) : null;
-		$show_foundations     = $foundations_status && ( $foundations_status['in_foundations'] || $foundations_status['cleared'] );
+		$has_adult_bjj      = isset( $rank_map['adult-bjj'] );
+		$foundations_status = $has_adult_bjj ? $this->foundations->get_status( $user->ID ) : null;
+		$show_foundations   = $foundations_status && ( $foundations_status['in_foundations'] || $foundations_status['cleared'] );
 
 		if ( empty( $ranks ) && ! $show_foundations ) {
 			return;
@@ -334,7 +334,7 @@ final class UserProfileRank {
 			'phase3'             => __( 'Phase 3 — Continued Training', 'gym-core' ),
 			'ready_to_clear'     => __( 'Ready to Clear', 'gym-core' ),
 		);
-		$phase_label = $phase_labels[ $status['phase'] ] ?? $status['phase'];
+		$phase_label  = $phase_labels[ $status['phase'] ] ?? $status['phase'];
 		echo '<p style="margin:4px 0;"><strong>' . esc_html__( 'Phase:', 'gym-core' ) . '</strong> ' . esc_html( $phase_label ) . '</p>';
 
 		// Classes completed / required.

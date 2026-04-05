@@ -22,6 +22,8 @@ use Gym_Core\Rank\RankDefinitions;
 final class PromotionNotifier {
 
 	/**
+	 * Twilio SMS client instance.
+	 *
 	 * @var TwilioClient
 	 */
 	private TwilioClient $sms;
@@ -90,11 +92,13 @@ final class PromotionNotifier {
 			esc_html__( "We're proud to announce your promotion!", 'gym-core' ),
 			esc_html( $rank_label ),
 			esc_html( $progress_text ),
-			esc_html( sprintf(
+			esc_html(
+				sprintf(
 				/* translators: %s: date */
-				__( 'Promoted on %s.', 'gym-core' ),
-				wp_date( get_option( 'date_format' ) )
-			) ),
+					__( 'Promoted on %s.', 'gym-core' ),
+					wp_date( get_option( 'date_format' ) )
+				)
+			),
 			esc_html( \Gym_Core\Utilities\Brand::name() )
 		);
 
@@ -145,11 +149,13 @@ final class PromotionNotifier {
 			esc_html( $subject ),
 			esc_html( $user->display_name ),
 			esc_html__( "Great news! You've completed the Foundations program and are now cleared for live training with all training partners.", 'gym-core' ),
-			esc_html( sprintf(
+			esc_html(
+				sprintf(
 				/* translators: %d: class count */
-				__( 'You completed %d classes and passed your coach evaluations. Welcome to the mat!', 'gym-core' ),
-				$status['classes_completed'] ?? 0
-			) ),
+					__( 'You completed %d classes and passed your coach evaluations. Welcome to the mat!', 'gym-core' ),
+					$status['classes_completed'] ?? 0
+				)
+			),
 			esc_html( \Gym_Core\Utilities\Brand::name() )
 		);
 
@@ -158,7 +164,6 @@ final class PromotionNotifier {
 		// SMS.
 		if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
 			$sms_body = sprintf(
-				/* translators: %s: name */
 				/* translators: 1: name, 2: brand name */
 				__( 'Great news %1$s! You\'ve completed Foundations and are cleared for live training at %2$s!', 'gym-core' ),
 				$user->display_name,
@@ -181,8 +186,11 @@ final class PromotionNotifier {
 
 		$sent = wp_mail( $to, $subject, $body, $headers );
 
-		if ( ! $sent && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( '[gym-core] Failed to send promotion email to %s', $to ) );
+		if ( ! $sent ) {
+			wc_get_logger()->warning(
+				sprintf( 'Failed to send promotion email to %s', $to ),
+				array( 'source' => 'gym-core' )
+			);
 		}
 	}
 
@@ -207,8 +215,11 @@ final class PromotionNotifier {
 
 		$result = $this->sms->send( $phone, $body );
 
-		if ( ! $result['success'] && defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( sprintf( '[gym-core] Failed to send promotion SMS to user %d: %s', $user_id, $result['error'] ?? 'unknown' ) );
+		if ( ! $result['success'] ) {
+			wc_get_logger()->error(
+				sprintf( 'Failed to send promotion SMS to user %d: %s', $user_id, $result['error'] ?? 'unknown' ),
+				array( 'source' => 'gym-core' )
+			);
 		}
 	}
 

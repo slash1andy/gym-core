@@ -38,7 +38,7 @@ class GamificationController extends BaseController {
 	 * Constructor.
 	 *
 	 * @param BadgeEngine   $badges  Badge engine.
-	 * @param StreakTracker  $streaks Streak tracker.
+	 * @param StreakTracker $streaks Streak tracker.
 	 */
 	public function __construct( BadgeEngine $badges, StreakTracker $streaks ) {
 		parent::__construct();
@@ -79,7 +79,12 @@ class GamificationController extends BaseController {
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(
-						'id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+						'id' => array(
+							'type'              => 'integer',
+							'required'          => true,
+							'sanitize_callback' => 'absint',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
 					)
 				),
 			)
@@ -93,7 +98,12 @@ class GamificationController extends BaseController {
 				'callback'            => array( $this, 'get_member_streak' ),
 				'permission_callback' => array( $this, 'permissions_view_badges' ),
 				'args'                => array(
-					'id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -181,7 +191,12 @@ class GamificationController extends BaseController {
 					'name'        => $def['name'],
 					'description' => $def['description'],
 					'icon'        => $def['icon'],
-				) : array( 'slug' => $earned->badge_slug, 'name' => $earned->badge_slug, 'description' => '', 'icon' => '' ),
+				) : array(
+					'slug'        => $earned->badge_slug,
+					'name'        => $earned->badge_slug,
+					'description' => '',
+					'icon'        => '',
+				),
 				'earned_at' => $earned->earned_at,
 				'metadata'  => $earned->metadata ? json_decode( $earned->metadata, true ) : null,
 			);

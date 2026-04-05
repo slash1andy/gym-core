@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Audit log admin page for action approval history.
  *

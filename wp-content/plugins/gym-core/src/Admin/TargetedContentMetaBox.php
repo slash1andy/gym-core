@@ -98,17 +98,17 @@ final class TargetedContentMetaBox {
 			'program'          => '',
 			'min_belt'         => '',
 			'members_only'     => '',
-			'foundations_only'  => '',
-			'min_classes'       => '',
-			'min_streak'        => '',
+			'foundations_only' => '',
+			'min_classes'      => '',
+			'min_streak'       => '',
 		);
 
 		$rules = wp_parse_args( $rules, $defaults );
 
 		wp_nonce_field( self::NONCE_ACTION, self::NONCE_NAME );
 
-		$programs         = RankDefinitions::get_programs();
-		$location_labels  = LocationTaxonomy::get_location_labels();
+		$programs        = RankDefinitions::get_programs();
+		$location_labels = LocationTaxonomy::get_location_labels();
 
 		?>
 		<p class="description">

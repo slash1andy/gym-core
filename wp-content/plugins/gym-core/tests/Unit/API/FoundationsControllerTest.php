@@ -349,6 +349,7 @@ class FoundationsControllerTest extends TestCase {
 	 * @testdox permissions_view allows access to own data.
 	 */
 	public function test_permissions_view_allows_own_data(): void {
+		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 50 );
 
 		$request = $this->make_request( array( 'user_id' => 50 ) );
@@ -361,6 +362,7 @@ class FoundationsControllerTest extends TestCase {
 	 * @testdox permissions_view denies other users without capability.
 	 */
 	public function test_permissions_view_denies_without_capability(): void {
+		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 50 );
 		Functions\when( 'current_user_can' )->justReturn( false );
 

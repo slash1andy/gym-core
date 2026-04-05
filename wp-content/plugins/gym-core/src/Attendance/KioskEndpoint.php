@@ -15,6 +15,8 @@ declare( strict_types=1 );
 
 namespace Gym_Core\Attendance;
 
+use Gym_Core\Location\Taxonomy;
+
 /**
  * Registers the kiosk check-in page and its assets.
  */
@@ -144,19 +146,19 @@ final class KioskEndpoint {
 				'location' => $location,
 				'timeout'  => $timeout,
 				'strings'  => array(
-					'title'          => \Gym_Core\Utilities\Brand::name(),
-					'subtitle'       => __( 'Tap to check in', 'gym-core' ),
-					'searchLabel'    => __( 'Search by Name', 'gym-core' ),
+					'title'             => \Gym_Core\Utilities\Brand::name(),
+					'subtitle'          => __( 'Tap to check in', 'gym-core' ),
+					'searchLabel'       => __( 'Search by Name', 'gym-core' ),
 					'searchPlaceholder' => __( 'Start typing your name...', 'gym-core' ),
-					'checkingIn'     => __( 'Checking in...', 'gym-core' ),
-					'success'        => __( 'Checked in!', 'gym-core' ),
-					'welcomeBack'    => __( 'Welcome back,', 'gym-core' ),
-					'error'          => __( 'Check-in failed', 'gym-core' ),
-					'tryAgain'       => __( 'Tap to try again', 'gym-core' ),
-					'noResults'      => __( 'No members found', 'gym-core' ),
-					'selectClass'    => __( 'Select your class', 'gym-core' ),
+					'checkingIn'        => __( 'Checking in...', 'gym-core' ),
+					'success'           => __( 'Checked in!', 'gym-core' ),
+					'welcomeBack'       => __( 'Welcome back,', 'gym-core' ),
+					'error'             => __( 'Check-in failed', 'gym-core' ),
+					'tryAgain'          => __( 'Tap to try again', 'gym-core' ),
+					'noResults'         => __( 'No members found', 'gym-core' ),
+					'selectClass'       => __( 'Select your class', 'gym-core' ),
 					/* translators: %d: number of consecutive weeks */
-					'weekStreak'     => __( 'Week %d streak!', 'gym-core' ),
+					'weekStreak'        => __( 'Week %d streak!', 'gym-core' ),
 				),
 			)
 		);
@@ -177,8 +179,12 @@ final class KioskEndpoint {
 			return $user_location;
 		}
 
-		// Fall back to cookie.
-		return sanitize_text_field( wp_unslash( $_COOKIE['gym_location'] ?? 'rockford' ) );
+		$cookie_location = isset( $_COOKIE['gym_location'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['gym_location'] ) ) : '';
+		if ( '' === $cookie_location ) {
+			$locations       = Taxonomy::get_location_labels();
+			$cookie_location = ! empty( $locations ) ? array_key_first( $locations ) : '';
+		}
+		return $cookie_location;
 	}
 
 	/**
@@ -213,7 +219,7 @@ final class KioskEndpoint {
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title><?php echo esc_html( sprintf( __( 'Check in — %s', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ); ?></title>
-	<?php wp_head(); ?>
+		<?php wp_head(); ?>
 </head>
 <body class="gym-kiosk" data-location="<?php echo esc_attr( $location ); ?>">
 
@@ -281,7 +287,7 @@ final class KioskEndpoint {
 		</div>
 	</div>
 
-	<?php wp_footer(); ?>
+		<?php wp_footer(); ?>
 </body>
 </html>
 		<?php

@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * REST API message endpoint.
  *
@@ -71,6 +72,14 @@ class MessageEndpoint {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function handle_message( WP_REST_Request $request ) {
+		$user_id   = get_current_user_id();
+		$rate_key  = 'hma_ai_chat_rate_' . $user_id;
+		$count     = (int) get_transient( $rate_key );
+		if ( $count >= 30 ) {
+			return new WP_Error( 'rate_limit_exceeded', __( 'Message rate limit exceeded. Please try again later.', 'hma-ai-chat' ), array( 'status' => 429 ) );
+		}
+		set_transient( $rate_key, $count + 1, MINUTE_IN_SECONDS );
+
 		$agent_slug = sanitize_text_field( $request->get_param( 'agent' ) );
 		$message    = wp_kses_post( $request->get_param( 'message' ) );
 		$conversation_id = absint( $request->get_param( 'conversation_id' ) ?? 0 );
@@ -113,6 +122,11 @@ class MessageEndpoint {
 					get_current_user_id(),
 					$agent_slug
 				);
+			} else {
+				$conversation = $conversation_store->get_conversation_record( $conversation_id );
+				if ( $conversation && (int) $conversation['user_id'] !== get_current_user_id() && ! current_user_can( 'manage_options' ) ) {
+					return new \WP_Error( 'rest_forbidden', __( 'You do not have permission to access this conversation.', 'hma-ai-chat' ), array( 'status' => 403 ) );
+				}
 			}
 
 			// Store user message.

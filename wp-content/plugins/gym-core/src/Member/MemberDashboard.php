@@ -174,15 +174,15 @@ final class MemberDashboard {
 		$location   = get_user_meta( $user_id, '_gym_location', true );
 
 		// Gather data — all calls are null-safe.
-		$ranks             = $this->rank_store->get_all_ranks( $user_id );
+		$ranks              = $this->rank_store->get_all_ranks( $user_id );
 		$foundations_status = $this->foundations->get_status( $user_id );
-		$streak_data       = $this->streak_tracker->get_streak( $user_id );
-		$badges            = $this->badge_engine->get_user_badges( $user_id );
-		$total_classes     = $this->attendance_store->get_total_count( $user_id );
-		$subscription      = $this->get_active_subscription( $user_id );
-		$upcoming_classes  = $this->get_upcoming_classes( $location );
-		$location_labels   = LocationTaxonomy::get_location_labels();
-		$location_label    = $location_labels[ $location ] ?? '';
+		$streak_data        = $this->streak_tracker->get_streak( $user_id );
+		$badges             = $this->badge_engine->get_user_badges( $user_id );
+		$total_classes      = $this->attendance_store->get_total_count( $user_id );
+		$subscription       = $this->get_active_subscription( $user_id );
+		$upcoming_classes   = $this->get_upcoming_classes( $location );
+		$location_labels    = LocationTaxonomy::get_location_labels();
+		$location_label     = $location_labels[ $location ] ?? '';
 
 		$this->render_styles();
 		?>
@@ -324,8 +324,8 @@ final class MemberDashboard {
 					<?php
 					$programs = RankDefinitions::get_programs();
 					foreach ( $ranks as $rank ) :
-						$belt_defs    = RankDefinitions::get_ranks( $rank->program );
-						$current_def  = null;
+						$belt_defs   = RankDefinitions::get_ranks( $rank->program );
+						$current_def = null;
 						foreach ( $belt_defs as $def ) {
 							if ( $def['slug'] === $rank->belt ) {
 								$current_def = $def;
@@ -639,11 +639,11 @@ final class MemberDashboard {
 		}
 
 		foreach ( $query->posts as $post ) {
-			$day_of_week  = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
-			$start_time   = get_post_meta( $post->ID, '_gym_class_start_time', true );
-			$end_time     = get_post_meta( $post->ID, '_gym_class_end_time', true );
+			$day_of_week   = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
+			$start_time    = get_post_meta( $post->ID, '_gym_class_start_time', true );
+			$end_time      = get_post_meta( $post->ID, '_gym_class_end_time', true );
 			$instructor_id = (int) get_post_meta( $post->ID, '_gym_class_instructor', true );
-			$recurrence   = get_post_meta( $post->ID, '_gym_class_recurrence', true ) ?: 'weekly';
+			$recurrence    = get_post_meta( $post->ID, '_gym_class_recurrence', true ) ?: 'weekly';
 
 			if ( ! $day_of_week || ! $start_time ) {
 				continue;

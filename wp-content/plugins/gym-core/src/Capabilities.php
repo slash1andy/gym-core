@@ -30,10 +30,12 @@ final class Capabilities {
 		'gym_view_ranks',
 		'gym_check_in_member',
 		'gym_view_attendance',
+		'gym_view_achievements',
 		'gym_send_sms',
 		'gym_manage_curriculum',
 		'gym_manage_announcements',
 		'gym_view_briefing',
+		'gym_process_sale',
 	);
 
 	/**
@@ -46,6 +48,7 @@ final class Capabilities {
 		'gym_view_ranks',
 		'gym_check_in_member',
 		'gym_view_attendance',
+		'gym_view_achievements',
 		'gym_view_briefing',
 	);
 
@@ -61,10 +64,12 @@ final class Capabilities {
 		'gym_view_ranks',
 		'gym_check_in_member',
 		'gym_view_attendance',
+		'gym_view_achievements',
 		'gym_send_sms',
 		'gym_manage_curriculum',
 		'gym_manage_announcements',
 		'gym_view_briefing',
+		'gym_process_sale',
 		'edit_users',
 	);
 

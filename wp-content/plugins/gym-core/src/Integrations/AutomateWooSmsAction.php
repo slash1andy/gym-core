@@ -117,7 +117,7 @@ if ( class_exists( '\AutomateWoo\Action' ) ) :
 			}
 
 			// Resolve phone number from the WC customer billing phone.
-			$user = $customer->get_user();
+			$user  = $customer->get_user();
 			$phone = '';
 
 			if ( $user ) {

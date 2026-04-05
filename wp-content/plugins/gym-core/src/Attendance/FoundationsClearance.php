@@ -105,7 +105,7 @@ class FoundationsClearance {
 
 		if ( empty( $meta ) || ! is_array( $meta ) ) {
 			return array(
-				'in_foundations'           => false,
+				'in_foundations'          => false,
 				'cleared'                 => false,
 				'phase'                   => 'not_enrolled',
 				'classes_completed'       => 0,
@@ -120,7 +120,7 @@ class FoundationsClearance {
 
 		if ( ! empty( $meta['cleared_at'] ) ) {
 			return array(
-				'in_foundations'           => false,
+				'in_foundations'          => false,
 				'cleared'                 => true,
 				'phase'                   => 'cleared',
 				'classes_completed'       => (int) ( $meta['classes_at_clearance'] ?? 0 ),
@@ -150,7 +150,7 @@ class FoundationsClearance {
 		}
 
 		return array(
-			'in_foundations'           => true,
+			'in_foundations'          => true,
 			'cleared'                 => false,
 			'phase'                   => $phase,
 			'classes_completed'       => $class_count,
@@ -173,10 +173,14 @@ class FoundationsClearance {
 			return;
 		}
 
-		update_user_meta( $user_id, self::META_KEY, array(
-			'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
-			'cleared_at'  => null,
-		) );
+		update_user_meta(
+			$user_id,
+			self::META_KEY,
+			array(
+				'enrolled_at' => gmdate( 'Y-m-d H:i:s' ),
+				'cleared_at'  => null,
+			)
+		);
 
 		// Indexed flag for efficient active-foundations queries.
 		update_user_meta( $user_id, '_gym_foundations_active', '1' );
@@ -248,13 +252,17 @@ class FoundationsClearance {
 
 		$existing = get_user_meta( $user_id, self::META_KEY, true );
 
-		update_user_meta( $user_id, self::META_KEY, array(
-			'enrolled_at'              => $existing['enrolled_at'] ?? '',
-			'cleared_at'               => gmdate( 'Y-m-d H:i:s' ),
-			'cleared_by'               => $coach_id,
-			'classes_at_clearance'     => $status['classes_completed'],
-			'coach_rolls_at_clearance' => $status['coach_rolls_completed'],
-		) );
+		update_user_meta(
+			$user_id,
+			self::META_KEY,
+			array(
+				'enrolled_at'              => $existing['enrolled_at'] ?? '',
+				'cleared_at'               => gmdate( 'Y-m-d H:i:s' ),
+				'cleared_by'               => $coach_id,
+				'classes_at_clearance'     => $status['classes_completed'],
+				'coach_rolls_at_clearance' => $status['coach_rolls_completed'],
+			)
+		);
 
 		// Remove indexed flag so active-foundations queries no longer match.
 		delete_user_meta( $user_id, '_gym_foundations_active' );

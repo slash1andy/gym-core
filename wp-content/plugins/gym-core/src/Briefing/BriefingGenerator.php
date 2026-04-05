@@ -85,7 +85,7 @@ class BriefingGenerator {
 	) {
 		$this->attendance  = $attendance;
 		$this->ranks       = $ranks;
-		$this->foundations  = $foundations;
+		$this->foundations = $foundations;
 		$this->promotion   = $promotion;
 	}
 
@@ -283,7 +283,7 @@ class BriefingGenerator {
 	 * days since last class, promotion eligibility, and medical notes.
 	 *
 	 * @param array<int, array{user_id: int, attendance_rate: float}> $roster  Forecasted roster.
-	 * @param string|null                                              $program Program slug.
+	 * @param string|null                                             $program Program slug.
 	 * @return array<int, array>
 	 */
 	private function enrich_roster( array $roster, ?string $program ): array {
@@ -346,20 +346,20 @@ class BriefingGenerator {
 			$medical_notes = get_user_meta( $user_id, '_gym_medical_notes', true ) ?: '';
 
 			$enriched[] = array(
-				'user_id'          => $user_id,
-				'display_name'     => $user->display_name,
-				'rank'             => $rank_data,
-				'foundations'      => $foundations_status['in_foundations'] ? array(
+				'user_id'         => $user_id,
+				'display_name'    => $user->display_name,
+				'rank'            => $rank_data,
+				'foundations'     => $foundations_status['in_foundations'] ? array(
 					'phase'              => $foundations_status['phase'],
 					'classes_completed'  => $foundations_status['classes_completed'],
 					'coach_rolls_needed' => 'phase2_coach_rolls' === $foundations_status['phase'],
 				) : null,
-				'days_since_last'  => $days_since_last,
-				'total_classes'    => $total_classes,
-				'is_first_timer'   => 0 === $total_classes,
-				'promotion'        => $promotion_data,
-				'medical_notes'    => $medical_notes,
-				'attendance_rate'  => $entry['attendance_rate'],
+				'days_since_last' => $days_since_last,
+				'total_classes'   => $total_classes,
+				'is_first_timer'  => 0 === $total_classes,
+				'promotion'       => $promotion_data,
+				'medical_notes'   => $medical_notes,
+				'attendance_rate' => $entry['attendance_rate'],
 			);
 		}
 
@@ -380,8 +380,8 @@ class BriefingGenerator {
 	 * @return array<int, array{priority: int, type: string, user_id: int, display_name: string, detail: string}>
 	 */
 	private function build_alerts( array $roster ): array {
-		$alerts              = array();
-		$absence_threshold   = (int) get_option( 'gym_core_briefing_absence_threshold', self::DEFAULT_ABSENCE_THRESHOLD );
+		$alerts            = array();
+		$absence_threshold = (int) get_option( 'gym_core_briefing_absence_threshold', self::DEFAULT_ABSENCE_THRESHOLD );
 
 		foreach ( $roster as $student ) {
 			// Priority 1: Foundations Phase 2 (coach roll needed).

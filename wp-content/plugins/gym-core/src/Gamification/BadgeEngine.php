@@ -119,10 +119,10 @@ class BadgeEngine {
 	 *
 	 * @since 1.3.0
 	 *
-	 * @param int    $user_id     Member user ID.
-	 * @param string $program     Program slug.
-	 * @param string $new_belt    New belt slug.
-	 * @param int    $new_stripes New stripe count.
+	 * @param int         $user_id     Member user ID.
+	 * @param string      $program     Program slug.
+	 * @param string      $new_belt    New belt slug.
+	 * @param int         $new_stripes New stripe count.
 	 * @param string|null $from_belt   Previous belt slug (null on first-ever rank).
 	 * @param int         $promoted_by Promoter user ID.
 	 * @return void
@@ -138,9 +138,9 @@ class BadgeEngine {
 			'belt_promotion',
 			wp_json_encode(
 				array(
-					'program'  => $program,
-					'belt'     => $new_belt,
-					'from'     => $from_belt,
+					'program'     => $program,
+					'belt'        => $new_belt,
+					'from'        => $from_belt,
 					'promoted_by' => $promoted_by,
 				)
 			)

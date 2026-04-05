@@ -288,8 +288,8 @@ class BriefingController extends BaseController {
 
 		$announcements = AnnouncementPostType::get_active_announcements( $location, $program );
 
-		$total       = count( $announcements );
-		$total_pages = (int) ceil( $total / $per_page );
+		$total         = count( $announcements );
+		$total_pages   = (int) ceil( $total / $per_page );
 		$announcements = array_slice( $announcements, ( $page - 1 ) * $per_page, $per_page );
 
 		return $this->success_response(

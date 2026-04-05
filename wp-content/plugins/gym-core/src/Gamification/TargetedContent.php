@@ -211,7 +211,7 @@ final class TargetedContent {
 				'min_classes'      => '',
 				'min_streak'       => '',
 				'foundations_only' => '',
-				'members_only'    => '',
+				'members_only'     => '',
 				'logged_in'        => '',
 				'role'             => '',
 				'location'         => '',
@@ -331,8 +331,8 @@ final class TargetedContent {
 
 		// Min classes check.
 		if ( '' !== $atts['min_classes'] ) {
-			$min_classes  = absint( $atts['min_classes'] );
-			$total_count  = $this->attendance->get_total_count( $user_id );
+			$min_classes = absint( $atts['min_classes'] );
+			$total_count = $this->attendance->get_total_count( $user_id );
 			if ( $total_count < $min_classes ) {
 				return $this->fallback_output( $atts['fallback'] );
 			}
@@ -340,8 +340,8 @@ final class TargetedContent {
 
 		// Min streak check.
 		if ( '' !== $atts['min_streak'] ) {
-			$min_streak   = absint( $atts['min_streak'] );
-			$streak_data  = $this->streaks->get_streak( $user_id );
+			$min_streak  = absint( $atts['min_streak'] );
+			$streak_data = $this->streaks->get_streak( $user_id );
 			if ( $streak_data['current_streak'] < $min_streak ) {
 				return $this->fallback_output( $atts['fallback'] );
 			}
@@ -454,10 +454,10 @@ final class TargetedContent {
 				. '</div>';
 		}
 
-		$all_ranks    = $this->ranks->get_all_ranks( $user_id );
-		$streak_data  = $this->streaks->get_streak( $user_id );
-		$user_badges  = $this->badges->get_user_badges( $user_id );
-		$programs     = RankDefinitions::get_programs();
+		$all_ranks   = $this->ranks->get_all_ranks( $user_id );
+		$streak_data = $this->streaks->get_streak( $user_id );
+		$user_badges = $this->badges->get_user_badges( $user_id );
+		$programs    = RankDefinitions::get_programs();
 
 		$output = '<div class="gym-progress-card">';
 
@@ -498,8 +498,8 @@ final class TargetedContent {
 			$classes_since = $this->attendance->get_count_since( $user_id, $promoted_at ?: gmdate( 'Y-m-d H:i:s' ) );
 
 			// Promotion threshold for the next rank.
-			$threshold     = RankDefinitions::get_promotion_threshold( $program, $rank_row->belt );
-			$next_belt     = RankDefinitions::get_next_belt( $program, $rank_row->belt );
+			$threshold = RankDefinitions::get_promotion_threshold( $program, $rank_row->belt );
+			$next_belt = RankDefinitions::get_next_belt( $program, $rank_row->belt );
 
 			$output .= '<div class="gym-progress-card__rank">';
 			$output .= '<h3 class="gym-progress-card__program">' . esc_html( $program_label ) . '</h3>';

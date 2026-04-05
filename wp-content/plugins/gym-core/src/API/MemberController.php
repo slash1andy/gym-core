@@ -205,9 +205,10 @@ class MemberController extends BaseController {
 			}
 		} catch ( \Throwable $e ) {
 			// Log but do not break the dashboard.
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Gym Core MemberController: memberships error — ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
+			wc_get_logger()->warning(
+				'MemberController: memberships error — ' . $e->getMessage(),
+				array( 'source' => 'gym-core' )
+			);
 		}
 
 		return array();
@@ -330,9 +331,10 @@ class MemberController extends BaseController {
 				);
 			}
 		} catch ( \Throwable $e ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Gym Core MemberController: billing error — ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
+			wc_get_logger()->warning(
+				'MemberController: billing error — ' . $e->getMessage(),
+				array( 'source' => 'gym-core' )
+			);
 		}
 
 		return null;
@@ -376,8 +378,8 @@ class MemberController extends BaseController {
 				),
 			);
 
-			$query = new \WP_Query( $args );
-			$days  = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
+			$query    = new \WP_Query( $args );
+			$days     = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
 			$schedule = array();
 
 			// Prime caches in bulk to avoid N+1 queries in the nested loop.
@@ -387,10 +389,14 @@ class MemberController extends BaseController {
 				update_object_term_cache( $post_ids, ClassPostType::POST_TYPE );
 
 				// Collect and cache all instructor user data in one query.
-				$instructor_ids = array_unique( array_filter( array_map(
-					static fn( $post ) => (int) get_post_meta( $post->ID, '_gym_class_instructor', true ),
-					$query->posts
-				) ) );
+				$instructor_ids = array_unique(
+					array_filter(
+						array_map(
+							static fn( $post ) => (int) get_post_meta( $post->ID, '_gym_class_instructor', true ),
+							$query->posts
+						)
+					)
+				);
 
 				if ( ! empty( $instructor_ids ) ) {
 					cache_users( $instructor_ids );
@@ -445,9 +451,10 @@ class MemberController extends BaseController {
 
 			return $schedule;
 		} catch ( \Throwable $e ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Gym Core MemberController: upcoming_classes error — ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
+			wc_get_logger()->warning(
+				'MemberController: upcoming_classes error — ' . $e->getMessage(),
+				array( 'source' => 'gym-core' )
+			);
 
 			return array();
 		}
@@ -466,10 +473,10 @@ class MemberController extends BaseController {
 			$formatted   = array();
 
 			foreach ( $all_ranks as $rank ) {
-				$program     = $rank->program;
-				$belt_defs   = $definitions[ $program ] ?? array();
-				$color       = null;
-				$type        = null;
+				$program   = $rank->program;
+				$belt_defs = $definitions[ $program ] ?? array();
+				$color     = null;
+				$type      = null;
 
 				foreach ( $belt_defs as $def ) {
 					if ( $def['slug'] === $rank->belt ) {
@@ -491,9 +498,10 @@ class MemberController extends BaseController {
 
 			return $formatted;
 		} catch ( \Throwable $e ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Gym Core MemberController: rank error — ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
+			wc_get_logger()->warning(
+				'MemberController: rank error — ' . $e->getMessage(),
+				array( 'source' => 'gym-core' )
+			);
 
 			return array();
 		}
@@ -522,9 +530,10 @@ class MemberController extends BaseController {
 
 			return $status;
 		} catch ( \Throwable $e ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Gym Core MemberController: foundations error — ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
+			wc_get_logger()->warning(
+				'MemberController: foundations error — ' . $e->getMessage(),
+				array( 'source' => 'gym-core' )
+			);
 
 			return null;
 		}
@@ -544,9 +553,9 @@ class MemberController extends BaseController {
 				return null;
 			}
 
-			$streak_weeks   = 0;
-			$badges_count   = 0;
-			$total_classes  = $this->attendance->get_total_count( $user_id );
+			$streak_weeks  = 0;
+			$badges_count  = 0;
+			$total_classes = $this->attendance->get_total_count( $user_id );
 
 			if ( null !== $this->streaks ) {
 				$streak_data  = $this->streaks->get_streak( $user_id );
@@ -564,9 +573,10 @@ class MemberController extends BaseController {
 				'total_classes'        => $total_classes,
 			);
 		} catch ( \Throwable $e ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log( 'Gym Core MemberController: gamification error — ' . $e->getMessage() ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			}
+			wc_get_logger()->warning(
+				'MemberController: gamification error — ' . $e->getMessage(),
+				array( 'source' => 'gym-core' )
+			);
 
 			return null;
 		}
@@ -579,10 +589,10 @@ class MemberController extends BaseController {
 	 */
 	private function build_quick_links(): array {
 		return array(
-			'update_payment_url' => '/my-account/payment-methods/',
+			'update_payment_url'  => '/my-account/payment-methods/',
 			'billing_history_url' => '/my-account/orders/',
-			'schedule_url'       => '/classes/',
-			'shop_url'           => '/shop/',
+			'schedule_url'        => '/classes/',
+			'shop_url'            => '/shop/',
 		);
 	}
 }

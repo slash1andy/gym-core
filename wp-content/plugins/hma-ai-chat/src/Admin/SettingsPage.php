@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Gandalf settings page.
  *
@@ -178,7 +179,7 @@ class SettingsPage {
 		);
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Gym Dashboard Settings', 'hma-ai-chat' ); ?></h1>
+			<h1><?php esc_html_e( 'Gandalf Settings', 'hma-ai-chat' ); ?></h1>
 
 			<nav class="nav-tab-wrapper">
 				<?php foreach ( $tabs as $slug => $label ) : ?>
@@ -365,14 +366,30 @@ class SettingsPage {
 	 * @internal
 	 */
 	public function render_api_key_field() {
+		$has_constant = defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY;
+		$has_wp_ai    = function_exists( 'wp_ai_client_prompt' );
+
+		if ( $has_constant ) {
+			echo '<input type="text" class="regular-text" value="' . esc_attr__( 'Configured via wp-config.php', 'hma-ai-chat' ) . '" disabled="disabled" />';
+			echo '<p class="description">' . esc_html__( 'The API key is defined as a constant and cannot be changed here.', 'hma-ai-chat' ) . '</p>';
+			return;
+		}
+
 		$key = get_option( \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION, '' );
-		$masked = $key ? substr( $key, 0, 12 ) . str_repeat( '*', 20 ) : '';
-		$has_wp_ai = function_exists( 'wp_ai_client_prompt' );
-		printf(
-			'<input type="password" id="hma_ai_chat_anthropic_api_key" name="%s" value="%s" class="regular-text" autocomplete="off" />',
-			esc_attr( \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION ),
-			esc_attr( $key )
-		);
+
+		if ( '' !== $key ) {
+			printf(
+				'<input type="password" id="hma_ai_chat_anthropic_api_key" name="%s" value="" class="regular-text" autocomplete="off" placeholder="%s" />',
+				esc_attr( \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION ),
+				esc_attr__( 'Key is saved (enter new value to change)', 'hma-ai-chat' )
+			);
+		} else {
+			printf(
+				'<input type="password" id="hma_ai_chat_anthropic_api_key" name="%s" value="" class="regular-text" autocomplete="off" />',
+				esc_attr( \HMA_AI_Chat\API\ClaudeClient::API_KEY_OPTION )
+			);
+		}
+
 		if ( $has_wp_ai ) {
 			echo '<p class="description">' . esc_html__( 'WordPress AI Client is active. This key is only used as a fallback.', 'hma-ai-chat' ) . '</p>';
 		} else {

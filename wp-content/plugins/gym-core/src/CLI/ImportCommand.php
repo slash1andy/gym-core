@@ -143,15 +143,15 @@ final class ImportCommand {
 			$wpdb->insert(
 				$tables['rank_history'],
 				array(
-					'user_id'     => $user_id,
-					'program'     => $program,
-					'from_belt'   => null,
+					'user_id'      => $user_id,
+					'program'      => $program,
+					'from_belt'    => null,
 					'from_stripes' => null,
-					'to_belt'     => $belt,
-					'to_stripes'  => $stripes,
-					'promoted_at' => $date,
-					'promoted_by' => $by,
-					'notes'       => sanitize_text_field( $row['notes'] ?? 'Imported from Spark Membership' ),
+					'to_belt'      => $belt,
+					'to_stripes'   => $stripes,
+					'promoted_at'  => $date,
+					'promoted_by'  => $by,
+					'notes'        => sanitize_text_field( $row['notes'] ?? 'Imported from Spark Membership' ),
 				),
 				array( '%d', '%s', '%s', '%d', '%s', '%d', '%s', '%d', '%s' )
 			);
@@ -206,7 +206,7 @@ final class ImportCommand {
 		$batch    = array();
 
 		foreach ( $rows as $i => $row ) {
-			$user_id = (int) ( $row['user_id'] ?? 0 );
+			$user_id  = (int) ( $row['user_id'] ?? 0 );
 			$location = sanitize_text_field( $row['location'] ?? '' );
 			$date     = $row['checked_in_at'] ?? '';
 
@@ -678,8 +678,8 @@ final class ImportCommand {
 	/**
 	 * Flushes a batch of attendance records with a single INSERT.
 	 *
-	 * @param string          $table Table name.
-	 * @param array<string>   $batch Array of prepared value strings.
+	 * @param string        $table Table name.
+	 * @param array<string> $batch Array of prepared value strings.
 	 * @return void
 	 */
 	private function flush_attendance_batch( string $table, array $batch ): void {

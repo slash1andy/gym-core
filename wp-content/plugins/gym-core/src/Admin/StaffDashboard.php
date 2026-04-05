@@ -324,9 +324,9 @@ final class StaffDashboard {
 		$total           = 0;
 		$location_counts = array();
 		foreach ( $locations as $slug => $label ) {
-			$records                    = $this->attendance->get_today_by_location( $slug );
+			$records                   = $this->attendance->get_today_by_location( $slug );
 			$location_counts[ $label ] = count( $records );
-			$total                     += count( $records );
+			$total                    += count( $records );
 		}
 		$this->render_stat_card( (string) $total, __( 'Check-ins Today', 'gym-core' ) );
 
@@ -371,8 +371,8 @@ final class StaffDashboard {
 		}
 
 		// Promotion candidates.
-		$programs  = array( 'adult-bjj', 'kids-bjj', 'kickboxing' );
-		$eligible  = 0;
+		$programs = array( 'adult-bjj', 'kids-bjj', 'kickboxing' );
+		$eligible = 0;
 		foreach ( $programs as $program ) {
 			$candidates = $this->eligibility->get_eligible_members( $program );
 			$eligible  += count( $candidates );
@@ -470,7 +470,7 @@ final class StaffDashboard {
 
 		$subscriptions = wcs_get_subscriptions(
 			array(
-				'subscription_status' => 'active',
+				'subscription_status'    => 'active',
 				'subscriptions_per_page' => -1,
 			)
 		);

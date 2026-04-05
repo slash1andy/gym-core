@@ -602,11 +602,11 @@ class GymContextProvider {
 			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				'relation' => 'OR',
 				array(
-					'key'     => '_announcement_end_date',
+					'key'     => '_gym_announcement_end_date',
 					'compare' => 'NOT EXISTS',
 				),
 				array(
-					'key'     => '_announcement_end_date',
+					'key'     => '_gym_announcement_end_date',
 					'value'   => $today,
 					'compare' => '>=',
 					'type'    => 'DATE',
@@ -626,7 +626,7 @@ class GymContextProvider {
 		$lines[] = '## Active Announcements';
 
 		foreach ( $posts as $post ) {
-			$pinned = get_post_meta( $post->ID, '_announcement_pinned', true );
+			$pinned = get_post_meta( $post->ID, '_gym_announcement_pinned', true );
 			$prefix = $pinned ? '[PINNED] ' : '';
 			$lines[] = sprintf(
 				'- %s%s: %s',
@@ -705,7 +705,14 @@ class GymContextProvider {
 
 		if ( $status >= 200 && $status < 300 ) {
 			$data = $response->get_data();
-			return is_array( $data ) ? $data : null;
+			if ( ! is_array( $data ) ) {
+				return null;
+			}
+			// Unwrap gym/v1 response envelope: { success: true, data: [...] }.
+			if ( isset( $data['data'] ) && is_array( $data['data'] ) ) {
+				$data = $data['data'];
+			}
+			return $data;
 		}
 
 		return null;

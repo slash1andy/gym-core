@@ -28,19 +28,19 @@ final class ContentGating {
 	 * @var array<string, array{name: string, product_slug: string}>
 	 */
 	private const PLANS = array(
-		'adult-bjj-member'   => array(
+		'adult-bjj-member'  => array(
 			'name'         => 'Adult BJJ Member',
 			'product_slug' => 'adult-bjj-membership',
 		),
-		'kids-bjj-member'    => array(
+		'kids-bjj-member'   => array(
 			'name'         => 'Kids BJJ Member',
 			'product_slug' => 'kids-bjj-membership',
 		),
-		'kickboxing-member'  => array(
+		'kickboxing-member' => array(
 			'name'         => 'Kickboxing Member',
 			'product_slug' => 'kickboxing-membership',
 		),
-		'all-access-member'  => array(
+		'all-access-member' => array(
 			'name'         => 'All-Access Member',
 			'product_slug' => 'all-access-membership',
 		),
@@ -51,7 +51,7 @@ final class ContentGating {
 	 *
 	 * @var string
 	 */
-	private const RULE_TYPE_TECHNIQUE_VIDEO = 'technique_video';
+	private const RULE_TYPE_TECHNIQUE_VIDEO   = 'technique_video';
 	private const RULE_TYPE_TRAINING_RESOURCE = 'training_resource';
 
 	/**

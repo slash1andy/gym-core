@@ -81,16 +81,17 @@ haanpaa/                           # Repo root
 **Milestones 1–6 code-complete.** All 20 finalization tasks resolved. Testing gate in progress.
 
 ### gym-core plugin (v1.0.0) — what's built
-- **8 core modules**: Locations, Schedule, Members, Attendance, Ranks, Gamification, SMS, Integrations
-- **11 REST controllers** under `gym/v1` namespace (20+ endpoints)
+- **9 core modules**: Locations, Schedule, Members, Attendance, Ranks, Gamification, SMS, Integrations, Sales
+- **12 REST controllers** under `gym/v1` namespace (25+ endpoints)
 - Multi-location architecture (Rockford/Beloit) with taxonomy, product filtering, Store API
 - Belt rank system with promotion eligibility engine and admin dashboards
 - Attendance check-in with kiosk endpoint, QR support, milestone tracking
+- Sales kiosk: tablet POS at `/sales/` with sliding-discount pricing, customer lookup, lead capture
 - Gamification: badges, streaks (quarterly freeze reset), targeted content shortcodes
 - Twilio SMS integration with 2-way messaging and TCPA compliance
 - CRM bridges: Jetpack CRM, AutomateWoo, MailPoet
 - iCal feed for class schedules
-- 60+ unit tests, PHPStan level 6, PHPCS, ESLint CI pipeline
+- 70+ unit tests, PHPStan level 6, PHPCS, ESLint CI pipeline
 - Badge evaluation deferred via Action Scheduler for check-in performance
 - HPOS + Cart/Checkout Blocks compatibility declared
 

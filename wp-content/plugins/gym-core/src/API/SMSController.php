@@ -77,6 +77,9 @@ class SMSController extends BaseController {
 					'variables'     => array(
 						'type'              => 'object',
 						'validate_callback' => 'rest_validate_request_arg',
+						'sanitize_callback' => static function ( $value ) {
+							return is_array( $value ) ? map_deep( $value, 'sanitize_text_field' ) : array();
+						},
 						'description'       => __( 'Template variable substitutions (e.g., {"first_name": "John"}).', 'gym-core' ),
 					),
 					'contact_id'    => array(

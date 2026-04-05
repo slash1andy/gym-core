@@ -29,10 +29,10 @@ final class FormToCrm {
 	/**
 	 * WooCommerce settings option IDs.
 	 */
-	private const OPT_ENABLED            = 'gym_core_crm_enabled';
-	private const OPT_ROCKFORD_REP       = 'gym_core_crm_rockford_rep';
-	private const OPT_BELOIT_REP         = 'gym_core_crm_beloit_rep';
-	private const OPT_DEFAULT_STAGE      = 'gym_core_crm_default_pipeline_stage';
+	private const OPT_ENABLED       = 'gym_core_crm_enabled';
+	private const OPT_ROCKFORD_REP  = 'gym_core_crm_rockford_rep';
+	private const OPT_BELOIT_REP    = 'gym_core_crm_beloit_rep';
+	private const OPT_DEFAULT_STAGE = 'gym_core_crm_default_pipeline_stage';
 
 	/**
 	 * Default pipeline stage name for new leads.
@@ -177,7 +177,7 @@ final class FormToCrm {
 		}
 
 		// Check if this is the customer's first completed order.
-		$customer_id    = $order->get_customer_id();
+		$customer_id     = $order->get_customer_id();
 		$completed_count = $this->get_completed_order_count( $customer_id, $email );
 
 		if ( $completed_count > 1 ) {
@@ -378,11 +378,11 @@ final class FormToCrm {
 		}
 
 		$contact_data = array(
-			'email'  => $fields['email'],
-			'fname'  => $fields['first_name'],
-			'lname'  => $fields['last_name'],
+			'email'   => $fields['email'],
+			'fname'   => $fields['first_name'],
+			'lname'   => $fields['last_name'],
 			'hometel' => $fields['phone'],
-			'tags'   => $tags,
+			'tags'    => $tags,
 		);
 
 		/**

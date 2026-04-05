@@ -60,8 +60,17 @@ class RankController extends BaseController {
 				'callback'            => array( $this, 'get_rank' ),
 				'permission_callback' => array( $this, 'permissions_view_rank' ),
 				'args'                => array(
-					'id'      => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-					'program' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+					'id'      => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'program' => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -76,8 +85,17 @@ class RankController extends BaseController {
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(
-						'id'      => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-						'program' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+						'id'      => array(
+							'type'              => 'integer',
+							'required'          => true,
+							'sanitize_callback' => 'absint',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
+						'program' => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
 					)
 				),
 			)
@@ -91,11 +109,34 @@ class RankController extends BaseController {
 				'callback'            => array( $this, 'promote' ),
 				'permission_callback' => array( $this, 'permissions_promote' ),
 				'args'                => array(
-					'user_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-					'program'  => array( 'type' => 'string', 'required' => true, 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
-					'belt'     => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
-					'stripes'  => array( 'type' => 'integer', 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-					'notes'    => array( 'type' => 'string', 'default' => '', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+					'user_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'program' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'belt'    => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'stripes' => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'notes'   => array(
+						'type'              => 'string',
+						'default'           => '',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -179,7 +220,10 @@ class RankController extends BaseController {
 					'to_belt'      => $record->to_belt,
 					'to_stripes'   => (int) $record->to_stripes,
 					'promoted_at'  => $record->promoted_at,
-					'promoted_by'  => $promoter ? array( 'id' => (int) $record->promoted_by, 'name' => $promoter->display_name ) : null,
+					'promoted_by'  => $promoter ? array(
+						'id'   => (int) $record->promoted_by,
+						'name' => $promoter->display_name,
+					) : null,
 					'notes'        => $record->notes,
 				);
 			},
@@ -203,11 +247,11 @@ class RankController extends BaseController {
 	 * @return \WP_REST_Response|\WP_Error
 	 */
 	public function promote( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
-		$user_id  = $request->get_param( 'user_id' );
-		$program  = $request->get_param( 'program' );
-		$belt     = $request->get_param( 'belt' );
-		$stripes  = $request->get_param( 'stripes' );
-		$notes    = $request->get_param( 'notes' );
+		$user_id = $request->get_param( 'user_id' );
+		$program = $request->get_param( 'program' );
+		$belt    = $request->get_param( 'belt' );
+		$stripes = $request->get_param( 'stripes' );
+		$notes   = $request->get_param( 'notes' );
 
 		if ( ! get_userdata( $user_id ) ) {
 			return $this->error_response( 'invalid_user', __( 'Member not found.', 'gym-core' ), 404 );
@@ -256,8 +300,8 @@ class RankController extends BaseController {
 	 * @return array<string, mixed>
 	 */
 	private function format_rank( object $rank, string $program, int $user_id ): array {
-		$promoter  = $rank->promoted_by ? get_userdata( (int) $rank->promoted_by ) : null;
-		$next_belt = RankDefinitions::get_next_belt( $program, $rank->belt );
+		$promoter         = $rank->promoted_by ? get_userdata( (int) $rank->promoted_by ) : null;
+		$next_belt        = RankDefinitions::get_next_belt( $program, $rank->belt );
 		$attendance_since = $this->attendance->get_count_since( $user_id, $rank->promoted_at );
 
 		return array(
@@ -265,7 +309,10 @@ class RankController extends BaseController {
 			'belt'                       => $rank->belt,
 			'stripes'                    => (int) $rank->stripes,
 			'promoted_at'                => $rank->promoted_at,
-			'promoted_by'                => $promoter ? array( 'id' => (int) $rank->promoted_by, 'name' => $promoter->display_name ) : null,
+			'promoted_by'                => $promoter ? array(
+				'id'   => (int) $rank->promoted_by,
+				'name' => $promoter->display_name,
+			) : null,
 			'attendance_since_promotion' => $attendance_since,
 			'next_belt'                  => $next_belt ? $next_belt['slug'] : null,
 		);

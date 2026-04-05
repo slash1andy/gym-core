@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Pending action data store for approval queue.
  *

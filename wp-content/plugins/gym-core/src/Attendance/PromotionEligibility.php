@@ -47,25 +47,14 @@ class PromotionEligibility {
 	/**
 	 * Constructor.
 	 *
-	 * @param AttendanceStore          $attendance  Attendance data store.
-	 * @param RankStore                $ranks       Rank data store.
+	 * @param AttendanceStore           $attendance  Attendance data store.
+	 * @param RankStore                 $ranks       Rank data store.
 	 * @param FoundationsClearance|null $foundations Optional Foundations clearance system.
 	 */
 	public function __construct( AttendanceStore $attendance, RankStore $ranks, ?FoundationsClearance $foundations = null ) {
 		$this->attendance  = $attendance;
 		$this->ranks       = $ranks;
 		$this->foundations = $foundations;
-	}
-
-	/**
-	 * Returns the default promotion thresholds per program.
-	 *
-	 * @deprecated 2.0.0 Use RankDefinitions::get_promotion_threshold() for per-rank thresholds.
-	 *
-	 * @return array<string, array>
-	 */
-	public static function get_default_thresholds(): array {
-		return RankDefinitions::get_default_thresholds();
 	}
 
 	/**
@@ -98,17 +87,20 @@ class PromotionEligibility {
 		// Use per-rank thresholds from RankDefinitions (sourced from Spark data).
 		$threshold = $rank
 			? RankDefinitions::get_promotion_threshold( $program, $rank->belt )
-			: array( 'min_days' => 0, 'min_classes' => 0 );
+			: array(
+				'min_days'    => 0,
+				'min_classes' => 0,
+			);
 
 		$result = array(
-			'eligible'             => false,
-			'in_foundations'       => false,
-			'attendance_count'     => 0,
-			'attendance_required'  => $threshold['min_classes'],
-			'days_at_rank'         => 0,
-			'days_required'        => $threshold['min_days'],
-			'has_recommendation'   => false,
-			'next_belt'            => null,
+			'eligible'            => false,
+			'in_foundations'      => false,
+			'attendance_count'    => 0,
+			'attendance_required' => $threshold['min_classes'],
+			'days_at_rank'        => 0,
+			'days_required'       => $threshold['min_days'],
+			'has_recommendation'  => false,
+			'next_belt'           => null,
 		);
 
 		// Foundations-enrolled students are not eligible for promotion.
@@ -135,11 +127,11 @@ class PromotionEligibility {
 		$result['attendance_count'] = $this->attendance->get_count_since( $user_id, $rank->promoted_at );
 
 		// Days at current rank.
-		$promoted_time         = strtotime( $rank->promoted_at );
+		$promoted_time          = strtotime( $rank->promoted_at );
 		$result['days_at_rank'] = $promoted_time ? (int) floor( ( time() - $promoted_time ) / DAY_IN_SECONDS ) : 0;
 
 		// Coach recommendation (stored as user meta).
-		$recommendation = get_user_meta( $user_id, '_gym_coach_recommendation_' . $program, true );
+		$recommendation               = get_user_meta( $user_id, '_gym_coach_recommendation_' . $program, true );
 		$result['has_recommendation'] = ! empty( $recommendation );
 
 		// Determine eligibility.
@@ -218,7 +210,7 @@ class PromotionEligibility {
 		$eligible    = array();
 
 		foreach ( $ranked_members as $member ) {
-			$user_id          = (int) $member->user_id;
+			$user_id = (int) $member->user_id;
 
 			// Skip Foundations-enrolled students.
 			if ( $this->is_in_foundations( $user_id ) ) {
@@ -245,22 +237,22 @@ class PromotionEligibility {
 			$has_recommendation = ! empty( $recommendation );
 			$meets_rec          = ! $require_rec || $has_recommendation;
 
-			$next_belt = \Gym_Core\Rank\RankDefinitions::get_next_belt( $program, $member->belt );
+			$next_belt   = \Gym_Core\Rank\RankDefinitions::get_next_belt( $program, $member->belt );
 			$is_eligible = $meets_attendance && $meets_time && $meets_rec;
 
-			$user = get_userdata( $user_id ); // Served from cache (primed above).
+			$user       = get_userdata( $user_id ); // Served from cache (primed above).
 			$eligible[] = array(
-				'user_id'              => $user_id,
-				'display_name'         => $user ? $user->display_name : "User #{$user_id}",
-				'belt'                 => $member->belt,
-				'stripes'              => (int) $member->stripes,
-				'eligible'             => $is_eligible,
-				'attendance_count'     => $attendance_count,
-				'attendance_required'  => $threshold['min_classes'],
-				'days_at_rank'         => $days_at_rank,
-				'days_required'        => $threshold['min_days'],
-				'has_recommendation'   => $has_recommendation,
-				'next_belt'            => $next_belt ? $next_belt['slug'] : null,
+				'user_id'             => $user_id,
+				'display_name'        => $user ? $user->display_name : "User #{$user_id}",
+				'belt'                => $member->belt,
+				'stripes'             => (int) $member->stripes,
+				'eligible'            => $is_eligible,
+				'attendance_count'    => $attendance_count,
+				'attendance_required' => $threshold['min_classes'],
+				'days_at_rank'        => $days_at_rank,
+				'days_required'       => $threshold['min_days'],
+				'has_recommendation'  => $has_recommendation,
+				'next_belt'           => $next_belt ? $next_belt['slug'] : null,
 			);
 		}
 

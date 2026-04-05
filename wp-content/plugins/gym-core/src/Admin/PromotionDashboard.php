@@ -72,9 +72,9 @@ final class PromotionDashboard {
 	/**
 	 * Constructor.
 	 *
-	 * @param AttendanceStore          $attendance  Attendance data store.
-	 * @param RankStore                $ranks       Rank data store.
-	 * @param PromotionEligibility     $eligibility Promotion eligibility engine.
+	 * @param AttendanceStore           $attendance  Attendance data store.
+	 * @param RankStore                 $ranks       Rank data store.
+	 * @param PromotionEligibility      $eligibility Promotion eligibility engine.
 	 * @param FoundationsClearance|null $foundations Optional Foundations clearance gate.
 	 */
 	public function __construct(
@@ -139,15 +139,19 @@ final class PromotionDashboard {
 			true
 		);
 
-		wp_localize_script( 'gym-admin-promotion', 'gymPromotion', array(
-			'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-			'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
-			'i18n'    => array(
-				'processing'  => __( 'Processing...', 'gym-core' ),
-				'recommended' => __( 'Recommended', 'gym-core' ),
-				'error'       => __( 'An error occurred. Please try again.', 'gym-core' ),
-			),
-		) );
+		wp_localize_script(
+			'gym-admin-promotion',
+			'gymPromotion',
+			array(
+				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+				'nonce'   => wp_create_nonce( self::NONCE_ACTION ),
+				'i18n'    => array(
+					'processing'  => __( 'Processing...', 'gym-core' ),
+					'recommended' => __( 'Recommended', 'gym-core' ),
+					'error'       => __( 'An error occurred. Please try again.', 'gym-core' ),
+				),
+			)
+		);
 	}
 
 	/**
@@ -231,10 +235,12 @@ final class PromotionDashboard {
 		echo '</select>';
 
 		// Location dropdown.
-		$locations = get_terms( array(
-			'taxonomy'   => LocationTaxonomy::SLUG,
-			'hide_empty' => false,
-		) );
+		$locations = get_terms(
+			array(
+				'taxonomy'   => LocationTaxonomy::SLUG,
+				'hide_empty' => false,
+			)
+		);
 
 		if ( ! is_wp_error( $locations ) && ! empty( $locations ) ) {
 			echo '<label for="gym-filter-location" class="screen-reader-text">' . esc_html__( 'Filter by location', 'gym-core' ) . '</label>';
@@ -364,7 +370,7 @@ final class PromotionDashboard {
 			exit;
 		}
 
-		$is_promote = 'bulk_promote' === $action;
+		$is_promote     = 'bulk_promote' === $action;
 		$confirm_action = $is_promote ? 'confirm_promote' : 'confirm_recommend';
 
 		echo '<div class="wrap">';
@@ -384,7 +390,7 @@ final class PromotionDashboard {
 		echo '<th>' . esc_html__( 'Target', 'gym-core' ) . '</th>';
 		echo '</tr></thead><tbody>';
 
-		$belts   = RankDefinitions::get_belts( $program );
+		$belts    = RankDefinitions::get_belts( $program );
 		$belt_map = array();
 		foreach ( $belts as $belt ) {
 			$belt_map[ $belt['slug'] ] = $belt['name'];
@@ -589,10 +595,12 @@ final class PromotionDashboard {
 
 		$this->eligibility->set_recommendation( $user_id, $program, get_current_user_id() );
 
-		wp_send_json_success( array(
-			'message' => __( 'Recommended', 'gym-core' ),
-			'user_id' => $user_id,
-		) );
+		wp_send_json_success(
+			array(
+				'message' => __( 'Recommended', 'gym-core' ),
+				'user_id' => $user_id,
+			)
+		);
 	}
 
 	/**
@@ -630,7 +638,7 @@ final class PromotionDashboard {
 		}
 
 		if ( (int) $rank->stripes < $max_stripes ) {
-			$result = $this->ranks->add_stripe(
+			$result       = $this->ranks->add_stripe(
 				$user_id,
 				$program,
 				get_current_user_id(),
@@ -642,7 +650,7 @@ final class PromotionDashboard {
 			if ( ! $next_belt ) {
 				wp_send_json_error( array( 'message' => __( 'Already at highest rank.', 'gym-core' ) ), 400 );
 			}
-			$result = $this->ranks->promote(
+			$result       = $this->ranks->promote(
 				$user_id,
 				$program,
 				$next_belt['slug'],
@@ -664,10 +672,12 @@ final class PromotionDashboard {
 		// Clear recommendation after successful promotion.
 		$this->eligibility->clear_recommendation( $user_id, $program );
 
-		wp_send_json_success( array(
-			'message' => $action_label,
-			'user_id' => $user_id,
-		) );
+		wp_send_json_success(
+			array(
+				'message' => $action_label,
+				'user_id' => $user_id,
+			)
+		);
 	}
 }
 
@@ -729,11 +739,11 @@ final class PromotionListTable extends \WP_List_Table {
 	/**
 	 * Constructor.
 	 *
-	 * @param PromotionEligibility     $eligibility Promotion eligibility engine.
+	 * @param PromotionEligibility      $eligibility Promotion eligibility engine.
 	 * @param FoundationsClearance|null $foundations Foundations clearance gate.
-	 * @param string                   $program     Program slug filter.
-	 * @param string                   $location    Location slug filter.
-	 * @param string                   $status      Status filter.
+	 * @param string                    $program     Program slug filter.
+	 * @param string                    $location    Location slug filter.
+	 * @param string                    $status      Status filter.
 	 */
 	public function __construct(
 		PromotionEligibility $eligibility,
@@ -742,11 +752,13 @@ final class PromotionListTable extends \WP_List_Table {
 		string $location,
 		string $status
 	) {
-		parent::__construct( array(
-			'singular' => 'member',
-			'plural'   => 'members',
-			'ajax'     => false,
-		) );
+		parent::__construct(
+			array(
+				'singular' => 'member',
+				'plural'   => 'members',
+				'ajax'     => false,
+			)
+		);
 
 		$this->eligibility = $eligibility;
 		$this->foundations = $foundations;
@@ -885,7 +897,7 @@ final class PromotionListTable extends \WP_List_Table {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		$orderby = isset( $_GET['orderby'] ) ? sanitize_key( wp_unslash( $_GET['orderby'] ) ) : 'attendance';
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
-		$order   = isset( $_GET['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ? 'asc' : 'desc';
+		$order = isset( $_GET['order'] ) && 'asc' === strtolower( sanitize_key( wp_unslash( $_GET['order'] ) ) ) ? 'asc' : 'desc';
 
 		$program = $this->program;
 		usort(
@@ -930,11 +942,13 @@ final class PromotionListTable extends \WP_List_Table {
 
 		$this->items = array_slice( array_values( $members ), $offset, $per_page );
 
-		$this->set_pagination_args( array(
-			'total_items' => $total,
-			'per_page'    => $per_page,
-			'total_pages' => (int) ceil( $total / $per_page ),
-		) );
+		$this->set_pagination_args(
+			array(
+				'total_items' => $total,
+				'per_page'    => $per_page,
+				'total_pages' => (int) ceil( $total / $per_page ),
+			)
+		);
 	}
 
 	/**
@@ -978,21 +992,21 @@ final class PromotionListTable extends \WP_List_Table {
 				continue;
 			}
 
-			$user     = get_userdata( $uid );
+			$user      = get_userdata( $uid );
 			$members[] = array(
-				'user_id'              => $uid,
-				'display_name'         => $user ? $user->display_name : "User #{$uid}",
-				'belt'                 => 'white',
-				'stripes'              => (int) $wb->stripes,
-				'eligible'             => false,
-				'attendance_count'     => 0,
-				'attendance_required'  => 0,
-				'days_at_rank'         => 0,
-				'days_required'        => 0,
-				'has_recommendation'   => false,
-				'next_belt'            => null,
-				'in_foundations'       => true,
-				'foundations_phase'    => $status['phase'],
+				'user_id'             => $uid,
+				'display_name'        => $user ? $user->display_name : "User #{$uid}",
+				'belt'                => 'white',
+				'stripes'             => (int) $wb->stripes,
+				'eligible'            => false,
+				'attendance_count'    => 0,
+				'attendance_required' => 0,
+				'days_at_rank'        => 0,
+				'days_required'       => 0,
+				'has_recommendation'  => false,
+				'next_belt'           => null,
+				'in_foundations'      => true,
+				'foundations_phase'   => $status['phase'],
 			);
 		}
 

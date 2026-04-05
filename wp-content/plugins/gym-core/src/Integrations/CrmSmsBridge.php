@@ -354,9 +354,9 @@ final class CrmSmsBridge {
 		if ( isset( $zbs ) && is_object( $zbs ) && method_exists( $zbs, 'addUpdateLog' ) ) {
 			$zbs->addUpdateLog( // @phpstan-ignore-line
 				array(
-					'objtype' => ZBS_TYPE_CONTACT ?? 1,
-					'objid'   => $contact_id,
-					'type'    => $type,
+					'objtype'   => ZBS_TYPE_CONTACT ?? 1,
+					'objid'     => $contact_id,
+					'type'      => $type,
 					'shortdesc' => $title,
 					'longdesc'  => wp_kses( $body, array() ),
 				)
@@ -399,9 +399,9 @@ final class CrmSmsBridge {
 	 * @return void
 	 */
 	private function log_warning( string $message ): void {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[Gym Core CRM SMS Bridge] ' . $message );
-		}
+		wc_get_logger()->warning(
+			$message,
+			array( 'source' => 'gym-core' )
+		);
 	}
 }

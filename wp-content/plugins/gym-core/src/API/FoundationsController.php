@@ -53,7 +53,12 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'get_status' ),
 				'permission_callback' => array( $this, 'permissions_view' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'user_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -66,7 +71,12 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'enroll' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'user_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -79,8 +89,18 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'record_coach_roll' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-					'notes'   => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg', 'default' => '' ),
+					'user_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'notes'   => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+						'default'           => '',
+					),
 				),
 			)
 		);
@@ -93,7 +113,12 @@ class FoundationsController extends BaseController {
 				'callback'            => array( $this, 'clear' ),
 				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array(
-					'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'user_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -116,6 +141,10 @@ class FoundationsController extends BaseController {
 	 * @return bool|\WP_Error
 	 */
 	public function permissions_view( \WP_REST_Request $request ): bool|\WP_Error {
+		if ( ! is_user_logged_in() ) {
+			return $this->error_response( 'rest_not_logged_in', __( 'Authentication required.', 'gym-core' ), 401 );
+		}
+
 		$user_id = (int) $request->get_param( 'user_id' );
 
 		if ( get_current_user_id() === $user_id ) {
@@ -173,13 +202,15 @@ class FoundationsController extends BaseController {
 
 		$status = $this->foundations->get_status( $user_id );
 
-		return $this->success_response( array_merge(
-			array(
-				'user_id'      => $user_id,
-				'display_name' => $user->display_name,
-			),
-			$status
-		) );
+		return $this->success_response(
+			array_merge(
+				array(
+					'user_id'      => $user_id,
+					'display_name' => $user->display_name,
+				),
+				$status
+			)
+		);
 	}
 
 	/**

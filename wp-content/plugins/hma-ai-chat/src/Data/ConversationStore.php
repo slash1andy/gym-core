@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Conversation data store.
  *
@@ -71,6 +72,26 @@ class ConversationStore {
 		);
 
 		return $result ? $wpdb->insert_id : false;
+	}
+
+	/**
+	 * Get a conversation record by ID.
+	 *
+	 * @param int $conversation_id Conversation ID.
+	 * @return array|null Conversation row as associative array, or null if not found.
+	 */
+	public function get_conversation_record( $conversation_id ) {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'hma_ai_conversations';
+
+		return $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT id, user_id, agent, title, created_at, updated_at FROM $table WHERE id = %d",
+				absint( $conversation_id )
+			),
+			ARRAY_A
+		);
 	}
 
 	/**

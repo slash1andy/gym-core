@@ -581,10 +581,10 @@ final class AttendanceDashboard {
 	/**
 	 * Renders a collapsible per-class section with check-in table.
 	 *
-	 * @param \WP_Post       $class      Class post object.
-	 * @param array<object>  $checkins   Check-in records.
-	 * @param string         $start_time Class start time.
-	 * @param string         $end_time   Class end time.
+	 * @param \WP_Post      $class      Class post object.
+	 * @param array<object> $checkins   Check-in records.
+	 * @param string        $start_time Class start time.
+	 * @param string        $end_time   Class end time.
 	 * @return void
 	 */
 	private function render_class_section( \WP_Post $class, array $checkins, string $start_time, string $end_time ): void {
@@ -647,10 +647,10 @@ final class AttendanceDashboard {
 			if ( $foundations ) {
 				$status = $foundations->get_status( $user_id );
 				if ( $status['in_foundations'] ) {
-					$phase   = str_replace( array( 'phase', '_coach_rolls' ), array( 'Phase ', '' ), $status['phase'] );
-					$done    = $status['classes_completed'];
-					$total   = $status['classes_total_required'];
-					$badge   = sprintf( 'Foundations: %s (%d/%d)', ucfirst( $phase ), $done, $total );
+					$phase = str_replace( array( 'phase', '_coach_rolls' ), array( 'Phase ', '' ), $status['phase'] );
+					$done  = $status['classes_completed'];
+					$total = $status['classes_total_required'];
+					$badge = sprintf( 'Foundations: %s (%d/%d)', ucfirst( $phase ), $done, $total );
 					echo '<span class="gym-badge-foundations">' . esc_html( $badge ) . '</span>';
 				}
 			}
@@ -667,8 +667,8 @@ final class AttendanceDashboard {
 	/**
 	 * Renders the sticky Quick Check-In bar.
 	 *
-	 * @param string                $location Active location slug.
-	 * @param array<int, \WP_Post>  $classes  Today's classes.
+	 * @param string               $location Active location slug.
+	 * @param array<int, \WP_Post> $classes  Today's classes.
 	 * @return void
 	 */
 	private function render_quick_checkin( string $location, array $classes ): void {

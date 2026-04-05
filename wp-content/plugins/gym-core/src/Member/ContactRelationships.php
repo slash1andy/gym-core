@@ -84,11 +84,22 @@ class ContactRelationships {
 									<li>
 										<?php echo esc_html( $parent_user->display_name ); ?>
 										(<?php echo esc_html( $parent_user->user_email ); ?>)
-										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( array(
-											'gym_remove_relationship' => 1,
-											'related_id'             => $parent_id,
-											'relationship_type'      => 'parent',
-										) ), 'gym_core_remove_relationship_' . $parent_id ) ); ?>" class="delete" onclick="return confirm('<?php esc_attr_e( 'Remove this parent relationship?', 'gym-core' ); ?>');">
+										<a href="
+										<?php
+										echo esc_url(
+											wp_nonce_url(
+												add_query_arg(
+													array(
+														'gym_remove_relationship' => 1,
+														'related_id' => $parent_id,
+														'relationship_type' => 'parent',
+													)
+												),
+												'gym_core_remove_relationship_' . $parent_id
+											)
+										);
+										?>
+										" class="delete" onclick="return confirm('<?php esc_attr_e( 'Remove this parent relationship?', 'gym-core' ); ?>');">
 											<?php esc_html_e( 'Remove', 'gym-core' ); ?>
 										</a>
 									</li>
@@ -111,11 +122,22 @@ class ContactRelationships {
 									<li>
 										<?php echo esc_html( $child_user->display_name ); ?>
 										(<?php echo esc_html( $child_user->user_email ); ?>)
-										<a href="<?php echo esc_url( wp_nonce_url( add_query_arg( array(
-											'gym_remove_relationship' => 1,
-											'related_id'             => $child_id,
-											'relationship_type'      => 'child',
-										) ), 'gym_core_remove_relationship_' . $child_id ) ); ?>" class="delete" onclick="return confirm('<?php esc_attr_e( 'Remove this child relationship?', 'gym-core' ); ?>');">
+										<a href="
+										<?php
+										echo esc_url(
+											wp_nonce_url(
+												add_query_arg(
+													array(
+														'gym_remove_relationship' => 1,
+														'related_id' => $child_id,
+														'relationship_type' => 'child',
+													)
+												),
+												'gym_core_remove_relationship_' . $child_id
+											)
+										);
+										?>
+										" class="delete" onclick="return confirm('<?php esc_attr_e( 'Remove this child relationship?', 'gym-core' ); ?>');">
 											<?php esc_html_e( 'Remove', 'gym-core' ); ?>
 										</a>
 									</li>

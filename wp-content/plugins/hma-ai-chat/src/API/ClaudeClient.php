@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Direct Claude API client.
  *
@@ -57,7 +58,11 @@ class ClaudeClient {
 	 * @return array{response: string, tokens_used: int}|\WP_Error
 	 */
 	public function send( string $system_prompt, array $messages, string $model = '' ): array|\WP_Error {
-		$api_key = get_option( self::API_KEY_OPTION, '' );
+		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY ) {
+			$api_key = (string) HMA_AI_CHAT_ANTHROPIC_API_KEY;
+		} else {
+			$api_key = get_option( self::API_KEY_OPTION, '' );
+		}
 
 		if ( '' === $api_key ) {
 			return new \WP_Error(

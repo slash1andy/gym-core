@@ -187,30 +187,90 @@ final class RankDefinitions {
 	public static function get_default_thresholds(): array {
 		return array(
 			'adult-bjj'  => array(
-				'white'  => array( 'min_days' => 25, 'min_classes' => 17 ),
-				'blue'   => array( 'min_days' => 500, 'min_classes' => 225 ),
-				'purple' => array( 'min_days' => 700, 'min_classes' => 400 ),
-				'brown'  => array( 'min_days' => 700, 'min_classes' => 400 ),
-				'black'  => array( 'min_days' => 700, 'min_classes' => 400 ),
+				'white'  => array(
+					'min_days'    => 25,
+					'min_classes' => 17,
+				),
+				'blue'   => array(
+					'min_days'    => 500,
+					'min_classes' => 225,
+				),
+				'purple' => array(
+					'min_days'    => 700,
+					'min_classes' => 400,
+				),
+				'brown'  => array(
+					'min_days'    => 700,
+					'min_classes' => 400,
+				),
+				'black'  => array(
+					'min_days'    => 700,
+					'min_classes' => 400,
+				),
 			),
 			'kids-bjj'   => array(
-				'white'        => array( 'min_days' => 0, 'min_classes' => 0 ),
-				'grey-white'   => array( 'min_days' => 230, 'min_classes' => 48 ),
-				'grey'         => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'grey-black'   => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'yellow-white' => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'yellow'       => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'yellow-black' => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'orange-white' => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'orange'       => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'orange-black' => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'green-white'  => array( 'min_days' => 340, 'min_classes' => 64 ),
-				'green'        => array( 'min_days' => 300, 'min_classes' => 60 ),
-				'green-black'  => array( 'min_days' => 300, 'min_classes' => 60 ),
+				'white'        => array(
+					'min_days'    => 0,
+					'min_classes' => 0,
+				),
+				'grey-white'   => array(
+					'min_days'    => 230,
+					'min_classes' => 48,
+				),
+				'grey'         => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'grey-black'   => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'yellow-white' => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'yellow'       => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'yellow-black' => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'orange-white' => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'orange'       => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'orange-black' => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'green-white'  => array(
+					'min_days'    => 340,
+					'min_classes' => 64,
+				),
+				'green'        => array(
+					'min_days'    => 300,
+					'min_classes' => 60,
+				),
+				'green-black'  => array(
+					'min_days'    => 300,
+					'min_classes' => 60,
+				),
 			),
 			'kickboxing' => array(
-				'level-1' => array( 'min_days' => 0, 'min_classes' => 0 ),
-				'level-2' => array( 'min_days' => 500, 'min_classes' => 200 ),
+				'level-1' => array(
+					'min_days'    => 0,
+					'min_classes' => 0,
+				),
+				'level-2' => array(
+					'min_days'    => 500,
+					'min_classes' => 200,
+				),
 			),
 		);
 	}
@@ -225,11 +285,41 @@ final class RankDefinitions {
 	 */
 	private static function get_adult_bjj_ranks(): array {
 		return array(
-			array( 'name' => __( 'White Belt', 'gym-core' ), 'slug' => 'white', 'color' => '#ffffff', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Blue Belt', 'gym-core' ), 'slug' => 'blue', 'color' => '#1e40af', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Purple Belt', 'gym-core' ), 'slug' => 'purple', 'color' => '#7c3aed', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Brown Belt', 'gym-core' ), 'slug' => 'brown', 'color' => '#78350f', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Black Belt', 'gym-core' ), 'slug' => 'black', 'color' => '#000000', 'max_stripes' => 10, 'type' => 'degree' ),
+			array(
+				'name'        => __( 'White Belt', 'gym-core' ),
+				'slug'        => 'white',
+				'color'       => '#ffffff',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Blue Belt', 'gym-core' ),
+				'slug'        => 'blue',
+				'color'       => '#1e40af',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Purple Belt', 'gym-core' ),
+				'slug'        => 'purple',
+				'color'       => '#7c3aed',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Brown Belt', 'gym-core' ),
+				'slug'        => 'brown',
+				'color'       => '#78350f',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Black Belt', 'gym-core' ),
+				'slug'        => 'black',
+				'color'       => '#000000',
+				'max_stripes' => 10,
+				'type'        => 'degree',
+			),
 		);
 	}
 
@@ -243,19 +333,97 @@ final class RankDefinitions {
 	 */
 	private static function get_kids_bjj_ranks(): array {
 		return array(
-			array( 'name' => __( 'White Belt', 'gym-core' ), 'slug' => 'white', 'color' => '#ffffff', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Grey/White Belt', 'gym-core' ), 'slug' => 'grey-white', 'color' => '#d1d5db', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Grey Belt', 'gym-core' ), 'slug' => 'grey', 'color' => '#9ca3af', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Grey/Black Belt', 'gym-core' ), 'slug' => 'grey-black', 'color' => '#6b7280', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Yellow/White Belt', 'gym-core' ), 'slug' => 'yellow-white', 'color' => '#fef3c7', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Yellow Belt', 'gym-core' ), 'slug' => 'yellow', 'color' => '#fbbf24', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Yellow/Black Belt', 'gym-core' ), 'slug' => 'yellow-black', 'color' => '#b45309', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Orange/White Belt', 'gym-core' ), 'slug' => 'orange-white', 'color' => '#fed7aa', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Orange Belt', 'gym-core' ), 'slug' => 'orange', 'color' => '#f97316', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Orange/Black Belt', 'gym-core' ), 'slug' => 'orange-black', 'color' => '#c2410c', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Green/White Belt', 'gym-core' ), 'slug' => 'green-white', 'color' => '#bbf7d0', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Green Belt', 'gym-core' ), 'slug' => 'green', 'color' => '#22c55e', 'max_stripes' => 4, 'type' => 'belt' ),
-			array( 'name' => __( 'Green/Black Belt', 'gym-core' ), 'slug' => 'green-black', 'color' => '#15803d', 'max_stripes' => 4, 'type' => 'belt' ),
+			array(
+				'name'        => __( 'White Belt', 'gym-core' ),
+				'slug'        => 'white',
+				'color'       => '#ffffff',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Grey/White Belt', 'gym-core' ),
+				'slug'        => 'grey-white',
+				'color'       => '#d1d5db',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Grey Belt', 'gym-core' ),
+				'slug'        => 'grey',
+				'color'       => '#9ca3af',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Grey/Black Belt', 'gym-core' ),
+				'slug'        => 'grey-black',
+				'color'       => '#6b7280',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Yellow/White Belt', 'gym-core' ),
+				'slug'        => 'yellow-white',
+				'color'       => '#fef3c7',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Yellow Belt', 'gym-core' ),
+				'slug'        => 'yellow',
+				'color'       => '#fbbf24',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Yellow/Black Belt', 'gym-core' ),
+				'slug'        => 'yellow-black',
+				'color'       => '#b45309',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Orange/White Belt', 'gym-core' ),
+				'slug'        => 'orange-white',
+				'color'       => '#fed7aa',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Orange Belt', 'gym-core' ),
+				'slug'        => 'orange',
+				'color'       => '#f97316',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Orange/Black Belt', 'gym-core' ),
+				'slug'        => 'orange-black',
+				'color'       => '#c2410c',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Green/White Belt', 'gym-core' ),
+				'slug'        => 'green-white',
+				'color'       => '#bbf7d0',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Green Belt', 'gym-core' ),
+				'slug'        => 'green',
+				'color'       => '#22c55e',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
+			array(
+				'name'        => __( 'Green/Black Belt', 'gym-core' ),
+				'slug'        => 'green-black',
+				'color'       => '#15803d',
+				'max_stripes' => 4,
+				'type'        => 'belt',
+			),
 		);
 	}
 
@@ -269,8 +437,20 @@ final class RankDefinitions {
 	 */
 	private static function get_kickboxing_ranks(): array {
 		return array(
-			array( 'name' => __( 'Level 1', 'gym-core' ), 'slug' => 'level-1', 'color' => '#3b82f6', 'max_stripes' => 0, 'type' => 'level' ),
-			array( 'name' => __( 'Level 2', 'gym-core' ), 'slug' => 'level-2', 'color' => '#ef4444', 'max_stripes' => 0, 'type' => 'level' ),
+			array(
+				'name'        => __( 'Level 1', 'gym-core' ),
+				'slug'        => 'level-1',
+				'color'       => '#3b82f6',
+				'max_stripes' => 0,
+				'type'        => 'level',
+			),
+			array(
+				'name'        => __( 'Level 2', 'gym-core' ),
+				'slug'        => 'level-2',
+				'color'       => '#ef4444',
+				'max_stripes' => 0,
+				'type'        => 'level',
+			),
 		);
 	}
 }

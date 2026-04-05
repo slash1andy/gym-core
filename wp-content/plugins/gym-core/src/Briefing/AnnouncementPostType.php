@@ -65,17 +65,17 @@ class AnnouncementPostType {
 		);
 
 		$args = array(
-			'labels'              => $labels,
-			'public'              => false,
-			'publicly_queryable'  => false,
-			'show_ui'             => true,
-			'show_in_menu'        => 'gym-core',
-			'show_in_rest'        => true,
-			'rest_base'           => 'announcements',
-			'capability_type'     => 'post',
-			'has_archive'         => false,
-			'rewrite'             => false,
-			'supports'            => array( 'title', 'editor', 'author' ),
+			'labels'             => $labels,
+			'public'             => false,
+			'publicly_queryable' => false,
+			'show_ui'            => true,
+			'show_in_menu'       => 'gym-core',
+			'show_in_rest'       => true,
+			'rest_base'          => 'announcements',
+			'capability_type'    => 'post',
+			'has_archive'        => false,
+			'rewrite'            => false,
+			'supports'           => array( 'title', 'editor', 'author' ),
 		);
 
 		register_post_type( self::POST_TYPE, $args );
@@ -285,10 +285,10 @@ class AnnouncementPostType {
 			$new_columns[ $key ] = $label;
 
 			if ( 'title' === $key ) {
-				$new_columns['gym_ann_type']    = __( 'Type', 'gym-core' );
-				$new_columns['gym_ann_target']  = __( 'Target', 'gym-core' );
-				$new_columns['gym_ann_dates']   = __( 'Active Dates', 'gym-core' );
-				$new_columns['gym_ann_pinned']  = __( 'Pinned', 'gym-core' );
+				$new_columns['gym_ann_type']   = __( 'Type', 'gym-core' );
+				$new_columns['gym_ann_target'] = __( 'Target', 'gym-core' );
+				$new_columns['gym_ann_dates']  = __( 'Active Dates', 'gym-core' );
+				$new_columns['gym_ann_pinned'] = __( 'Pinned', 'gym-core' );
 			}
 		}
 

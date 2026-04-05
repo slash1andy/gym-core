@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * Admin chat page.
  *
@@ -25,7 +26,7 @@ class ChatPage {
 		}
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'HMA AI Chat', 'hma-ai-chat' ); ?></h1>
+			<h1><?php esc_html_e( 'Gandalf', 'hma-ai-chat' ); ?></h1>
 			<div id="hma-ai-chat-container" class="hma-ai-chat-panel">
 				<!-- Chat app will be rendered here -->
 			</div>

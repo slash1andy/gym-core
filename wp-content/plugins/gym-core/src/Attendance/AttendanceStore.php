@@ -254,8 +254,8 @@ class AttendanceStore {
 	 */
 	public function get_weekly_trend( int $user_id, int $weeks = 12 ): array {
 		global $wpdb;
-		$tables    = TableManager::get_table_names();
-		$since     = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$tables = TableManager::get_table_names();
+		$since  = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return $wpdb->get_results(

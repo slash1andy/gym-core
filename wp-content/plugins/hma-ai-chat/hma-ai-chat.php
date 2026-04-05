@@ -2,7 +2,7 @@
 /**
  * Plugin Name: HMA AI Chat
  * Description: AI-powered chat interface for Haanpaa Martial Arts staff, built on WordPress 7.0 AI Client
- * Version: 0.1.0
+ * Version: 0.4.0
  * Author: Andrew Wikel
  * License: GPL-2.0-or-later
  * Requires WP: 7.0
@@ -12,6 +12,8 @@
  *
  * @package HMA_AI_Chat
  */
+
+declare(strict_types=1);
 
 defined( 'ABSPATH' ) || exit;
 

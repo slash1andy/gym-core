@@ -43,8 +43,8 @@ class AttendanceController extends BaseController {
 	/**
 	 * Constructor.
 	 *
-	 * @param AttendanceStore   $store          Attendance data store.
-	 * @param CheckInValidator  $validator      Check-in validator.
+	 * @param AttendanceStore    $store          Attendance data store.
+	 * @param CheckInValidator   $validator      Check-in validator.
 	 * @param StreakTracker|null $streak_tracker Optional streak tracker for check-in response enrichment.
 	 */
 	public function __construct( AttendanceStore $store, CheckInValidator $validator, ?StreakTracker $streak_tracker = null ) {
@@ -68,8 +68,18 @@ class AttendanceController extends BaseController {
 				'callback'            => array( $this, 'check_in' ),
 				'permission_callback' => array( $this, 'permissions_check_in' ),
 				'args'                => array(
-					'user_id'  => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-					'class_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'user_id'  => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'class_id' => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 					'method'   => array(
 						'type'              => 'string',
 						'required'          => true,
@@ -98,9 +108,22 @@ class AttendanceController extends BaseController {
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(
-						'user_id' => array( 'type' => 'integer', 'required' => true, 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
-						'from'    => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
-						'to'      => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
+						'user_id' => array(
+							'type'              => 'integer',
+							'required'          => true,
+							'sanitize_callback' => 'absint',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
+						'from'    => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
+						'to'      => array(
+							'type'              => 'string',
+							'sanitize_callback' => 'sanitize_text_field',
+							'validate_callback' => 'rest_validate_request_arg',
+						),
 					)
 				),
 			)
@@ -114,8 +137,16 @@ class AttendanceController extends BaseController {
 				'callback'            => array( $this, 'get_today' ),
 				'permission_callback' => array( $this, 'permissions_view_all_attendance' ),
 				'args'                => array(
-					'location' => array( 'type' => 'string', 'sanitize_callback' => 'sanitize_text_field', 'validate_callback' => 'rest_validate_request_arg' ),
-					'class_id' => array( 'type' => 'integer', 'sanitize_callback' => 'absint', 'validate_callback' => 'rest_validate_request_arg' ),
+					'location' => array(
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'class_id' => array(
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -218,7 +249,7 @@ class AttendanceController extends BaseController {
 
 		// Include streak data when the tracker is available (used by kiosk success screen).
 		if ( $this->streak_tracker ) {
-			$streak_data                    = $this->streak_tracker->get_streak( $user_id );
+			$streak_data                     = $this->streak_tracker->get_streak( $user_id );
 			$response_data['current_streak'] = $streak_data['current_streak'];
 		}
 
@@ -243,10 +274,14 @@ class AttendanceController extends BaseController {
 		$total   = $this->store->get_total_count( $user_id, $from );
 
 		// Prime the post cache in bulk to avoid N+1 queries in the loop.
-		$class_ids = array_unique( array_filter( array_map(
-			static fn( $record ) => (int) $record->class_id,
-			$records
-		) ) );
+		$class_ids = array_unique(
+			array_filter(
+				array_map(
+					static fn( $record ) => (int) $record->class_id,
+					$records
+				)
+			)
+		);
 
 		if ( ! empty( $class_ids ) ) {
 			_prime_post_caches( $class_ids, false, false );
@@ -258,7 +293,10 @@ class AttendanceController extends BaseController {
 
 				return array(
 					'id'            => (int) $record->id,
-					'class'         => $class ? array( 'id' => $class->ID, 'name' => $class->post_title ) : null,
+					'class'         => $class ? array(
+						'id'   => $class->ID,
+						'name' => $class->post_title,
+					) : null,
 					'location'      => $record->location,
 					'checked_in_at' => $record->checked_in_at,
 					'method'        => $record->method,

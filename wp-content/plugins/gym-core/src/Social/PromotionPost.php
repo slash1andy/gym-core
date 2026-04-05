@@ -115,15 +115,14 @@ final class PromotionPost {
 		$post_id = wp_insert_post( $post_data, true );
 
 		if ( is_wp_error( $post_id ) ) {
-			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-				error_log(
-					sprintf(
-						'[gym-core] Failed to create promotion post for user %d: %s',
-						$user_id,
-						$post_id->get_error_message()
-					)
-				);
-			}
+			wc_get_logger()->error(
+				sprintf(
+					'Failed to create promotion post for user %d: %s',
+					$user_id,
+					$post_id->get_error_message()
+				),
+				array( 'source' => 'gym-core' )
+			);
 			return;
 		}
 

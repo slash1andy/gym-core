@@ -180,6 +180,7 @@ final class ICalFeed {
 		header( 'Content-Type: text/calendar; charset=utf-8' );
 		header( 'Content-Disposition: inline; filename="gym-calendar.ics"' );
 		header( 'Cache-Control: public, max-age=3600' );
+		header( 'X-Content-Type-Options: nosniff' );
 
 		echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- iCal plaintext feed.
 		exit;
@@ -319,7 +320,8 @@ final class ICalFeed {
 		$location_terms   = get_the_terms( $class->ID, LocationTaxonomy::SLUG );
 		if ( is_array( $location_terms ) && ! empty( $location_terms ) ) {
 			$location_slug    = $location_terms[0]->slug;
-			$location_address = self::ADDRESSES[ $location_slug ] ?? '';
+			$addresses        = $this->get_addresses();
+			$location_address = $addresses[ $location_slug ] ?? '';
 		}
 
 		// Build description.
@@ -406,8 +408,8 @@ final class ICalFeed {
 	 * @return string Datetime in Ymd\THis format.
 	 */
 	private function get_next_occurrence( string $day_of_week, string $time ): string {
-		$target_day = self::DAY_NUMBER[ $day_of_week ] ?? 1;
-		$today      = new \DateTime( 'now', new \DateTimeZone( 'America/Chicago' ) );
+		$target_day  = self::DAY_NUMBER[ $day_of_week ] ?? 1;
+		$today       = new \DateTime( 'now', new \DateTimeZone( 'America/Chicago' ) );
 		$current_day = (int) $today->format( 'N' );
 
 		$diff = $target_day - $current_day;
@@ -443,6 +445,17 @@ final class ICalFeed {
 		$text = str_replace( "\n", '\\n', $text );
 
 		return $text;
+	}
+
+	/**
+	 * Returns location addresses, allowing customization via filter.
+	 *
+	 * @since 2.3.0
+	 *
+	 * @return array<string, string>
+	 */
+	private function get_addresses(): array {
+		return apply_filters( 'gym_core_ical_addresses', self::ADDRESSES );
 	}
 
 	/**

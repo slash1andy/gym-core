@@ -244,7 +244,7 @@ class ClassScheduleController extends BaseController {
 
 		$query = new \WP_Query( $args );
 
-		$days = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
+		$days     = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
 		$schedule = array();
 
 		foreach ( $days as $i => $day_name ) {
@@ -257,16 +257,16 @@ class ClassScheduleController extends BaseController {
 					continue;
 				}
 
-				$capacity = (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30;
+				$capacity  = (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30;
 				$classes[] = array(
-					'id'              => $post->ID,
-					'name'            => $post->post_title,
-					'program'         => $this->get_class_program( $post->ID ),
-					'instructor'      => $this->get_instructor_name( $post->ID ),
-					'start_time'      => get_post_meta( $post->ID, '_gym_class_start_time', true ),
-					'end_time'        => get_post_meta( $post->ID, '_gym_class_end_time', true ),
-					'location'        => $location,
-					'capacity'        => $capacity,
+					'id'         => $post->ID,
+					'name'       => $post->post_title,
+					'program'    => $this->get_class_program( $post->ID ),
+					'instructor' => $this->get_instructor_name( $post->ID ),
+					'start_time' => get_post_meta( $post->ID, '_gym_class_start_time', true ),
+					'end_time'   => get_post_meta( $post->ID, '_gym_class_end_time', true ),
+					'location'   => $location,
+					'capacity'   => $capacity,
 				);
 			}
 
@@ -340,7 +340,10 @@ class ClassScheduleController extends BaseController {
 			return null;
 		}
 		$user = get_userdata( $user_id );
-		return $user ? array( 'id' => $user_id, 'name' => $user->display_name ) : null;
+		return $user ? array(
+			'id'   => $user_id,
+			'name' => $user->display_name,
+		) : null;
 	}
 
 	/**

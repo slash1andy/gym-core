@@ -321,7 +321,10 @@ final class Settings {
 				'default' => 'yes',
 				'type'    => 'checkbox',
 			),
-			array( 'type' => 'sectionend', 'id' => 'gym_core_ranks_options' ),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_ranks_options',
+			),
 
 			// --- Foundations Clearance Gate ---
 			array(
@@ -343,7 +346,10 @@ final class Settings {
 				'id'                => 'gym_core_foundations_phase1_classes',
 				'default'           => '10',
 				'type'              => 'number',
-				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+				'custom_attributes' => array(
+					'min'  => '1',
+					'step' => '1',
+				),
 			),
 			array(
 				'title'             => __( 'Phase 2 — Coach Rolls Required', 'gym-core' ),
@@ -351,7 +357,10 @@ final class Settings {
 				'id'                => 'gym_core_foundations_coach_rolls_required',
 				'default'           => '2',
 				'type'              => 'number',
-				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+				'custom_attributes' => array(
+					'min'  => '1',
+					'step' => '1',
+				),
 			),
 			array(
 				'title'             => __( 'Phase 3 — Total Classes to Clear', 'gym-core' ),
@@ -359,9 +368,15 @@ final class Settings {
 				'id'                => 'gym_core_foundations_total_classes',
 				'default'           => '25',
 				'type'              => 'number',
-				'custom_attributes' => array( 'min' => '1', 'step' => '1' ),
+				'custom_attributes' => array(
+					'min'  => '1',
+					'step' => '1',
+				),
 			),
-			array( 'type' => 'sectionend', 'id' => 'gym_core_foundations_options' ),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_foundations_options',
+			),
 
 			// --- Adult BJJ Promotion Thresholds ---
 			array(
@@ -370,15 +385,90 @@ final class Settings {
 				'type'  => 'title',
 				'id'    => 'gym_core_adult_bjj_thresholds',
 			),
-			array( 'title' => __( 'White Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_white_days', 'default' => '25', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'White Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_white_classes', 'default' => '17', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Blue Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_blue_days', 'default' => '500', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Blue Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_blue_classes', 'default' => '225', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Purple Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_purple_days', 'default' => '700', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Purple Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_purple_classes', 'default' => '400', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Brown Belt — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_brown_days', 'default' => '700', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Brown Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_adult_bjj_brown_classes', 'default' => '400', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'type' => 'sectionend', 'id' => 'gym_core_adult_bjj_thresholds' ),
+			array(
+				'title'             => __( 'White Belt — Min Days', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_white_days',
+				'default'           => '25',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'White Belt — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_white_classes',
+				'default'           => '17',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Blue Belt — Min Days', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_blue_days',
+				'default'           => '500',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Blue Belt — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_blue_classes',
+				'default'           => '225',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Purple Belt — Min Days', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_purple_days',
+				'default'           => '700',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Purple Belt — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_purple_classes',
+				'default'           => '400',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Brown Belt — Min Days', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_brown_days',
+				'default'           => '700',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Brown Belt — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_adult_bjj_brown_classes',
+				'default'           => '400',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_adult_bjj_thresholds',
+			),
 
 			// --- Kids BJJ Promotion Thresholds ---
 			array(
@@ -387,11 +477,52 @@ final class Settings {
 				'type'  => 'title',
 				'id'    => 'gym_core_kids_bjj_thresholds',
 			),
-			array( 'title' => __( 'Default — Min Days', 'gym-core' ), 'desc' => __( 'Applied to most Kids belts', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_default_days', 'default' => '340', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Default — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_default_classes', 'default' => '64', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'White Belt — Min Days', 'gym-core' ), 'desc' => __( 'First belt (typically 0)', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_white_days', 'default' => '0', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'White Belt — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_kids_bjj_white_classes', 'default' => '0', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'type' => 'sectionend', 'id' => 'gym_core_kids_bjj_thresholds' ),
+			array(
+				'title'             => __( 'Default — Min Days', 'gym-core' ),
+				'desc'              => __( 'Applied to most Kids belts', 'gym-core' ),
+				'id'                => 'gym_core_threshold_kids_bjj_default_days',
+				'default'           => '340',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Default — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_kids_bjj_default_classes',
+				'default'           => '64',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'White Belt — Min Days', 'gym-core' ),
+				'desc'              => __( 'First belt (typically 0)', 'gym-core' ),
+				'id'                => 'gym_core_threshold_kids_bjj_white_days',
+				'default'           => '0',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'White Belt — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_kids_bjj_white_classes',
+				'default'           => '0',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_kids_bjj_thresholds',
+			),
 
 			// --- Kickboxing Level Thresholds ---
 			array(
@@ -400,9 +531,30 @@ final class Settings {
 				'type'  => 'title',
 				'id'    => 'gym_core_kickboxing_thresholds',
 			),
-			array( 'title' => __( 'Level 2 — Min Days', 'gym-core' ), 'id' => 'gym_core_threshold_kickboxing_level2_days', 'default' => '500', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'title' => __( 'Level 2 — Min Classes', 'gym-core' ), 'id' => 'gym_core_threshold_kickboxing_level2_classes', 'default' => '200', 'type' => 'number', 'custom_attributes' => array( 'min' => '0', 'step' => '1' ) ),
-			array( 'type' => 'sectionend', 'id' => 'gym_core_kickboxing_thresholds' ),
+			array(
+				'title'             => __( 'Level 2 — Min Days', 'gym-core' ),
+				'id'                => 'gym_core_threshold_kickboxing_level2_days',
+				'default'           => '500',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'title'             => __( 'Level 2 — Min Classes', 'gym-core' ),
+				'id'                => 'gym_core_threshold_kickboxing_level2_classes',
+				'default'           => '200',
+				'type'              => 'number',
+				'custom_attributes' => array(
+					'min'  => '0',
+					'step' => '1',
+				),
+			),
+			array(
+				'type' => 'sectionend',
+				'id'   => 'gym_core_kickboxing_thresholds',
+			),
 		);
 	}
 

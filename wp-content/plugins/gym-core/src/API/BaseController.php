@@ -312,10 +312,24 @@ abstract class BaseController extends \WP_REST_Controller {
 			$elapsed   = time() - $window_start;
 			$remaining = max( 1, $window - $elapsed );
 
-			set_transient( $transient_key, array( 'count' => $count + 1, 'start' => $window_start ), $remaining );
+			set_transient(
+				$transient_key,
+				array(
+					'count' => $count + 1,
+					'start' => $window_start,
+				),
+				$remaining
+			);
 		} else {
 			// First hit: create the transient so the window starts now.
-			set_transient( $transient_key, array( 'count' => 1, 'start' => time() ), $window );
+			set_transient(
+				$transient_key,
+				array(
+					'count' => 1,
+					'start' => time(),
+				),
+				$window
+			);
 		}
 
 		return true;

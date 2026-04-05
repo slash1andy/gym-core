@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 /**
  * REST API webhook/heartbeat endpoint for Paperclip integration.
  *
@@ -170,8 +171,9 @@ class HeartbeatEndpoint {
 		);
 
 		// Merge any additional action data from Paperclip (sanitized).
-		if ( is_array( $action_data ) ) {
-			$stored_data = array_merge( $stored_data, array_map( 'sanitize_text_field', $action_data ) );
+		$action_data = is_array( $action_data ) ? map_deep( $action_data, 'sanitize_text_field' ) : array();
+		if ( ! empty( $action_data ) ) {
+			$stored_data = array_merge( $stored_data, $action_data );
 		}
 
 		$action_id = $action_store->store_pending_action(
@@ -239,6 +241,7 @@ class HeartbeatEndpoint {
 	private function handle_revised_action_complete( $run_id, $agent, $task_id, WP_REST_Request $request ) {
 		$action_id    = absint( $request->get_param( 'actionId' ) ?? 0 );
 		$revised_data = $request->get_param( 'revisedData' );
+		$revised_data = is_array( $revised_data ) ? map_deep( $revised_data, 'sanitize_text_field' ) : array();
 
 		if ( ! $action_id ) {
 			return new WP_Error(

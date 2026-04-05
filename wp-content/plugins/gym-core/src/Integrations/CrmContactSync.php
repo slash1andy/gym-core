@@ -406,9 +406,9 @@ final class CrmContactSync {
 	 * @return void
 	 */
 	private function log_warning( string $message ): void {
-		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( '[Gym Core CRM Contact Sync] ' . $message );
-		}
+		wc_get_logger()->warning(
+			$message,
+			array( 'source' => 'gym-core' )
+		);
 	}
 }

@@ -120,6 +120,7 @@ final class Plugin {
 		$this->register_notification_modules();
 		$this->register_social_modules();
 		$this->register_kiosk_modules();
+		$this->register_sales_modules();
 		$this->register_gamification_modules();
 		$this->register_integration_modules();
 		$this->register_member_modules();
@@ -147,6 +148,23 @@ final class Plugin {
 	}
 
 	/**
+	 * Registers the sales kiosk endpoint and admin meta box.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @return void
+	 */
+	private function register_sales_modules(): void {
+		$kiosk = new Sales\KioskEndpoint();
+		$kiosk->register_hooks();
+
+		if ( is_admin() ) {
+			$meta_box = new Sales\ProductMetaBox();
+			$meta_box->register_hooks();
+		}
+	}
+
+	/**
 	 * Registers admin modules (settings pages, user profile fields).
 	 *
 	 * @since 1.1.0
@@ -171,43 +189,49 @@ final class Plugin {
 
 			// Admin dashboards need attendance/rank stores — defer to gym_core_loaded
 			// when stores have been instantiated by register_attendance_modules().
-			add_action( 'gym_core_loaded', function (): void {
-				if ( class_exists( Admin\AttendanceDashboard::class ) ) {
-					$dashboard = new Admin\AttendanceDashboard( $this->attendance_store, $this->checkin_validator );
-					$dashboard->register_hooks();
-				}
+			add_action(
+				'gym_core_loaded',
+				function (): void {
+					if ( class_exists( Admin\AttendanceDashboard::class ) ) {
+						$dashboard = new Admin\AttendanceDashboard( $this->attendance_store, $this->checkin_validator );
+						$dashboard->register_hooks();
+					}
 
-				if ( class_exists( Admin\PromotionDashboard::class ) ) {
-					$dashboard = new Admin\PromotionDashboard(
+					if ( class_exists( Admin\PromotionDashboard::class ) ) {
+						$dashboard = new Admin\PromotionDashboard(
+							$this->attendance_store,
+							$this->rank_store,
+							$this->promotion_eligibility,
+							$this->foundations_clearance
+						);
+						$dashboard->register_hooks();
+					}
+
+					// Staff Dashboard — role-aware landing page with chat + widgets.
+					$staff_dashboard = new Admin\StaffDashboard(
 						$this->attendance_store,
 						$this->rank_store,
-						$this->promotion_eligibility,
-						$this->foundations_clearance
+						$this->promotion_eligibility
 					);
-					$dashboard->register_hooks();
+					$staff_dashboard->register_hooks();
 				}
-
-				// Staff Dashboard — role-aware landing page with chat + widgets.
-				$staff_dashboard = new Admin\StaffDashboard(
-					$this->attendance_store,
-					$this->rank_store,
-					$this->promotion_eligibility
-				);
-				$staff_dashboard->register_hooks();
-			} );
+			);
 		}
 
 		// UserProfileRank — defer to gym_core_loaded for store dependencies.
-		add_action( 'gym_core_loaded', function (): void {
-			if ( class_exists( Admin\UserProfileRank::class ) ) {
-				$profile = new Admin\UserProfileRank(
-					$this->rank_store,
-					$this->attendance_store,
-					$this->foundations_clearance
-				);
-				$profile->register_hooks();
+		add_action(
+			'gym_core_loaded',
+			function (): void {
+				if ( class_exists( Admin\UserProfileRank::class ) ) {
+					$profile = new Admin\UserProfileRank(
+						$this->rank_store,
+						$this->attendance_store,
+						$this->foundations_clearance
+					);
+					$profile->register_hooks();
+				}
 			}
-		} );
+		);
 	}
 
 	/**
@@ -242,6 +266,11 @@ final class Plugin {
 
 		$schedule_controller = new API\ClassScheduleController();
 		$schedule_controller->register_hooks();
+
+		$sales_calculator = new Sales\PricingCalculator();
+		$sales_builder    = new Sales\OrderBuilder();
+		$sales_controller = new API\SalesController( $sales_calculator, $sales_builder );
+		$sales_controller->register_hooks();
 
 		// Controllers that need the data stores initialized in register_attendance_modules().
 		// Deferred to gym_core_loaded so stores are available.
@@ -340,11 +369,11 @@ final class Plugin {
 		// Stores are instantiated here and available for injection.
 		// They don't register hooks themselves — they're consumed by
 		// REST endpoints, admin pages, and the gamification engine.
-		$this->attendance_store        = new Attendance\AttendanceStore();
-		$this->rank_store              = new Rank\RankStore();
-		$this->checkin_validator       = new Attendance\CheckInValidator( $this->attendance_store );
-		$this->foundations_clearance   = new Attendance\FoundationsClearance( $this->attendance_store );
-		$this->promotion_eligibility   = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store, $this->foundations_clearance );
+		$this->attendance_store      = new Attendance\AttendanceStore();
+		$this->rank_store            = new Rank\RankStore();
+		$this->checkin_validator     = new Attendance\CheckInValidator( $this->attendance_store );
+		$this->foundations_clearance = new Attendance\FoundationsClearance( $this->attendance_store );
+		$this->promotion_eligibility = new Attendance\PromotionEligibility( $this->attendance_store, $this->rank_store, $this->foundations_clearance );
 
 		$milestone_tracker = new Attendance\MilestoneTracker( $this->attendance_store );
 		$milestone_tracker->register_hooks();
@@ -441,19 +470,23 @@ final class Plugin {
 	 * @return void
 	 */
 	private function register_top_level_menu(): void {
-		add_action( 'admin_menu', static function (): void {
-			add_menu_page(
-				__( 'Gym Dashboard', 'gym-core' ),
-				__( 'Gym', 'gym-core' ),
-				'read',
-				'gym-core',
-				'__return_null',
-				'dashicons-awards',
-				3
-			);
+		add_action(
+			'admin_menu',
+			static function (): void {
+				add_menu_page(
+					__( 'Gym Dashboard', 'gym-core' ),
+					__( 'Gym', 'gym-core' ),
+					'read',
+					'gym-core',
+					'__return_null',
+					'dashicons-awards',
+					3
+				);
 
-			// StaffDashboard replaces this submenu at priority 20.
-		}, 5 );
+				// StaffDashboard replaces this submenu at priority 20.
+			},
+			5
+		);
 	}
 
 	/**

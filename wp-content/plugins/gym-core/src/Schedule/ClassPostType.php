@@ -73,19 +73,19 @@ final class ClassPostType {
 		);
 
 		$args = array(
-			'labels'              => $labels,
-			'public'              => true,
-			'publicly_queryable'  => true,
-			'show_ui'             => true,
-			'show_in_menu'        => 'gym-core',
-			'show_in_rest'        => true,
-			'rest_base'           => 'classes',
-			'capability_type'     => 'post',
-			'has_archive'         => true,
-			'rewrite'             => array( 'slug' => 'classes' ),
-			'supports'            => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
-			'taxonomies'          => array( 'gym_location', self::PROGRAM_TAXONOMY ),
-			'register_meta_args'  => array(),
+			'labels'             => $labels,
+			'public'             => true,
+			'publicly_queryable' => true,
+			'show_ui'            => true,
+			'show_in_menu'       => 'gym-core',
+			'show_in_rest'       => true,
+			'rest_base'          => 'classes',
+			'capability_type'    => 'post',
+			'has_archive'        => true,
+			'rewrite'            => array( 'slug' => 'classes' ),
+			'supports'           => array( 'title', 'editor', 'thumbnail', 'custom-fields' ),
+			'taxonomies'         => array( 'gym_location', self::PROGRAM_TAXONOMY ),
+			'register_meta_args' => array(),
 		);
 
 		register_post_type( self::POST_TYPE, $args );
@@ -135,37 +135,37 @@ final class ClassPostType {
 	 */
 	private function register_post_meta(): void {
 		$meta_fields = array(
-			'_gym_class_instructor'    => array(
+			'_gym_class_instructor'  => array(
 				'type'        => 'integer',
 				'description' => 'Instructor user ID',
 				'default'     => 0,
 			),
-			'_gym_class_capacity'      => array(
+			'_gym_class_capacity'    => array(
 				'type'        => 'integer',
 				'description' => 'Maximum students',
 				'default'     => 30,
 			),
-			'_gym_class_day_of_week'   => array(
+			'_gym_class_day_of_week' => array(
 				'type'        => 'string',
 				'description' => 'Day of week (monday, tuesday, etc.)',
 				'default'     => '',
 			),
-			'_gym_class_start_time'    => array(
+			'_gym_class_start_time'  => array(
 				'type'        => 'string',
 				'description' => 'Start time in H:i format (24hr)',
 				'default'     => '',
 			),
-			'_gym_class_end_time'      => array(
+			'_gym_class_end_time'    => array(
 				'type'        => 'string',
 				'description' => 'End time in H:i format (24hr)',
 				'default'     => '',
 			),
-			'_gym_class_recurrence'    => array(
+			'_gym_class_recurrence'  => array(
 				'type'        => 'string',
 				'description' => 'Recurrence rule (weekly, biweekly, or specific dates)',
 				'default'     => 'weekly',
 			),
-			'_gym_class_status'        => array(
+			'_gym_class_status'      => array(
 				'type'        => 'string',
 				'description' => 'Class status (active, cancelled, suspended)',
 				'default'     => 'active',
@@ -219,13 +219,13 @@ final class ClassPostType {
 	public function render_details_meta_box( \WP_Post $post ): void {
 		wp_nonce_field( 'gym_class_meta', 'gym_class_meta_nonce' );
 
-		$instructor  = (int) get_post_meta( $post->ID, '_gym_class_instructor', true );
-		$capacity    = (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30;
-		$day         = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
-		$start_time  = get_post_meta( $post->ID, '_gym_class_start_time', true );
-		$end_time    = get_post_meta( $post->ID, '_gym_class_end_time', true );
-		$recurrence  = get_post_meta( $post->ID, '_gym_class_recurrence', true ) ?: 'weekly';
-		$status      = get_post_meta( $post->ID, '_gym_class_status', true ) ?: 'active';
+		$instructor = (int) get_post_meta( $post->ID, '_gym_class_instructor', true );
+		$capacity   = (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30;
+		$day        = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
+		$start_time = get_post_meta( $post->ID, '_gym_class_start_time', true );
+		$end_time   = get_post_meta( $post->ID, '_gym_class_end_time', true );
+		$recurrence = get_post_meta( $post->ID, '_gym_class_recurrence', true ) ?: 'weekly';
+		$status     = get_post_meta( $post->ID, '_gym_class_status', true ) ?: 'active';
 
 		$days = array(
 			'monday'    => __( 'Monday', 'gym-core' ),

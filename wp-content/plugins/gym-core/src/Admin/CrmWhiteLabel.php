@@ -38,7 +38,11 @@ final class CrmWhiteLabel {
 		// Rename "Jetpack CRM" to "Gym CRM" in the top-level menu.
 		foreach ( $menu as &$item ) {
 			if ( isset( $item[2] ) && false !== strpos( $item[2], 'zerobscrm' ) ) {
-				$item[0] = 'Gym CRM';
+				$item[0] = sprintf(
+					/* translators: %s: brand name */
+					__( '%s CRM', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				);
 				break;
 			}
 		}

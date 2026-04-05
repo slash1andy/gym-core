@@ -50,13 +50,13 @@ class StreakTracker {
 		$weeks = $this->attendance->get_attended_weeks( $user_id );
 
 		$result = array(
-			'current_streak'    => 0,
-			'longest_streak'    => 0,
-			'streak_started_at' => null,
-			'freezes_remaining' => $this->get_freezes_remaining( $user_id ),
-			'freezes_used'      => $this->get_freezes_used( $user_id ),
+			'current_streak'     => 0,
+			'longest_streak'     => 0,
+			'streak_started_at'  => null,
+			'freezes_remaining'  => $this->get_freezes_remaining( $user_id ),
+			'freezes_used'       => $this->get_freezes_used( $user_id ),
 			'last_check_in_date' => null,
-			'streak_status'     => 'broken',
+			'streak_status'      => 'broken',
 		);
 
 		if ( empty( $weeks ) ) {
@@ -124,10 +124,10 @@ class StreakTracker {
 		$weeks = array_reverse( $weeks );
 		$weeks = array_values( array_unique( $weeks ) );
 
-		$streaks        = array();
-		$streak_start   = $weeks[0];
-		$streak_length  = 1;
-		$previous_week  = $weeks[0];
+		$streaks       = array();
+		$streak_start  = $weeks[0];
+		$streak_length = 1;
+		$previous_week = $weeks[0];
 
 		for ( $i = 1, $count = count( $weeks ); $i < $count; $i++ ) {
 			$expected_next = gmdate( 'Y-m-d', strtotime( $previous_week . ' +7 days' ) );
@@ -137,7 +137,7 @@ class StreakTracker {
 				++$streak_length;
 			} else {
 				// Gap — save current streak, start new one.
-				$streaks[] = array(
+				$streaks[]     = array(
 					'start'  => $streak_start,
 					'end'    => $previous_week,
 					'length' => $streak_length,
