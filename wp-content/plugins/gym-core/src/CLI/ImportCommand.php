@@ -10,6 +10,7 @@
  *   wp gym import attendance --file=attendance.csv
  *   wp gym import achievements --file=badges.csv
  *   wp gym import users --file=members.csv
+ *   wp gym import notes --file=member-notes.csv
  *
  * @package Gym_Core
  * @since   1.1.0
@@ -463,6 +464,150 @@ final class ImportCommand {
 		}
 
 		$this->report( 'users', $imported, $skipped, $dry_run );
+	}
+
+	/**
+	 * Import member notes from CSV into Jetpack CRM contact notes.
+	 *
+	 * Reads a CSV with member_email, note_date, note_content, and optional
+	 * note_type columns. Looks up the WP user by email, resolves the Jetpack
+	 * CRM contact, and creates a CRM activity log entry for each row.
+	 *
+	 * ## OPTIONS
+	 *
+	 * --file=<file>
+	 * : Path to the CSV file.
+	 *
+	 * [--dry-run]
+	 * : Validate without writing to the database.
+	 *
+	 * [--batch-size=<number>]
+	 * : Records per progress tick. Default 500.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp gym import notes --file=member-notes.csv
+	 *     wp gym import notes --file=member-notes.csv --dry-run
+	 *
+	 * @param array<int, string>    $args       Positional arguments.
+	 * @param array<string, string> $assoc_args Named arguments.
+	 * @return void
+	 */
+	public function notes( array $args, array $assoc_args ): void {
+		$file       = $assoc_args['file'] ?? '';
+		$dry_run    = isset( $assoc_args['dry-run'] );
+		$batch_size = (int) ( $assoc_args['batch-size'] ?? 500 );
+
+		if ( ! function_exists( 'zeroBS_getContactByEmail' ) && ! function_exists( 'zeroBSCRM_addUpdateLog' ) ) {
+			\WP_CLI::error( 'Jetpack CRM is not active. Cannot import notes without it.' );
+			return;
+		}
+
+		$rows = $this->read_csv( $file );
+		if ( empty( $rows ) ) {
+			return;
+		}
+
+		$required = array( 'member_email', 'note_date', 'note_content' );
+		if ( ! $this->validate_columns( $rows[0] ?? array(), $required ) ) {
+			return;
+		}
+
+		$imported = 0;
+		$skipped  = 0;
+
+		// Cache email → CRM contact ID lookups to avoid repeated queries.
+		$contact_cache = array();
+
+		foreach ( $rows as $i => $row ) {
+			$email        = sanitize_email( $row['member_email'] ?? '' );
+			$note_date    = sanitize_text_field( $row['note_date'] ?? '' );
+			$note_content = sanitize_text_field( $row['note_content'] ?? '' );
+			$note_type    = sanitize_text_field( $row['note_type'] ?? 'note' );
+
+			if ( '' === $email || '' === $note_content ) {
+				\WP_CLI::warning( "Row {$i}: missing required field (member_email or note_content). Skipping." );
+				++$skipped;
+				continue;
+			}
+
+			// Resolve CRM contact ID (with cache).
+			if ( ! isset( $contact_cache[ $email ] ) ) {
+				$contact_cache[ $email ] = $this->resolve_crm_contact_by_email( $email );
+			}
+
+			$contact_id = $contact_cache[ $email ];
+
+			if ( 0 === $contact_id ) {
+				\WP_CLI::warning( "Row {$i}: no WP user or CRM contact found for {$email}. Skipping." );
+				++$skipped;
+				continue;
+			}
+
+			if ( $dry_run ) {
+				\WP_CLI::log( "[DRY RUN] Would import note for {$email} (contact #{$contact_id}): {$note_content}" );
+				++$imported;
+				continue;
+			}
+
+			if ( function_exists( 'zeroBSCRM_addUpdateLog' ) ) {
+				zeroBSCRM_addUpdateLog( // @phpstan-ignore-line
+					$contact_id,
+					-1,
+					-1,
+					array(
+						'type'      => $note_type,
+						'shortdesc' => $note_content,
+						'longdesc'  => '',
+						'created'   => '' !== $note_date ? strtotime( $note_date ) : time(),
+					)
+				);
+			}
+
+			++$imported;
+
+			if ( 0 === $imported % $batch_size ) {
+				\WP_CLI::log( sprintf( 'Progress: %d imported so far...', $imported ) );
+			}
+		}
+
+		$this->report( 'notes', $imported, $skipped, $dry_run );
+	}
+
+	/**
+	 * Resolves a CRM contact ID from an email address.
+	 *
+	 * First looks up the WP user by email, then attempts to find the
+	 * corresponding Jetpack CRM contact. Falls back to direct CRM email
+	 * lookup if no WP user is found.
+	 *
+	 * @param string $email Email address to look up.
+	 * @return int CRM contact ID, or 0 if not found.
+	 */
+	private function resolve_crm_contact_by_email( string $email ): int {
+		// Try Jetpack CRM's native email lookup.
+		if ( function_exists( 'zeroBS_getContactByEmail' ) ) {
+			$contact = zeroBS_getContactByEmail( $email ); // @phpstan-ignore-line
+			if ( ! empty( $contact ) && isset( $contact['id'] ) ) {
+				return (int) $contact['id'];
+			}
+		}
+
+		// Fallback: look up WP user, then try CRM contact ID from user meta.
+		$user = get_user_by( 'email', $email );
+		if ( ! $user ) {
+			return 0;
+		}
+
+		// Jetpack CRM stores a WP user → contact link.
+		if ( function_exists( 'zeroBS_getCustomerIDWithEmail' ) ) {
+			$id = zeroBS_getCustomerIDWithEmail( $email ); // @phpstan-ignore-line
+			if ( $id ) {
+				return (int) $id;
+			}
+		}
+
+		return 0;
 	}
 
 	/**
