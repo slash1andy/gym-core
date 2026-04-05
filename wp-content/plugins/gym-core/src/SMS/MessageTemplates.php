@@ -96,6 +96,33 @@ final class MessageTemplates {
 				),
 				'description' => __( 'Sent after 90 days of inactivity', 'gym-core' ),
 			),
+			'transition_announce'    => array(
+				'name'        => __( 'Transition Announce', 'gym-core' ),
+				'body'        => sprintf(
+					/* translators: %s: brand name */
+					__( 'Hey {first_name}, %s is upgrading our member system! Your plan & pricing stay the same. More details coming soon. Questions? Reply here.', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				),
+				'description' => __( 'Sent 2 weeks before Spark-to-WooCommerce transition', 'gym-core' ),
+			),
+			'transition_portal_ready' => array(
+				'name'        => __( 'Transition Portal Ready', 'gym-core' ),
+				'body'        => sprintf(
+					/* translators: %s: brand name */
+					__( '{first_name}, your new %s member portal is ready! Log in at {portal_url} to set your password and update your payment method.', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				),
+				'description' => __( 'Sent 1 week before transition when member portal is ready', 'gym-core' ),
+			),
+			'transition_complete'    => array(
+				'name'        => __( 'Transition Complete', 'gym-core' ),
+				'body'        => sprintf(
+					/* translators: %s: brand name */
+					__( '{first_name}, you\'re all set! Your %s membership is live on our new system. Next billing: {billing_date}. Questions? Reply anytime.', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				),
+				'description' => __( 'Sent on transition day confirming migration is complete', 'gym-core' ),
+			),
 		);
 
 		/**
