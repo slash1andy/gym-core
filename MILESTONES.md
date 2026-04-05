@@ -909,7 +909,7 @@ ACCEPTANCE:
 
 #### 5.3 — Targeted Content Delivery (gym-core)
 ```
-STATUS: READY
+STATUS: COMPLETE
 DESCRIPTION: Content targeting engine that filters content by belt, program, and location.
 DEPENDS_ON: 4.1, 3.1
 ACCEPTANCE:

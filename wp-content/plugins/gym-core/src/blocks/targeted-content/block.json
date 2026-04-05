@@ -1,0 +1,56 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "gym/targeted-content",
+	"version": "1.0.0",
+	"title": "Targeted Content",
+	"category": "widgets",
+	"icon": "visibility",
+	"description": "Show inner blocks only to members who match targeting criteria (belt rank, program, location, etc.).",
+	"keywords": [ "members", "rank", "belt", "targeted", "conditional" ],
+	"textdomain": "gym-core",
+	"editorScript": "gym-targeted-content-editor",
+	"attributes": {
+		"program": {
+			"type": "string",
+			"default": ""
+		},
+		"minBelt": {
+			"type": "string",
+			"default": ""
+		},
+		"location": {
+			"type": "string",
+			"default": ""
+		},
+		"membersOnly": {
+			"type": "boolean",
+			"default": false
+		},
+		"foundationsOnly": {
+			"type": "boolean",
+			"default": false
+		},
+		"loggedIn": {
+			"type": "boolean",
+			"default": false
+		},
+		"minClasses": {
+			"type": "number",
+			"default": 0
+		},
+		"minStreak": {
+			"type": "number",
+			"default": 0
+		},
+		"fallback": {
+			"type": "string",
+			"default": ""
+		}
+	},
+	"supports": {
+		"html": false,
+		"align": [ "wide", "full" ],
+		"className": true
+	}
+}

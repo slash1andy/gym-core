@@ -4,8 +4,8 @@
 	"description": "Gym Core WooCommerce plugin — asset build tooling",
 	"private": true,
 	"scripts": {
-		"build": "wp-scripts build",
-		"start": "wp-scripts start",
+		"build": "node node_modules/.bin/wp-scripts build",
+		"start": "node node_modules/.bin/wp-scripts start",
 		"lint:js": "wp-scripts lint-js",
 		"lint:css": "wp-scripts lint-style",
 		"lint": "npm run lint:js && npm run lint:css"

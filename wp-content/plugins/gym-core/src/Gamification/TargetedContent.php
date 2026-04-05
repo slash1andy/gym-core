@@ -25,6 +25,7 @@ use Gym_Core\Rank\RankDefinitions;
 use Gym_Core\Attendance\AttendanceStore;
 use Gym_Core\Attendance\FoundationsClearance;
 use Gym_Core\Location\Manager as LocationManager;
+use Gym_Core\Location\Taxonomy as LocationTaxonomy;
 use Gym_Core\Member\ContentGating;
 
 /**
@@ -131,6 +132,10 @@ final class TargetedContent {
 
 		// Filter the_content based on post meta targeting rules.
 		add_filter( 'the_content', array( $this, 'filter_content_by_rules' ), 5 );
+
+		// Register the gym/targeted-content Gutenberg block.
+		add_action( 'init', array( $this, 'register_block' ) );
+		add_action( 'enqueue_block_editor_assets', array( $this, 'localize_block_data' ) );
 	}
 
 	/**
@@ -724,6 +729,110 @@ final class TargetedContent {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Registers the gym/targeted-content block type.
+	 *
+	 * The block wraps InnerBlocks and evaluates targeting rules server-side.
+	 * Editor script is registered manually so block.json can live in src/
+	 * while the built JS lives in build/.
+	 *
+	 * @since 5.3.0
+	 *
+	 * @return void
+	 */
+	public function register_block(): void {
+		$asset_path = GYM_CORE_PATH . 'build/blocks/targeted-content/index.asset.php';
+		$asset      = file_exists( $asset_path )
+			? require $asset_path
+			: array(
+				'dependencies' => array(),
+				'version'      => GYM_CORE_VERSION,
+			);
+
+		wp_register_script(
+			'gym-targeted-content-editor',
+			GYM_CORE_URL . 'build/blocks/targeted-content/index.js',
+			$asset['dependencies'],
+			$asset['version'],
+			true
+		);
+
+		wp_register_style(
+			'gym-targeted-content-editor-style',
+			GYM_CORE_URL . 'assets/css/targeted-content-editor.css',
+			array(),
+			GYM_CORE_VERSION
+		);
+
+		register_block_type(
+			GYM_CORE_PATH . 'src/blocks/targeted-content',
+			array(
+				'editor_style'    => 'gym-targeted-content-editor-style',
+				'render_callback' => array( $this, 'render_block' ),
+			)
+		);
+	}
+
+	/**
+	 * Localizes program, location, and belt data for the block editor.
+	 *
+	 * @since 5.3.0
+	 *
+	 * @return void
+	 */
+	public function localize_block_data(): void {
+		if ( ! wp_script_is( 'gym-targeted-content-editor', 'registered' ) ) {
+			return;
+		}
+
+		wp_localize_script(
+			'gym-targeted-content-editor',
+			'gymTargetedContent',
+			array(
+				'programs'  => RankDefinitions::get_programs(),
+				'locations' => LocationTaxonomy::get_location_labels(),
+				'belts'     => array_values( RankDefinitions::get_ranks( 'adult-bjj' ) ),
+			)
+		);
+	}
+
+	/**
+	 * Server-side render callback for the gym/targeted-content block.
+	 *
+	 * Evaluates targeting rules from block attributes against the current
+	 * viewer. If the viewer matches all rules, the inner block content is
+	 * returned. Otherwise, the fallback message (or empty string) is returned.
+	 *
+	 * @since 5.3.0
+	 *
+	 * @param array  $attributes Block attributes.
+	 * @param string $content    Pre-rendered inner blocks HTML.
+	 * @return string Rendered HTML.
+	 */
+	public function render_block( array $attributes, string $content ): string {
+		$rules = array(
+			'logged_in'        => ! empty( $attributes['loggedIn'] ) ? 'true' : '',
+			'members_only'     => ! empty( $attributes['membersOnly'] ) ? 'true' : '',
+			'foundations_only' => ! empty( $attributes['foundationsOnly'] ) ? 'true' : '',
+			'program'          => $attributes['program'] ?? '',
+			'min_belt'         => $attributes['minBelt'] ?? '',
+			'location'         => $attributes['location'] ?? '',
+			'min_classes'      => isset( $attributes['minClasses'] ) && $attributes['minClasses'] > 0
+				? (string) $attributes['minClasses']
+				: '',
+			'min_streak'       => isset( $attributes['minStreak'] ) && $attributes['minStreak'] > 0
+				? (string) $attributes['minStreak']
+				: '',
+		);
+
+		if ( $this->evaluate_rules( $rules ) ) {
+			return $content;
+		}
+
+		$fallback = $attributes['fallback'] ?? '';
+		return $this->fallback_output( $fallback );
 	}
 
 	/**
