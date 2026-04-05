@@ -55,6 +55,7 @@ class GamificationControllerTest extends TestCase {
 
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'sanitize_text_field' )->returnArg( 1 );
+		Functions\when( 'apply_filters' )->returnArg( 2 );
 		Functions\when( 'absint' )->alias(
 			static function ( mixed $val ): int {
 				return abs( (int) $val );
@@ -99,37 +100,6 @@ class GamificationControllerTest extends TestCase {
 	}
 
 	/**
-	 * Returns a standard set of badge definitions for tests.
-	 *
-	 * @return array<string, array<string, string>>
-	 */
-	private function badge_definitions(): array {
-		return array(
-			'first-class' => array(
-				'name'             => 'First Class',
-				'description'      => 'Attended first class',
-				'icon'             => 'star',
-				'category'         => 'attendance',
-				'criteria_summary' => 'Attend 1 class',
-			),
-			'ten-classes' => array(
-				'name'             => 'Dedication',
-				'description'      => 'Attended 10 classes',
-				'icon'             => 'fire',
-				'category'         => 'attendance',
-				'criteria_summary' => 'Attend 10 classes',
-			),
-			'first-stripe' => array(
-				'name'             => 'First Stripe',
-				'description'      => 'Earned first belt stripe',
-				'icon'             => 'belt',
-				'category'         => 'rank',
-				'criteria_summary' => 'Earn your first stripe',
-			),
-		);
-	}
-
-	/**
 	 * Builds a mock earned badge object.
 	 *
 	 * @param string      $slug     Badge slug.
@@ -153,11 +123,7 @@ class GamificationControllerTest extends TestCase {
 	 * @testdox get_badge_definitions returns all badges for a public (not logged-in) request.
 	 */
 	public function test_get_badge_definitions_returns_all_for_public_request(): void {
-		$definitions = $this->badge_definitions();
-
-		Mockery::mock( 'alias:' . BadgeDefinitions::class )
-			->allows( 'get_all' )
-			->andReturn( $definitions );
+		$real_definitions = BadgeDefinitions::get_all();
 
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
@@ -168,8 +134,8 @@ class GamificationControllerTest extends TestCase {
 
 		$body = $response->get_data();
 		$this->assertTrue( $body['success'] );
-		$this->assertCount( 3, $body['data'] );
-		$this->assertSame( 'first-class', $body['data'][0]['slug'] );
+		$this->assertCount( count( $real_definitions ), $body['data'] );
+		$this->assertSame( 'first_class', $body['data'][0]['slug'] );
 		$this->assertSame( 'First Class', $body['data'][0]['name'] );
 
 		// Public requests must NOT include earned status.
@@ -181,18 +147,12 @@ class GamificationControllerTest extends TestCase {
 	 * @testdox get_badge_definitions includes earned status for a logged-in user.
 	 */
 	public function test_get_badge_definitions_includes_earned_for_logged_in_user(): void {
-		$definitions = $this->badge_definitions();
-
-		Mockery::mock( 'alias:' . BadgeDefinitions::class )
-			->allows( 'get_all' )
-			->andReturn( $definitions );
-
 		Functions\when( 'get_current_user_id' )->justReturn( 42 );
 
 		$this->badges->allows( 'get_user_badges' )
 			->with( 42 )
 			->andReturn( array(
-				$this->make_earned_badge( 'first-class', '2026-03-15 14:30:00' ),
+				$this->make_earned_badge( 'first_class', '2026-03-15 14:30:00' ),
 			) );
 
 		$request  = $this->make_request();
@@ -201,7 +161,7 @@ class GamificationControllerTest extends TestCase {
 		$body = $response->get_data();
 		$this->assertTrue( $body['success'] );
 
-		// First badge should be marked as earned.
+		// First badge (first_class) should be marked as earned.
 		$this->assertTrue( $body['data'][0]['earned'] );
 		$this->assertSame( '2026-03-15 14:30:00', $body['data'][0]['earned_at'] );
 
@@ -214,12 +174,6 @@ class GamificationControllerTest extends TestCase {
 	 * @testdox get_badge_definitions filters results by category when provided.
 	 */
 	public function test_get_badge_definitions_filters_by_category(): void {
-		$definitions = $this->badge_definitions();
-
-		Mockery::mock( 'alias:' . BadgeDefinitions::class )
-			->allows( 'get_all' )
-			->andReturn( $definitions );
-
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
 		$request  = $this->make_request( array( 'category' => 'rank' ) );
@@ -227,9 +181,12 @@ class GamificationControllerTest extends TestCase {
 
 		$body = $response->get_data();
 		$this->assertTrue( $body['success'] );
-		$this->assertCount( 1, $body['data'] );
-		$this->assertSame( 'first-stripe', $body['data'][0]['slug'] );
-		$this->assertSame( 'rank', $body['data'][0]['category'] );
+
+		// All returned badges must be in the rank category.
+		foreach ( $body['data'] as $badge ) {
+			$this->assertSame( 'rank', $badge['category'] );
+		}
+		$this->assertNotEmpty( $body['data'] );
 	}
 
 	// -------------------------------------------------------------------------
@@ -240,17 +197,13 @@ class GamificationControllerTest extends TestCase {
 	 * @testdox get_member_badges returns formatted earned badges with metadata totals.
 	 */
 	public function test_get_member_badges_returns_formatted_badges_with_meta(): void {
-		$definitions = $this->badge_definitions();
-
-		Mockery::mock( 'alias:' . BadgeDefinitions::class )
-			->allows( 'get_all' )
-			->andReturn( $definitions );
+		$real_definitions = BadgeDefinitions::get_all();
 
 		$this->badges->allows( 'get_user_badges' )
 			->with( 7 )
 			->andReturn( array(
-				$this->make_earned_badge( 'first-class', '2026-02-10 09:00:00', '{"class_id":101}' ),
-				$this->make_earned_badge( 'ten-classes', '2026-03-20 11:00:00' ),
+				$this->make_earned_badge( 'first_class', '2026-02-10 09:00:00', '{"class_id":101}' ),
+				$this->make_earned_badge( 'ten_classes', '2026-03-20 11:00:00' ),
 			) );
 
 		$request  = $this->make_request( array( 'id' => 7 ) );
@@ -263,7 +216,7 @@ class GamificationControllerTest extends TestCase {
 		$this->assertCount( 2, $body['data'] );
 
 		// First earned badge.
-		$this->assertSame( 'first-class', $body['data'][0]['badge']['slug'] );
+		$this->assertSame( 'first_class', $body['data'][0]['badge']['slug'] );
 		$this->assertSame( 'First Class', $body['data'][0]['badge']['name'] );
 		$this->assertSame( '2026-02-10 09:00:00', $body['data'][0]['earned_at'] );
 		$this->assertSame( array( 'class_id' => 101 ), $body['data'][0]['metadata'] );
@@ -274,7 +227,7 @@ class GamificationControllerTest extends TestCase {
 		// Meta totals.
 		$this->assertArrayHasKey( 'meta', $body );
 		$this->assertSame( 2, $body['meta']['total_badges_earned'] );
-		$this->assertSame( 3, $body['meta']['total_badges_available'] );
+		$this->assertSame( count( $real_definitions ), $body['meta']['total_badges_available'] );
 	}
 
 	// -------------------------------------------------------------------------

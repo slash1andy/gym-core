@@ -23,16 +23,8 @@ class BadgeDefinitionsTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		Functions\stubs(
-			array(
-				'__' => static function ( string $text ): string {
-					return $text;
-				},
-				'apply_filters' => static function ( string $hook, $value ) {
-					return $value;
-				},
-			)
-		);
+		Functions\when( '__' )->returnArg( 1 );
+		Functions\when( 'apply_filters' )->returnArg( 2 );
 	}
 
 	protected function tearDown(): void {
