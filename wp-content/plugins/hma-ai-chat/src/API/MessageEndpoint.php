@@ -125,8 +125,11 @@ class MessageEndpoint {
 			// Get conversation history.
 			$history = $conversation_store->get_conversation( $conversation_id );
 
-			// Build system prompt.
+			// Build system prompt with real-time gym context.
 			$system_prompt = $agent->get_system_prompt();
+
+			$gym_context_provider = new \HMA_AI_Chat\Context\GymContextProvider();
+			$system_prompt       .= $gym_context_provider->get_context_for_persona( $agent_slug, get_current_user_id() );
 
 			// Call AI — use WP AI Client if available, otherwise direct ClaudeClient.
 			if ( function_exists( 'wp_ai_client_prompt' ) ) {

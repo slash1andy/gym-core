@@ -197,18 +197,16 @@ class GymContextProvider {
 			$lines[] = sprintf( 'Foundations: %s (coach rolls: %d)', ucfirst( $status ), $rolls );
 		}
 
-		// Attendance stats.
+		// Attendance stats + last check-in (single request).
 		$attendance = $this->rest_get( '/gym/v1/attendance/' . $user_id, array(
 			'per_page' => 1,
+			'page'     => 1,
 		) );
 
-		$total_classes = 0;
-		if ( is_array( $attendance ) ) {
-			// Check response headers for total count if available.
-			$total_classes = count( $attendance );
-			// Use the summary endpoint if total is embedded.
-			if ( isset( $attendance['total'] ) ) {
-				$total_classes = (int) $attendance['total'];
+		if ( is_array( $attendance ) && ! empty( $attendance ) ) {
+			$last = reset( $attendance );
+			if ( isset( $last['checked_in_at'] ) ) {
+				$lines[] = sprintf( 'Last Check-in: %s', $last['checked_in_at'] );
 			}
 		}
 
@@ -228,18 +226,6 @@ class GymContextProvider {
 				$badge_names[] = $badge['name'] ?? $badge['badge_name'] ?? 'Badge';
 			}
 			$lines[] = sprintf( 'Badges: %s', implode( ', ', $badge_names ) );
-		}
-
-		// Last check-in from attendance.
-		$recent = $this->rest_get( '/gym/v1/attendance/' . $user_id, array(
-			'per_page' => 1,
-			'page'     => 1,
-		) );
-		if ( is_array( $recent ) && ! empty( $recent ) ) {
-			$last = reset( $recent );
-			if ( isset( $last['date'] ) ) {
-				$lines[] = sprintf( 'Last Check-in: %s', $last['date'] );
-			}
 		}
 
 		return implode( "\n", $lines );
@@ -313,10 +299,6 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_trial_context(): string {
-		$templates = $this->rest_get( '/gym/v1/sms/templates' );
-
-		// We surface trial info from the sales system prompt tools, but also
-		// check for any WooCommerce trial products.
 		$lines = array( '## Trial & Drop-In Options' );
 
 		// Query WC products tagged as trials.
@@ -426,9 +408,7 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_foundations_summary(): string {
-		$data = $this->rest_get( '/gym/v1/foundations', array(
-			'status' => 'active',
-		) );
+		$data = $this->rest_get( '/gym/v1/foundations/active' );
 
 		if ( ! is_array( $data ) ) {
 			return '';
@@ -445,7 +425,9 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_promotion_candidates(): string {
-		$programs = array( 'bjj', 'muay-thai', 'kickboxing' );
+		$programs = class_exists( '\Gym_Core\Rank\RankDefinitions' )
+			? array_keys( \Gym_Core\Rank\RankDefinitions::get_programs() )
+			: array( 'adult-bjj', 'kids-bjj', 'kickboxing' );
 		$lines    = array( '## Promotion Candidates' );
 		$found    = false;
 

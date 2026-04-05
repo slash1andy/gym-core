@@ -58,6 +58,8 @@ class ToolRegistry {
 			'get_locations',
 			'draft_sms',
 			'get_trial_info',
+			'get_announcements',
+			'get_today_attendance',
 		),
 		'coaching' => array(
 			'get_member_rank',
@@ -70,12 +72,20 @@ class ToolRegistry {
 			'get_briefing',
 			'get_foundations_status',
 			'record_coach_roll',
+			'enroll_foundations',
+			'clear_foundations',
+			'get_active_foundations',
+			'get_today_attendance',
+			'get_promotion_eligible',
+			'get_announcements',
 		),
 		'finance'  => array(
 			'get_revenue_summary',
 			'get_subscriptions',
 			'get_failed_payments',
 			'get_reports',
+			'get_today_attendance',
+			'get_locations',
 		),
 		'admin'    => array(
 			'get_today_attendance',
@@ -84,6 +94,17 @@ class ToolRegistry {
 			'draft_announcement',
 			'draft_social_post',
 			'get_briefing_today',
+			'get_announcements',
+			'get_active_foundations',
+			'draft_sms',
+			'get_sms_templates',
+			'get_locations',
+			'get_social_pending',
+			'approve_social_post',
+			'get_member_rank',
+			'get_attendance',
+			'get_badges',
+			'get_streak',
 		),
 	);
 
@@ -628,14 +649,14 @@ class ToolRegistry {
 					'properties' => array(
 						'program' => array(
 							'type'        => 'string',
-							'description' => 'Program slug (e.g. "bjj", "muay-thai", "kickboxing").',
+							'description' => 'Program slug (e.g. "adult-bjj", "kids-bjj", "kickboxing").',
 						),
 					),
 					'required'   => array( 'program' ),
 				),
 				'endpoint'     => '/promotions/eligible',
 				'method'       => 'GET',
-				'auth_cap'     => 'manage_woocommerce',
+				'auth_cap'     => 'gym_promote_student',
 				'write'        => false,
 			),
 			array(
@@ -728,6 +749,141 @@ class ToolRegistry {
 				'method'       => 'GET',
 				'auth_cap'     => 'gym_view_briefing',
 				'write'        => false,
+			),
+
+			// -----------------------------------------------------------------
+			// Cross-persona read tools
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'get_announcements',
+				'description'  => 'List active gym announcements, optionally filtered by location or program. Returns title, content, type, targeting, and date range.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'location' => array(
+							'type'        => 'string',
+							'description' => 'Optional location slug to filter announcements.',
+						),
+						'program'  => array(
+							'type'        => 'string',
+							'description' => 'Optional program slug to filter announcements.',
+						),
+						'page'     => array(
+							'type'        => 'integer',
+							'description' => 'Page number (default 1).',
+						),
+						'per_page' => array(
+							'type'        => 'integer',
+							'description' => 'Results per page (default 10).',
+						),
+					),
+					'required'   => array(),
+				),
+				'endpoint'     => '/announcements',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_view_briefing',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'get_sms_templates',
+				'description'  => 'List all available SMS message templates with their slugs, names, body text, and descriptions.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(),
+					'required'   => array(),
+				),
+				'endpoint'     => '/sms/templates',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_send_sms',
+				'write'        => false,
+			),
+
+			// -----------------------------------------------------------------
+			// Foundations management tools
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'enroll_foundations',
+				'description'  => 'Enroll a student in the Foundations program. Requires staff approval. The student must not already be enrolled or cleared.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'user_id' => array(
+							'type'        => 'integer',
+							'description' => 'WordPress user ID of the student to enroll.',
+						),
+					),
+					'required'   => array( 'user_id' ),
+				),
+				'endpoint'     => '/foundations/enroll',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_promote_student',
+				'write'        => true,
+			),
+			array(
+				'name'         => 'clear_foundations',
+				'description'  => 'Clear a Foundations student for live training. Requires staff approval. The student must be currently enrolled in Foundations.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'user_id' => array(
+							'type'        => 'integer',
+							'description' => 'WordPress user ID of the student to clear.',
+						),
+					),
+					'required'   => array( 'user_id' ),
+				),
+				'endpoint'     => '/foundations/clear',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_promote_student',
+				'write'        => true,
+			),
+			array(
+				'name'         => 'get_active_foundations',
+				'description'  => 'List all students currently enrolled in the Foundations program, with their status and coach-roll counts.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(),
+					'required'   => array(),
+				),
+				'endpoint'     => '/foundations/active',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_view_ranks',
+				'write'        => false,
+			),
+
+			// -----------------------------------------------------------------
+			// Social post management tools
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'get_social_pending',
+				'description'  => 'List all pending social posts awaiting coach or admin approval before publication via Jetpack Publicize.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(),
+					'required'   => array(),
+				),
+				'endpoint'     => '/social/pending',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_manage_announcements',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'approve_social_post',
+				'description'  => 'Approve and publish a pending social post. Triggers Jetpack Publicize to share to connected social media accounts. Requires staff approval.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'post_id' => array(
+							'type'        => 'integer',
+							'description' => 'Post ID of the pending social post to approve.',
+						),
+					),
+					'required'   => array( 'post_id' ),
+				),
+				'endpoint'     => '/social/{post_id}/approve',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_manage_announcements',
+				'write'        => true,
 			),
 		);
 	}
