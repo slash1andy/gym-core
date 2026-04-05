@@ -92,6 +92,67 @@ Ask the Sales Agent for data you can use in conversations with leads:
 
 ---
 
+## Sales Kiosk (Tablet Interface)
+
+**URL:** Open your browser to `[your-site]/sales/` on a tablet
+
+The Sales Kiosk is a dedicated tablet interface for processing membership sales in person. It runs full-screen with large touch targets -- no WordPress admin required.
+
+### Who can access it
+Only users with the **Head Coach** or **Administrator** role can open the kiosk. Regular coaches cannot access it.
+
+### How it works
+
+**Step 1 -- Select a membership**
+The kiosk opens to a grid of all membership products (including ones hidden from the public website), organized by program category. Tap the membership the prospect wants.
+
+**Step 2 -- Customize pricing**
+A slider lets you adjust the down payment amount. As the down payment goes up:
+- The monthly payment goes down
+- The customer earns a discount on the total contract value
+- The savings amount is displayed in real-time
+
+The pricing range (min/max down payment, discount tiers) is configured per product in WooCommerce admin.
+
+**Step 3 -- Customer information**
+Search for the customer by name or email. If they already exist in the system (as a WordPress user or CRM contact), their info is pre-filled. Otherwise, enter their details manually: name, email, phone, and billing address.
+
+**Save as Lead:** If the prospect is not ready to buy, tap **Save as Lead** to create a CRM contact with notes. This lets you follow up later.
+
+**Step 4 -- Review and process**
+Review the membership, pricing breakdown, and customer details. Tap **Process Payment** to create the order and redirect to the secure payment page.
+
+**Step 5 -- Payment**
+The customer enters their card details on the WooCommerce payment page (powered by WooPayments/Stripe). The page is simplified for the tablet -- no header, footer, or navigation.
+
+**Step 6 -- Confirmation**
+After successful payment, the kiosk shows a confirmation screen with the customer's name and membership. It auto-resets for the next sale.
+
+### Pricing examples
+
+| Scenario | Down Payment | Monthly | Total (12mo) | Savings |
+|----------|-------------|---------|------------|---------|
+| Minimum down | $99 | $196.33 | $2,455 | $0 |
+| Mid-range down | $499 | $155.58 | $2,366 | $89 |
+| Maximum down | $999 | $104.67 | $2,255 | $200 |
+
+*Exact numbers depend on how each product is configured in WooCommerce.*
+
+### Troubleshooting
+
+- **"Pricing not configured"** on a product card -- Ask the admin to set up the Sales Kiosk Pricing fields on that product in WooCommerce.
+- **Payment page looks wrong** -- Make sure the URL has `gym_sales_kiosk=1` in it. This triggers the clean tablet layout.
+- **Cannot access `/sales/`** -- You need the `gym_process_sale` capability. Ask your admin to check your role.
+- **Customer search finds no results** -- The customer may not be in the system yet. Enter their details manually.
+
+### Tips
+- Use portrait orientation on the tablet for the best layout
+- The kiosk auto-resets after a successful sale or lead save -- just wait for the timeout
+- All kiosk orders are tracked separately so you can report on in-person vs. online sales
+- Tap anywhere on the success/lead-saved screen to reset immediately
+
+---
+
 ## Trial Class Bookings
 
 ### Booking a trial for a lead

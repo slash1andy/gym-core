@@ -76,6 +76,20 @@ grows, individual modules may be extracted into their own plugins.
 - Endpoints: member lookup, class schedule, attendance log, rank history
 - Designed for consumption by external AI agent workflows
 
+### 9. Sales Kiosk (Tablet Point of Sale)
+- Standalone full-screen tablet interface at `/sales/` for in-person membership sales
+- Shows hidden membership products (catalog visibility = hidden) to authorized sales staff
+- Sliding-discount dynamic pricing: higher down payment earns a discount on total contract value
+- Per-product pricing config via admin meta fields: base total, min/max down payment, max discount
+- Customer search: finds existing WP users and Jetpack CRM contacts, pre-fills checkout form
+- Lead capture: save walk-in prospects as CRM contacts with notes when they don't buy
+- Order creation: builds WC order + WC Subscription programmatically with custom pricing
+- Payment handoff: redirects to WooCommerce pay page (WooPayments/Stripe Elements)
+- Kiosk-mode checkout: hides theme chrome on pay page for clean tablet experience
+- Auto-redirect back to kiosk after successful payment with confirmation screen
+- Access control: requires `gym_process_sale` capability (head coaches + admins)
+- REST endpoints: `gym/v1/sales/products`, `calculate`, `customer`, `order`, `lead`
+
 ---
 
 ## Customer-Facing Features
@@ -96,6 +110,8 @@ grows, individual modules may be extracted into their own plugins.
 - Attendance reports per class and per member
 - SMS notification log and send history
 - Settings page: `WooCommerce > Gym Core` with tabbed sections per module
+- Sales Kiosk pricing config: product-level meta fields for down payment ranges and discount tiers
+- Sales kiosk order tracking: all kiosk orders tagged with `_gym_sales_kiosk` meta for attribution
 
 ---
 
@@ -147,6 +163,7 @@ grows, individual modules may be extracted into their own plugins.
 | **1.6 — Gamification** | Badge definitions, streak engine, leaderboard widget |
 | **1.7 — SMS** | Twilio integration, opt-in UI, Action Scheduler queuing |
 | **1.8 — REST API** | `gym/v1` endpoints, Application Password auth, AI agent docs |
+| **1.9 — Sales Kiosk** | Tablet POS at `/sales/`, sliding-discount pricing, order builder, lead capture, CRM integration |
 
 ---
 

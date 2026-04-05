@@ -1278,6 +1278,64 @@ All endpoints use the `gym/v1` namespace. Controllers extend `Gym_Core\API\BaseC
 | **GamificationController** | 5.10 | `/badges` | GET | Public / Logged-in |
 | | | `/members/{id}/badges` | GET | Logged-in (own) / gym_view_achievements |
 | | | `/members/{id}/streak` | GET | Logged-in (own) / gym_view_achievements |
+| **SalesController** | 8.1 | `/sales/products` | GET | gym_process_sale |
+| | | `/sales/calculate` | POST | gym_process_sale |
+| | | `/sales/customer` | GET | gym_process_sale |
+| | | `/sales/order` | POST | gym_process_sale |
+| | | `/sales/lead` | POST | gym_process_sale |
+
+---
+
+## Milestone 8: Sales Kiosk (Tablet POS)
+
+**Goal:** Give the sales team (Matt & Rachel) a tablet-based point-of-sale interface for processing in-person membership sales with dynamic pricing.
+
+**Replaces:** Manual order entry in WooCommerce admin, paper sign-ups, switching between screens
+**Depends on:** M1 (WooCommerce + WooPayments), M2 (CRM for lead capture)
+
+### For Andrew (what gets done)
+
+A full-screen, touch-optimized tablet interface at `/sales/` lets sales staff browse hidden membership products, adjust down payment amounts with a slider (higher down payment = lower monthly + discount on total), search for existing customers or enter new ones, and hand off to WooPayments for immediate card payment. Walk-ins who don't buy can be saved as CRM leads with notes.
+
+### Agent Task List
+
+#### 8.1 — Sales Kiosk Foundation
+```
+STATUS: COMPLETE
+DESCRIPTION: Build the sales kiosk tablet interface with all core features.
+DEPENDS_ON: M1, M2 (CRM)
+ACCEPTANCE:
+  - Standalone /sales/ URL with full-screen dark theme (no theme chrome)
+  - Requires gym_process_sale capability (admins + head coaches only)
+  - Product grid showing all subscription products (including hidden) grouped by category
+  - Location-aware product filtering
+  - Sliding-discount pricing: per-product meta (base total, min/max down, max discount)
+  - Server-validated pricing via POST /gym/v1/sales/calculate
+  - Customer search across WP users and Jetpack CRM contacts
+  - Manual customer entry form with billing address fields
+  - Lead capture: POST /gym/v1/sales/lead creates CRM contact with notes
+  - Order creation: POST /gym/v1/sales/order creates WC order + subscription
+  - Payment handoff: redirects to WC pay page with kiosk mode (hidden theme chrome)
+  - Auto-redirect back to kiosk after successful payment
+  - Success screen with auto-reset timeout
+  - All kiosk orders tagged with _gym_sales_kiosk meta for attribution
+  - PricingCalculator unit tests (10 tests, all passing)
+  - PHPCS clean, PHPStan level 6 compatible
+```
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `src/Sales/KioskEndpoint.php` | Rewrite rule, auth gate, HTML template, checkout styling |
+| `src/Sales/PricingCalculator.php` | Sliding-discount pricing math (monthly + biweekly) |
+| `src/Sales/OrderBuilder.php` | WC order + subscription creation with custom pricing |
+| `src/Sales/ProductMetaBox.php` | Admin UI: pricing fields on subscription products |
+| `src/API/SalesController.php` | 5 REST endpoints for products, pricing, customer, order, lead |
+| `assets/js/sales-kiosk.js` | 5-screen tablet UI (product grid, pricing, customer, review, success) |
+| `assets/css/sales-kiosk.css` | Touch-optimized dark theme with coral accents |
+| `assets/css/sales-kiosk-checkout.css` | Hides theme chrome on WC pay page |
+| `tests/Unit/Sales/PricingCalculatorTest.php` | 10 unit tests for pricing calculator |
 
 ---
 
@@ -1317,5 +1375,8 @@ M1 Billing ──────────────────────┐
   │           │                    │
   │     └── M6 AI Agents ─────┘   │
   │                                │
-  └── M7 Media + Cutover ─────────┘
+  ├── M7 Media + Cutover ─────────┘
+  │
+  └── M8 Sales Kiosk (depends M1 + M2)
+        └── 8.1 Sales REST API (gym/v1/sales/*)
 ```

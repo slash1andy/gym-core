@@ -30,26 +30,35 @@
 |--------|-----------|--------|
 | Location | `src/Location/` | **Complete** — taxonomy, filtering, orders, Blocks, Store API |
 | Frontend | `src/Frontend/` | **Complete** — location selector banner |
-| Admin | `src/Admin/` | Empty — future settings pages |
-| API | `src/API/` | Empty — future REST endpoints |
-| Data | `src/Data/` | Empty — future DB tables/queries |
-| Utilities | `src/Utilities/` | Empty — future helpers |
+| Attendance | `src/Attendance/` | **Complete** — check-in kiosk, attendance DB table, milestones |
+| Rank | `src/Rank/` | **Complete** — belt definitions, rank store, promotion eligibility |
+| Gamification | `src/Gamification/` | **Complete** — badges, streaks, targeted content |
+| Sales | `src/Sales/` | **Complete** — tablet kiosk at `/sales/`, sliding-discount pricing, order builder, lead capture |
+| SMS | `src/SMS/` | **Complete** — Twilio client, inbound handler, message templates |
+| Member | `src/Member/` | **Complete** — content gating, dashboard, contact relationships |
+| Integrations | `src/Integrations/` | **Complete** — FormToCrm, CRM sync, AutomateWoo triggers |
+| Admin | `src/Admin/` | **Complete** — settings, staff dashboard, promotion dashboard, attendance dashboard |
+| API | `src/API/` | **Complete** — 12 REST controllers under `gym/v1` |
+| Data | `src/Data/` | **Complete** — table manager for custom attendance/rank tables |
+| Utilities | `src/Utilities/` | **Complete** — Brand helper |
 
 ### Naming Patterns
 
 - **Taxonomy**: `gym_location`
 - **CPT** (future): `gym_class`
 - **Custom tables** (future): `{prefix}gym_attendance`, `{prefix}gym_ranks`, etc.
-- **REST namespace** (future): `gym/v1`
-- **Meta keys**: `_gym_location`, `_gym_*`
+- **REST namespace**: `gym/v1`
+- **Meta keys**: `_gym_location`, `_gym_sales_kiosk`, `_gym_base_total`, `_gym_*`
 - **Cookies**: `gym_location`
 - **User meta**: `gym_location`
 - **AJAX actions**: `gym_set_location`
 - **Cron hooks**: `gym_core_daily_maintenance`
 - **Options**: `gym_core_settings`, `gym_core_version`, `gym_core_activated`
-- **CSS classes**: `gym-*` (e.g., `gym-location-selector`)
-- **JS globals**: `gymLocation`
-- **Script/style handles**: `gym-location-selector`
+- **CSS classes**: `gym-*` (e.g., `gym-location-selector`, `gym-sales-kiosk`)
+- **JS globals**: `gymLocation`, `gymKiosk`, `gymSalesKiosk`
+- **Script/style handles**: `gym-location-selector`, `gym-kiosk`, `gym-sales-kiosk`
+- **Rewrite endpoints**: `/check-in/` (attendance kiosk), `/sales/` (sales kiosk)
+- **Custom capabilities**: `gym_promote_student`, `gym_process_sale`, etc. (see `Capabilities.php`)
 
 ## Development
 

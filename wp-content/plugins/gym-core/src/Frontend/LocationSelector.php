@@ -116,11 +116,12 @@ class LocationSelector {
 			self::SCRIPT_HANDLE,
 			'gymLocation',
 			array(
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'nonce'   => wp_create_nonce( 'gym_location_nonce' ),
-				'current' => $this->manager->get_current_location(),
-				'i18n'    => array(
-					'switching' => __( 'Switching location\u2026', 'gym-core' ),
+				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
+				'nonce'      => wp_create_nonce( 'gym_location_nonce' ),
+				'current'    => $this->manager->get_current_location(),
+				'locations'  => $this->get_location_coordinates(),
+				'i18n'       => array(
+					'switching' => __( 'Switching location…', 'gym-core' ),
 					'error'     => __( 'Could not switch location. Please try again.', 'gym-core' ),
 				),
 			)
@@ -185,5 +186,37 @@ class LocationSelector {
 			<?php endif; ?>
 		</nav>
 		<?php
+	}
+
+	/**
+	 * Returns location coordinates for browser geolocation matching.
+	 *
+	 * Coordinates are stored as a filterable option so they can be updated
+	 * without code changes if a location moves.
+	 *
+	 * @since 4.0.0
+	 *
+	 * @return array<string, array{lat: float, lng: float}>
+	 */
+	private function get_location_coordinates(): array {
+		$defaults = array(
+			'rockford' => array(
+				'lat' => 42.2711,
+				'lng' => -89.0940,
+			),
+			'beloit'   => array(
+				'lat' => 42.5083,
+				'lng' => -89.0318,
+			),
+		);
+
+		/**
+		 * Filters the GPS coordinates used for browser-based location detection.
+		 *
+		 * @since 4.0.0
+		 *
+		 * @param array<string, array{lat: float, lng: float}> $coordinates Location slug => { lat, lng }.
+		 */
+		return apply_filters( 'gym_core_location_coordinates', $defaults );
 	}
 }

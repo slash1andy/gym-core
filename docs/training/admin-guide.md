@@ -138,6 +138,52 @@ Membership tiers (Basic, Pro, Unlimited) are WooCommerce subscription products.
 
 ---
 
+## Sales Kiosk Configuration
+
+The Sales Kiosk is a tablet interface at `/sales/` that lets sales staff process membership purchases in person with dynamic pricing.
+
+### Configuring kiosk pricing on a product
+
+Each subscription product can have custom pricing ranges for the kiosk:
+
+1. Go to **WooCommerce > Products** and edit a subscription product.
+2. Scroll to the **General** tab. If the product type is "Simple subscription" or "Variable subscription", you will see a **Sales Kiosk Pricing** section.
+3. Fill in the four fields:
+   - **Base contract total ($)** -- The full contract value at the minimum down payment (e.g., $2,455 for a 12-month Adult BJJ membership).
+   - **Min down payment ($)** -- The lowest amount a customer can put down (e.g., $99).
+   - **Max down payment ($)** -- The highest amount (e.g., $999).
+   - **Max discount ($)** -- The maximum savings earned when the customer pays the max down payment (e.g., $200).
+4. Click **Update** to save.
+
+The kiosk calculates the monthly payment automatically:
+- At minimum down payment: no discount, highest monthly payment.
+- At maximum down payment: full discount, lowest monthly payment.
+- In between: proportional discount based on where the slider falls.
+
+### Making products visible to the kiosk
+
+Products with catalog visibility set to **Hidden** will still appear in the sales kiosk. This is by design -- membership products stay hidden from the public shop but are available for in-person sales.
+
+### Viewing kiosk orders
+
+All orders created through the sales kiosk are tagged with metadata:
+- `_gym_sales_kiosk` = 1 (marks the order as kiosk-originated)
+- `_gym_down_payment` = the down payment amount
+- `_gym_recurring_payment` = the calculated monthly amount
+- `_gym_sales_staff_id` = the staff member who processed the sale
+
+To find kiosk orders: go to **WooCommerce > Orders** and look for orders with the note "Sales kiosk order" or filter by the kiosk meta key.
+
+### Access control
+
+Only users with the `gym_process_sale` capability can access the kiosk. This is granted to:
+- **Administrators** (automatic)
+- **Head Coach** role (automatic)
+
+Regular coaches and other roles cannot access the kiosk. To grant access to a specific user, assign them the Head Coach role or add the capability manually.
+
+---
+
 ## Using Gandalf (AI Chat)
 
 **URL:** `admin.php?page=gym-core` (left panel)

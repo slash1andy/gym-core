@@ -113,6 +113,7 @@ See `MILESTONES.md` at repo root. Remaining work:
 4. **M6.10**: gym/v1 endpoint completeness audit (READY)
 5. **M6.2**: ~~LibreChat~~ SKIPPED — WP AI Client + ClaudeClient fallback is sufficient
 6. **M7.1–7.4**: Media migration, Spark data import, staff training, parallel run (NOT STARTED)
+7. **M8.1**: Sales Kiosk — COMPLETE (tablet POS at `/sales/`, dynamic pricing, lead capture)
 
 ## Key Documents
 
