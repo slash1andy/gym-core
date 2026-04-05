@@ -102,17 +102,96 @@ The system tracks milestones automatically (e.g., 50 classes, 100 classes). When
    - "Show me attendance trends for the Tuesday evening BJJ class."
    - "What should I focus on for [student name]'s next assessment?"
    - "Which students have missed more than 2 weeks?"
+   - "Look up [student name] -- what's their rank, attendance, and Foundations status?"
+   - "Who in the Foundations program needs coach rolls?"
 
-### Class briefings
-Before class, ask the Coaching Agent:
-- "Give me a briefing for tonight's 6pm BJJ class."
-- The agent returns: enrolled students, any returning-from-absence students, students nearing milestones, and promotion candidates in the class.
+### What the Coaching Agent knows
+The Coaching Agent has access to:
+- Member records: belt rank, attendance history, streaks, badges, and milestones
+- Promotion eligibility: who meets criteria, who is close, and time at current rank
+- Foundations status: which students are in each phase and what they need to progress
+- Class rosters: enrolled students for any upcoming class
+- At-risk alerts: students with declining attendance
+
+### Class briefings (pre-class intelligence)
+Before each class, ask the Coaching Agent for a briefing. This gives you a snapshot of who to expect and what to watch for.
+
+1. Ask: "Give me a briefing for tonight's 6pm BJJ class."
+2. The agent returns:
+   - **Enrolled students** for this session
+   - **Returning-from-absence students** -- members who have not trained recently
+   - **Milestone watch** -- students close to attendance milestones (e.g., 50th or 100th class)
+   - **Promotion candidates** -- students who are eligible or nearly eligible
+   - **Foundations students** -- who is in Foundations and what phase they are in
+3. Use this to personalize your coaching: welcome back absent students, acknowledge milestones, and keep an eye on promotion-ready practitioners.
 
 ### Assessment help
 When evaluating a student for promotion:
 1. Ask: "Help me assess [student name] for [next rank]."
 2. The agent reviews their attendance, time at current rank, and any notes.
 3. Use the response as a starting point for your evaluation -- you make the final call.
+
+### Member lookup
+To quickly check on any student:
+1. Ask: "Show me [student name]'s full profile."
+2. The agent returns: current rank, total classes, current streak, badges earned, Foundations status (if applicable), and time since last promotion.
+
+---
+
+## Foundations Program (New Student Safety Gate)
+
+Foundations is the onboarding program for new adult BJJ students. Students in Foundations cannot live-train with non-coaches until they are cleared. This protects both the new student and existing members.
+
+### The Foundations lifecycle
+
+**Phase 1: Coached instruction only**
+- The student attends classes but only drills and practices with coaches.
+- After completing the required number of classes (configured in settings), they advance to Phase 2.
+
+**Phase 2: Supervised rolls with coaches**
+- The student completes supervised rolls with coaches to demonstrate control and safety.
+- To record a coach roll: go to the student's profile or ask the Coaching Agent: "Record a coach roll for [student name]."
+- After completing the required number of coach rolls, they advance to Phase 3.
+
+**Phase 3: Additional classes**
+- The student continues attending classes until they reach the total class threshold.
+- Once the threshold is met, they are automatically cleared.
+
+**Cleared**
+- The student can now train with all partners in all classes.
+- Their Foundations status changes to "Cleared" on their profile.
+
+### Managing Foundations as a coach
+- **Check status:** Ask the Coaching Agent: "What's [student name]'s Foundations status?" or view it on their member profile.
+- **Record coach rolls:** After a supervised roll, record it promptly so the student's progress updates.
+- **Class briefings include Foundations info:** When you request a class briefing, the agent tells you which students are in Foundations and what phase they are in, so you can pair them appropriately.
+- **Thresholds are configurable:** The head instructor or admin sets the required class counts and roll counts in **Settings > Gym Core > Ranks**. If you think thresholds need adjusting, talk to the head instructor.
+
+Note: Time spent in Foundations counts toward White Belt stripe progression. Foundations is a safety status, not a belt rank.
+
+---
+
+## Viewing Promotion Eligible Lists
+
+The Promotions dashboard shows all students who meet or are approaching promotion criteria.
+
+### Quick access
+1. Go to **Gym > Promotions** (`admin.php?page=gym-promotions`).
+2. Use the location filter to show students at your location.
+3. Each row shows: student name, current rank, classes since last promotion, eligibility status, and any existing coach recommendations.
+
+### Using the Coaching Agent
+For a faster overview, ask:
+- "Who is eligible for promotion at [location]?"
+- "Show me all students within 5 classes of promotion eligibility."
+- "Which white belts are closest to their first stripe?"
+
+### Submitting recommendations
+When you identify a student ready for promotion:
+1. Click **Recommend** next to their name on the Promotions dashboard.
+2. Add your assessment notes: technique readiness, areas of strength, anything to watch.
+3. The recommendation flags the student for the head instructor's final review.
+4. You can also ask the Coaching Agent: "Recommend [student name] for promotion" and it will walk you through the process.
 
 ---
 

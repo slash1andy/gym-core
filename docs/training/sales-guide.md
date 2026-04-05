@@ -44,10 +44,31 @@ The Sales Agent is your main tool for lead conversations and follow-ups.
 - Recent lead and enrollment activity
 - Gym programs and age groups
 - Common objection-handling approaches
+- Current attendance numbers (useful for social proof: "We had 45 check-ins yesterday!")
+- Active announcements and upcoming events
 
 ### Getting talking points before a call
 1. Ask: "Give me talking points for [situation]."
 2. The agent tailors its response using real gym data (class availability, current promotions, membership openings).
+
+### Drafting SMS messages
+The Sales Agent can draft SMS messages for leads and members via Twilio:
+1. Ask: "Draft an SMS to [lead name] following up on their trial class."
+2. The agent writes the message and submits it for approval.
+3. The draft appears in the **approval queue** on the Gym Dashboard.
+4. Review the message, edit if needed, then click **Approve** to send via Twilio.
+5. Or click **Reject** to discard it and write your own.
+
+You can also ask the agent to draft bulk messages:
+- "Draft a follow-up SMS for all leads who visited this week but haven't signed up."
+
+All SMS messages require your approval before sending -- nothing goes out automatically.
+
+### Announcements and social proof
+Ask the Sales Agent for data you can use in conversations with leads:
+- "What's our class attendance been like this week?" -- Great for showing a busy, active gym.
+- "What promotions happened recently?" -- Shows student progress and community.
+- "Draft an announcement about our new member special." -- Creates an announcement post for the admin to review.
 
 ---
 

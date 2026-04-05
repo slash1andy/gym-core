@@ -24,8 +24,20 @@ Your dashboard shows finance-relevant widgets on the right side (revenue, active
    - "What's this month's revenue for Rockford?"
    - "How many subscriptions failed payment this week?"
    - "Show me a breakdown of membership tiers by location."
+   - "Compare revenue between both locations for last month."
+   - "Give me a subscription overview -- how many active, on hold, cancelled?"
+   - "Which members have failed payments right now?"
 3. Joyous pulls real data from WooCommerce and gym-core to answer.
 4. If Joyous suggests an action (like retrying a batch of failed payments), it goes to the approval queue for review before executing.
+
+### What Joyous knows
+Joyous has access to:
+- WooCommerce revenue, orders, and subscription data
+- Failed payment details and retry status
+- Membership tier breakdowns by location
+- Active member counts and churn trends
+
+Use Joyous for quick answers instead of navigating through multiple WooCommerce report screens. It is especially useful for comparing locations or getting a fast end-of-day summary.
 
 ---
 
@@ -119,6 +131,24 @@ Failed payments appear in two places:
 ### Comparing locations
 1. Use the location toggle on the Gym Dashboard to view per-location stats.
 2. Ask Joyous: "Compare revenue between Rockford and Beloit for March."
+
+---
+
+## Attendance Reports (Operational KPI)
+
+Attendance data lives in the gym-core plugin, not WooCommerce. To access it:
+
+### From the admin dashboard
+1. Go to **Gym > Attendance** (`admin.php?page=gym-attendance`).
+2. Use the **History** tab to filter by date range, class, or location.
+3. The **Trends** tab shows week-over-week stats and at-risk member alerts.
+
+### From Joyous
+Ask Joyous for attendance summaries when preparing operational reports:
+- "How many total check-ins did we have last month at each location?"
+- "What's the average attendance per class this week?"
+
+Attendance numbers are a useful KPI alongside revenue -- declining attendance often predicts future subscription cancellations.
 
 ---
 

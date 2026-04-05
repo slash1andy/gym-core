@@ -151,8 +151,49 @@ Membership tiers (Basic, Pro, Unlimited) are WooCommerce subscription products.
 3. Gandalf responds using real gym data (attendance, ranks, memberships, revenue).
 4. If Gandalf proposes an action (e.g., sending an SMS blast), it enters the **approval queue**. Review pending actions and approve or reject them.
 
+### Admin Agent -- what it can do
+The Admin Agent is your go-to for day-to-day operations. Example prompts:
+- "How many check-ins did we have today at each location?"
+- "Who is eligible for promotion this month?"
+- "Draft an announcement about the holiday schedule change."
+- "Send an SMS to all active members at Rockford about Saturday's open mat."
+- "Look up member [name] -- what's their attendance and rank?"
+- "Draft a social post celebrating this week's promotions."
+
+The Admin Agent has access to attendance data, promotion eligibility, member records, SMS (via Twilio), announcements, and social post drafting. Any action it proposes (sending SMS, publishing a post) goes through the approval queue first.
+
 ### Approval queue
 When Gandalf or its background agents propose actions, they appear in the pending actions list. Review each one, then click **Approve** or **Reject**.
+
+---
+
+## Social Post Approval Workflow
+
+Gandalf drafts celebration posts (promotions, milestones, events) and saves them as **pending** posts. The flow:
+
+1. **Gandalf drafts** -- A promotion happens or you ask Gandalf to create a social post. It generates the copy and saves it as a pending post.
+2. **Staff reviews** -- Go to **Posts** in the admin sidebar and filter by **Pending** status. Open the draft to review text and images.
+3. **Edit if needed** -- Adjust the wording, add photos, or tweak the message.
+4. **Publish** -- Click **Publish**. Jetpack Publicize automatically shares the post to connected social accounts (Facebook, Instagram, etc.).
+
+You can also ask the Admin Agent: "Show me pending social posts" to see what is waiting for review.
+
+---
+
+## Foundations Management
+
+Foundations is the safety gate for new adult BJJ students. New students cannot live-train with non-coaches until they complete the Foundations program.
+
+### How Foundations works
+- **Phase 1:** Complete the required number of coached-only classes.
+- **Phase 2:** Complete supervised rolls with coaches (recorded by the coaching staff).
+- **Phase 3:** Complete additional classes to reach the total class threshold.
+- **Cleared:** Student can now train with all partners.
+
+### Admin tasks
+- View Foundations status on any member's profile under **Gym > Members** or by asking Gandalf.
+- Foundations thresholds (class counts, required rolls) are configurable at **Settings > Gym Core > Ranks**.
+- Time in Foundations counts toward White Belt stripe progression -- it is not a separate belt.
 
 ---
 
