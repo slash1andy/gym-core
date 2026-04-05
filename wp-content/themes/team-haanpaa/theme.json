@@ -9,26 +9,28 @@
     },
     "color": {
       "palette": [
-        { "slug": "offwhite", "color": "#FAF8F4", "name": "Off-white" },
-        { "slug": "navy", "color": "#1A2B4A", "name": "Navy" },
-        { "slug": "coral", "color": "#E8613A", "name": "Coral" },
-        { "slug": "warm-gray", "color": "#E2DDD7", "name": "Warm Gray" },
+        { "slug": "black", "color": "#000000", "name": "Black" },
+        { "slug": "royal-blue", "color": "#0032A0", "name": "Royal Blue" },
+        { "slug": "cool-gray", "color": "#75787B", "name": "Cool Gray" },
         { "slug": "white", "color": "#FFFFFF", "name": "White" },
-        { "slug": "light-coral", "color": "#FFF0EB", "name": "Light Coral" },
-        { "slug": "dark-navy", "color": "#111E36", "name": "Dark Navy" }
+        { "slug": "blue-hover", "color": "#0041CC", "name": "Blue Hover" },
+        { "slug": "gray-light", "color": "#F5F5F7", "name": "Light Gray" },
+        { "slug": "gray-100", "color": "#E5E5E7", "name": "Gray 100" },
+        { "slug": "gray-800", "color": "#2A2A2A", "name": "Gray 800" },
+        { "slug": "gray-900", "color": "#1A1A1A", "name": "Gray 900" }
       ]
     },
     "typography": {
       "fontFamilies": [
         {
-          "fontFamily": "'Playfair Display', Georgia, serif",
-          "slug": "playfair",
-          "name": "Playfair Display"
+          "fontFamily": "'Barlow Condensed', 'Arial Narrow', sans-serif",
+          "slug": "barlow-condensed",
+          "name": "Barlow Condensed"
         },
         {
-          "fontFamily": "'DM Sans', 'Helvetica Neue', Arial, sans-serif",
-          "slug": "dm-sans",
-          "name": "DM Sans"
+          "fontFamily": "'Inter', 'Helvetica Neue', Arial, sans-serif",
+          "slug": "inter",
+          "name": "Inter"
         }
       ],
       "fontSizes": [
@@ -37,7 +39,7 @@
         { "slug": "large", "size": "1.25rem", "name": "Large" },
         { "slug": "x-large", "size": "1.75rem", "name": "Extra Large" },
         { "slug": "xx-large", "size": "2.25rem", "name": "2X Large" },
-        { "slug": "huge", "size": "clamp(2.5rem, 4vw, 3.5rem)", "name": "Huge" }
+        { "slug": "huge", "size": "clamp(2.75rem, 5vw, 4rem)", "name": "Huge" }
       ]
     },
     "spacing": {
@@ -56,44 +58,47 @@
   },
   "styles": {
     "color": {
-      "background": "#FAF8F4",
-      "text": "#1A2B4A"
+      "background": "#FFFFFF",
+      "text": "#000000"
     },
     "typography": {
-      "fontFamily": "'DM Sans', 'Helvetica Neue', Arial, sans-serif",
+      "fontFamily": "'Inter', 'Helvetica Neue', Arial, sans-serif",
       "fontSize": "1rem",
       "lineHeight": "1.6"
     },
     "elements": {
       "heading": {
         "typography": {
-          "fontFamily": "'Playfair Display', Georgia, serif",
-          "fontWeight": "900",
-          "lineHeight": "1.15"
+          "fontFamily": "'Barlow Condensed', 'Arial Narrow', sans-serif",
+          "fontWeight": "700",
+          "lineHeight": "1.1",
+          "textTransform": "uppercase",
+          "letterSpacing": "0.02em"
         },
         "color": {
-          "text": "#1A2B4A"
+          "text": "#000000"
         }
       },
       "link": {
         "color": {
-          "text": "#E8613A"
+          "text": "#0032A0"
         },
         ":hover": {
           "color": {
-            "text": "#1A2B4A"
+            "text": "#0041CC"
           }
         }
       },
       "button": {
         "typography": {
+          "fontFamily": "'Barlow Condensed', 'Arial Narrow', sans-serif",
           "fontSize": "0.875rem",
-          "fontWeight": "500",
+          "fontWeight": "600",
           "letterSpacing": "0.1em",
           "textTransform": "uppercase"
         },
         "color": {
-          "background": "#E8613A",
+          "background": "#0032A0",
           "text": "#FFFFFF"
         },
         "border": {
@@ -101,7 +106,7 @@
         },
         ":hover": {
           "color": {
-            "background": "#d14e2a",
+            "background": "#0041CC",
             "text": "#FFFFFF"
           }
         }
@@ -116,27 +121,28 @@
           "textTransform": "uppercase"
         },
         "color": {
-          "text": "#1A2B4A"
+          "text": "#FFFFFF"
         }
       },
       "core/site-title": {
         "typography": {
-          "fontFamily": "'Playfair Display', Georgia, serif",
-          "fontWeight": "900",
+          "fontFamily": "'Barlow Condensed', 'Arial Narrow', sans-serif",
+          "fontWeight": "800",
           "fontSize": "1.5rem",
-          "letterSpacing": "-0.02em"
+          "letterSpacing": "0.02em",
+          "textTransform": "uppercase"
         },
         "color": {
-          "text": "#1A2B4A"
+          "text": "#FFFFFF"
         },
         "elements": {
           "link": {
             "color": {
-              "text": "#1A2B4A"
+              "text": "#FFFFFF"
             },
             ":hover": {
               "color": {
-                "text": "#E8613A"
+                "text": "#0032A0"
               }
             }
           }

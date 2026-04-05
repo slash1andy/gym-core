@@ -126,6 +126,7 @@ See `MILESTONES.md` at repo root. Remaining work:
 | `docs/architecture/ai-architecture-paperclip.md` | How do the AI agents work? |
 | `docs/planning/future-features-plan.md` | What does WP 7.0 unlock for this project? |
 | `docs/migration/wix-content/README.md` | What Wix content has been scraped? (index + status + agent guide) |
+| `docs/brand-guide.md` | Brand colors, typography, voice/tone, UI components, accessibility |
 
 ## Technical Requirements
 
