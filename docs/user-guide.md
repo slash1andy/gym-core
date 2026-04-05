@@ -661,13 +661,116 @@ Milestones are tracked per-user and will not fire twice for the same threshold. 
 
 **Customizing milestones:** Under WooCommerce > Settings > Gym Core > Attendance, enter a comma-separated list of class counts in the "Attendance milestones" field.
 
-### Targeted Content (Content Gating)
+### Targeted Content
 
-Members see different content based on their membership plan:
+Targeted content lets you show or hide content based on a viewer's membership, belt rank, program, location, attendance, or streak. There are three ways to use it: the Gutenberg block, shortcodes, or the post meta box.
 
-- **Technique videos:** Require membership in the matching program (e.g., Adult BJJ technique videos require an Adult BJJ or All-Access membership)
-- **Training resources:** Available to any active member regardless of program
-- **All-Access members** can see all gated content
+#### Targeted Content Block (Gutenberg)
+
+The **Targeted Content** block (`gym/targeted-content`) wraps any inner blocks and only renders them if the viewer matches all targeting rules.
+
+**How to use it:**
+
+1. In the block editor, click **+** and search for "Targeted Content."
+2. Add the block. It appears as a container with a header bar showing "Targeted Content -- No rules set."
+3. Add any blocks inside it (paragraphs, images, videos, headings, etc.).
+4. Open the block's **sidebar settings** (click the block, then check the right panel) to configure rules:
+
+**Sidebar panels:**
+
+| Panel | Controls |
+|-------|----------|
+| **Targeting Rules** | Logged-in users only (toggle), Active members only (toggle), Foundations students only (toggle) |
+| **Program & Belt** | Program checkboxes (Adult BJJ, Kids BJJ, Kickboxing), Minimum belt dropdown |
+| **Location** | Location checkboxes (one per registered location) |
+| **Attendance & Streaks** | Minimum classes (number), Minimum streak in weeks (number) |
+| **Fallback** | Fallback message shown to viewers who don't match (leave empty to hide entirely) |
+
+All rules use **AND logic** -- the viewer must match every rule you set. Leave a panel empty to skip that criterion.
+
+**Example:** To show a technique video only to Adult BJJ blue belts and above at Rockford:
+1. Add the Targeted Content block.
+2. Inside it, add a Video block with the technique video.
+3. In the sidebar: enable **Active members only**, check **Adult BJJ** under Program, set Minimum belt to **Blue**, and check **Rockford** under Location.
+4. Optionally set a fallback: "This content is available to Blue Belt and above."
+
+#### Targeted Content Shortcodes
+
+For classic editor or widget areas, use the `[gym_targeted]` shortcode:
+
+```
+[gym_targeted program="adult-bjj" min_belt="blue" location="rockford" members_only="true"]
+Blue Belt technique of the week: Cross-collar choke from closed guard.
+[/gym_targeted]
+```
+
+**All attributes:**
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `program` | string | Comma-separated program slugs: `adult-bjj`, `kids-bjj`, `kickboxing` |
+| `min_belt` | string | Minimum belt slug (e.g., `blue`, `purple`). Requires `program`. |
+| `max_belt` | string | Maximum belt slug (inclusive upper bound). |
+| `min_classes` | number | Minimum total class count. |
+| `min_streak` | number | Minimum current streak in weeks. |
+| `members_only` | bool | `true` to require an active membership. |
+| `foundations_only` | bool | `true` to show only to Foundations students. |
+| `logged_in` | bool | `true` to require authentication. |
+| `role` | string | Comma-separated WordPress roles (e.g., `customer,subscriber`). |
+| `location` | string | Comma-separated location slugs (e.g., `rockford,beloit`). |
+| `fallback` | string | Message shown when the viewer doesn't match. |
+
+**More examples:**
+
+Kids program parent update:
+```
+[gym_targeted program="kids-bjj" members_only="true"]
+Parents: the Kids BJJ tournament is on Saturday, May 10th. Arrive by 8:30am.
+[/gym_targeted]
+```
+
+Streak motivation (4+ weeks):
+```
+[gym_targeted min_streak="4" logged_in="true"]
+You're on a roll! Keep your streak alive this week.
+[/gym_targeted]
+```
+
+#### Member Greeting Shortcode
+
+`[gym_member_greeting]` shows a personalized greeting with the member's name, belt rank(s), class count, and current streak. Guests see a generic welcome message.
+
+**Output example (logged-in member):**
+> Welcome back, Sarah! You're a Blue Belt in Adult BJJ with 47 classes and a 6-week streak.
+
+**Output example (guest):**
+> Welcome to the gym!
+
+Use this on the homepage, member dashboard, or any page where you want a personal touch.
+
+#### Progress Card Shortcode
+
+`[gym_progress_card]` renders a visual progress card for the logged-in member:
+
+- Belt rank with color indicator
+- Stripe visualization (filled/empty dots)
+- Classes since last promotion (with threshold if applicable)
+- Days at current rank (with threshold if applicable)
+- Current streak in weeks
+- Total badges earned
+
+Guests see a "Join to track your progress!" call-to-action instead.
+
+#### Post/Page Meta Box Targeting
+
+You can restrict an **entire post or page** to matching viewers without using blocks or shortcodes:
+
+1. Edit any post or page.
+2. In the sidebar, find the **Content Targeting** meta box.
+3. Set your rules (same options as the block: logged-in, members only, foundations, roles, location, program, belt, classes, streak).
+4. Save. The entire page content is hidden from non-matching viewers.
+
+This is useful for dedicated pages like "Blue Belt Curriculum" or "Kids Program Resources" where the whole page should be gated.
 
 ---
 
