@@ -40,6 +40,17 @@ class ManagerTest extends TestCase {
 		Functions\when( 'wp_unslash' )->returnArg( 1 );
 		Functions\when( 'sanitize_key' )->returnArg( 1 );
 
+		// Stub cache to return location labels so Taxonomy::get_location_labels()
+		// never reaches get_terms / is_wp_error during is_valid() calls.
+		Functions\when( 'wp_cache_get' )->justReturn(
+			array(
+				'rockford' => 'Rockford',
+				'beloit'   => 'Beloit',
+			)
+		);
+		Functions\when( 'wp_cache_set' )->justReturn( true );
+		Functions\when( 'wp_cache_delete' )->justReturn( true );
+
 		$this->sut = new Manager();
 	}
 

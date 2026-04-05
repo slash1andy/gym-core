@@ -34,6 +34,19 @@ class TaxonomyTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 		Monkey\setUp();
+
+		// Stub cache functions used by Taxonomy::get_location_labels().
+		// Stub cache to return location labels so Taxonomy::get_location_labels()
+		// short-circuits without calling get_terms / is_wp_error.
+		Functions\when( 'wp_cache_get' )->justReturn(
+			array(
+				'rockford' => 'Rockford',
+				'beloit'   => 'Beloit',
+			)
+		);
+		Functions\when( 'wp_cache_set' )->justReturn( true );
+		Functions\when( 'wp_cache_delete' )->justReturn( true );
+
 		$this->sut = new Taxonomy();
 	}
 
@@ -151,9 +164,6 @@ class TaxonomyTest extends TestCase {
 			->twice()
 			->andReturn( array( 'term_id' => 1, 'term_taxonomy_id' => 1 ) );
 
-		Functions\expect( '__' )
-			->andReturnFirstArg(); // Passthrough translations.
-
 		Taxonomy::seed_terms();
 
 		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
@@ -174,9 +184,6 @@ class TaxonomyTest extends TestCase {
 			->andReturn( array( 'term_id' => '1' ) ); // Non-null = term exists.
 
 		Functions\expect( 'wp_insert_term' )->never();
-
-		Functions\expect( '__' )
-			->andReturnFirstArg();
 
 		Taxonomy::seed_terms();
 

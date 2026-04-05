@@ -58,6 +58,17 @@ class LocationControllerTest extends TestCase {
 			}
 		);
 
+		// Stub cache to return location labels so Taxonomy::get_location_labels()
+		// short-circuits without calling get_terms / is_wp_error during is_valid().
+		Functions\when( 'wp_cache_get' )->justReturn(
+			array(
+				'rockford' => 'Rockford',
+				'beloit'   => 'Beloit',
+			)
+		);
+		Functions\when( 'wp_cache_set' )->justReturn( true );
+		Functions\when( 'wp_cache_delete' )->justReturn( true );
+
 		$this->manager = Mockery::mock( Manager::class );
 		$this->sut     = new LocationController( $this->manager );
 	}
