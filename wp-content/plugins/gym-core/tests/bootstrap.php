@@ -11,6 +11,9 @@
 
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
+// Allow Mockery to mock final classes (e.g. BadgeEngine, StreakTracker, FoundationsClearance).
+DG\BypassFinals::enable();
+
 // Stub constants so classes that reference them can be loaded without WordPress.
 if ( ! defined( 'ABSPATH' ) ) {
 	define( 'ABSPATH', '/tmp/wordpress/' );

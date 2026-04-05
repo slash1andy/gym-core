@@ -25,7 +25,7 @@ namespace Gym_Core\Attendance;
 /**
  * Tracks and evaluates Foundations clearance status for new students.
  */
-final class FoundationsClearance {
+class FoundationsClearance {
 
 	/**
 	 * User meta key for foundations status.

@@ -21,7 +21,7 @@ use Gym_Core\Data\TableManager;
 /**
  * Evaluates and awards badges based on member activity.
  */
-final class BadgeEngine {
+class BadgeEngine {
 
 	/**
 	 * Attendance store.

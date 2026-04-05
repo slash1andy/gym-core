@@ -16,7 +16,7 @@ namespace Gym_Core\Attendance;
 /**
  * Validates whether a member can check in to a class.
  */
-final class CheckInValidator {
+class CheckInValidator {
 
 	/**
 	 * Attendance store instance.

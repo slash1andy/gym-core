@@ -17,7 +17,7 @@ namespace Gym_Core\Briefing;
 /**
  * Registers and configures the gym_announcement custom post type.
  */
-final class AnnouncementPostType {
+class AnnouncementPostType {
 
 	/**
 	 * Post type slug.

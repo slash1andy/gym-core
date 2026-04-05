@@ -25,7 +25,7 @@ use Gym_Core\Schedule\ClassPostType;
 /**
  * Generates pre-class intelligence briefings for coaches.
  */
-final class BriefingGenerator {
+class BriefingGenerator {
 
 	/**
 	 * Default number of weeks to look back for attendance forecasting.

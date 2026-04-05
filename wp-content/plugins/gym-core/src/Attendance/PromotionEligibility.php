@@ -21,7 +21,7 @@ use Gym_Core\Attendance\FoundationsClearance;
 /**
  * Evaluates and queries promotion eligibility for members.
  */
-final class PromotionEligibility {
+class PromotionEligibility {
 
 	/**
 	 * Attendance store.

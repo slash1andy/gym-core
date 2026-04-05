@@ -20,7 +20,7 @@ use Gym_Core\Attendance\AttendanceStore;
 /**
  * Calculates and manages attendance streaks.
  */
-final class StreakTracker {
+class StreakTracker {
 
 	/**
 	 * Attendance store.

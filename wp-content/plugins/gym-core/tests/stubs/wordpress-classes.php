@@ -168,6 +168,103 @@ if ( ! class_exists( 'WP_REST_Response' ) ) {
 	}
 }
 
+// -------------------------------------------------------------------------
+// WordPress query classes
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WP_Query' ) ) {
+	/**
+	 * Stub for WP_Query — used by controllers that instantiate queries directly.
+	 *
+	 * Tests set WP_Query::$__test_result before calling the method under test.
+	 * The constructor copies those values into the instance properties.
+	 */
+	class WP_Query { // phpcs:ignore
+		/** @var \WP_Post[] */
+		public array $posts = array();
+		/** @var int */
+		public int $found_posts = 0;
+		/** @var int */
+		public int $max_num_pages = 0;
+
+		/**
+		 * Preset result for the next WP_Query instantiation.
+		 *
+		 * Tests should set this static property with an associative array:
+		 *   [ 'posts' => [...], 'found_posts' => N, 'max_num_pages' => N ]
+		 *
+		 * @var array{posts: array, found_posts: int, max_num_pages: int}|null
+		 */
+		public static ?array $__test_result = null;
+
+		/**
+		 * Constructor — reads from the static test result preset.
+		 *
+		 * @param array<string, mixed> $args Query arguments (ignored in stub).
+		 */
+		public function __construct( array $args = array() ) {
+			if ( null !== self::$__test_result ) {
+				$this->posts         = self::$__test_result['posts'] ?? array();
+				$this->found_posts   = self::$__test_result['found_posts'] ?? 0;
+				$this->max_num_pages = self::$__test_result['max_num_pages'] ?? 0;
+			}
+		}
+
+		/**
+		 * Resets the test preset. Call in tearDown().
+		 *
+		 * @return void
+		 */
+		public static function __test_reset(): void {
+			self::$__test_result = null;
+		}
+	}
+}
+
+// -------------------------------------------------------------------------
+// WordPress post classes
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WP_Post' ) ) {
+	/**
+	 * Stub for WP_Post — represents a post object returned by get_post() and
+	 * WP_Query. Exposes the public properties the controllers read.
+	 */
+	class WP_Post { // phpcs:ignore
+		/** @var int */
+		public int $ID = 0;
+		/** @var string */
+		public string $post_title = '';
+		/** @var string */
+		public string $post_content = '';
+		/** @var string */
+		public string $post_type = 'post';
+		/** @var string */
+		public string $post_status = 'publish';
+		/** @var string */
+		public string $post_name = '';
+		/** @var int */
+		public int $post_author = 0;
+		/** @var string */
+		public string $post_date = '0000-00-00 00:00:00';
+
+		/**
+		 * Constructor — populates public properties from an object or array.
+		 *
+		 * @param object|null $post Source data.
+		 */
+		public function __construct( ?object $post = null ) {
+			if ( null !== $post ) {
+				foreach ( (array) $post as $key => $value ) {
+					if ( property_exists( $this, $key ) ) {
+						$this->$key = $value;
+					}
+				}
+			}
+		}
+	}
+}
+
 // WP_Error is defined in tests/stubs/WP_Error.php (loaded first by bootstrap.php).
 // Do not redefine it here to avoid fragile load-order dependencies.
 

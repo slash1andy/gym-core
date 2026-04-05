@@ -18,7 +18,7 @@ namespace Gym_Core\SMS;
 /**
  * Sends and validates SMS via the Twilio API.
  */
-final class TwilioClient {
+class TwilioClient {
 
 	/**
 	 * Twilio API base URL.

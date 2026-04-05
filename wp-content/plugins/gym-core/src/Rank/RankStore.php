@@ -19,7 +19,7 @@ use Gym_Core\Data\TableManager;
 /**
  * Data access layer for belt rank records.
  */
-final class RankStore {
+class RankStore {
 
 	/**
 	 * Returns the current rank for a user in a given program.

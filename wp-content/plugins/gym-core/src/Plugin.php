@@ -299,6 +299,10 @@ final class Plugin {
 					$this->badge_engine
 				);
 				$member_controller->register_hooks();
+
+				// Social post manager (AI-suggested social posts via Gandalf).
+				$social_post_manager = new Social\SocialPostManager();
+				$social_post_manager->register_hooks();
 			}
 		);
 	}

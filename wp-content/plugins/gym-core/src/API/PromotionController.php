@@ -48,7 +48,7 @@ class PromotionController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::READABLE,
 				'callback'            => array( $this, 'get_eligible' ),
-				'permission_callback' => array( $this, 'permissions_manage' ),
+				'permission_callback' => array( $this, 'permissions_coach' ),
 				'args'                => array_merge(
 					$this->pagination_route_args(),
 					array(

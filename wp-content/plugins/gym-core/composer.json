@@ -9,6 +9,7 @@
 	"require-dev": {
 		"brain/monkey": "^2.6",
 		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"dg/bypass-finals": "^1.9",
 		"mockery/mockery": "^1.6",
 		"php-stubs/woocommerce-stubs": "^10.6",
 		"php-stubs/wp-cli-stubs": "^2.12",
