@@ -173,9 +173,113 @@ Tags: block-theme, full-site-editing, one-column, custom-colors, custom-menu, ed
   .btn-pill .wp-block-button__link,
   .btn-accent .wp-block-button__link,
   .value-card,
-  .header-nav a::after {
+  .header-nav a::after,
+  .site-header .wc-block-customer-account__account-icon,
+  .site-header .wc-block-mini-cart__button,
+  footer a {
     animation: none !important;
     transition: none !important;
+  }
+}
+
+/* ---------- Header WooCommerce icons ---------- */
+.site-header .wc-block-customer-account__account-icon,
+.site-header .wc-block-mini-cart__button {
+  color: #fff;
+  fill: #fff;
+  transition: color 0.2s ease, fill 0.2s ease;
+}
+.site-header .wc-block-customer-account__account-icon:hover,
+.site-header .wc-block-mini-cart__button:hover {
+  color: var(--wp--preset--color--royal-blue);
+  fill: var(--wp--preset--color--royal-blue);
+}
+.site-header .wc-block-customer-account__account-icon svg,
+.site-header .wc-block-mini-cart__button svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+/* Force white on all SVG paths inside header WC blocks */
+.site-header .wc-block-mini-cart__button .wc-block-mini-cart__icon,
+.site-header .wc-block-customer-account__account-icon svg {
+  color: inherit;
+  fill: inherit;
+}
+/* Mini-cart item count badge */
+.site-header .wc-block-mini-cart__badge {
+  background-color: var(--wp--preset--color--royal-blue);
+  color: #fff;
+  font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 0.625rem;
+  font-weight: 700;
+  line-height: 1;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+/* Touch target sizing for header icons */
+.site-header .wc-block-customer-account__account-icon,
+.site-header .wc-block-mini-cart__button {
+  min-width: 44px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+/* Header actions group alignment */
+.header-actions {
+  align-items: center;
+}
+
+/* ---------- Footer link hover ---------- */
+footer a,
+.wp-block-template-part:last-child a {
+  transition: color 0.2s ease;
+}
+footer a:hover,
+.wp-block-template-part:last-child a:hover {
+  color: #fff !important;
+}
+
+/* ---------- Responsive tables ---------- */
+@media (max-width: 768px) {
+  figure.wp-block-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  figure.wp-block-table table {
+    min-width: 600px;
+  }
+}
+
+/* ---------- Mobile header ---------- */
+@media (max-width: 960px) {
+  .site-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  .site-header .header-nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: center;
+  }
+  .site-header .header-nav .wp-block-navigation {
+    gap: 1.5rem;
+    font-size: 0.75rem;
+  }
+  .site-header .wp-block-site-logo img {
+    max-width: 140px;
   }
 }
 
