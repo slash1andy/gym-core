@@ -318,18 +318,18 @@ final class KioskEndpoint {
 			<p><?php esc_html_e( 'Complete Payment', 'gym-core' ); ?></p>
 		</div>
 
-		<div class="kiosk-pay-summary">
-			<h2><?php esc_html_e( 'Order Summary', 'gym-core' ); ?></h2>
-			<?php foreach ( $order->get_items() as $item ) : ?>
-				<p><?php echo esc_html( $item->get_name() ); ?></p>
-			<?php endforeach; ?>
-			<p class="total"><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></p>
-		</div>
-
 		<div class="kiosk-pay-form">
 			<?php
-			// Render the classic WooCommerce pay form.
-			\WC_Shortcode_Checkout::output( array() );
+			// Render the classic WooCommerce order-pay form directly.
+			$available_gateways = WC()->payment_gateways->get_available_payment_gateways();
+			wc_get_template(
+				'checkout/form-pay.php',
+				array(
+					'order'              => $order,
+					'available_gateways' => $available_gateways,
+					'order_button_text'  => __( 'Pay Now', 'gym-core' ),
+				)
+			);
 			?>
 		</div>
 
