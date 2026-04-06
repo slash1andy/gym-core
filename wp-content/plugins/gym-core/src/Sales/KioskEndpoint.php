@@ -41,6 +41,7 @@ final class KioskEndpoint {
 		add_filter( 'body_class', array( $this, 'add_checkout_body_class' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_checkout_styles' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'redirect_kiosk_thankyou' ) );
+		add_filter( 'user_has_cap', array( $this, 'allow_staff_pay_for_kiosk_orders' ), 10, 3 );
 	}
 
 	/**
@@ -222,6 +223,44 @@ final class KioskEndpoint {
 
 		wp_safe_redirect( $redirect_url );
 		exit;
+	}
+
+	/**
+	 * Allows staff with gym_process_sale capability to pay for kiosk orders.
+	 *
+	 * WooCommerce's order-pay page checks current_user_can('pay_for_order', $order_id),
+	 * which normally requires the logged-in user to be the order owner. Since kiosk
+	 * orders are created for the customer but paid by staff, we grant this capability
+	 * to users with gym_process_sale when the order originated from the kiosk.
+	 *
+	 * @param array<string, bool> $allcaps All capabilities of the user.
+	 * @param array<int, string>  $caps    Required capabilities.
+	 * @param array<int, mixed>   $args    Arguments: [0] = requested cap, [1] = user ID, [2] = order ID.
+	 * @return array<string, bool>
+	 */
+	public function allow_staff_pay_for_kiosk_orders( array $allcaps, array $caps, array $args ): array {
+		if ( ! isset( $args[0] ) || 'pay_for_order' !== $args[0] ) {
+			return $allcaps;
+		}
+
+		if ( empty( $allcaps['gym_process_sale'] ) && empty( $allcaps['manage_woocommerce'] ) ) {
+			return $allcaps;
+		}
+
+		if ( ! isset( $args[2] ) ) {
+			return $allcaps;
+		}
+
+		$order = wc_get_order( $args[2] );
+		if ( ! $order ) {
+			return $allcaps;
+		}
+
+		if ( '1' === $order->get_meta( OrderBuilder::META_KIOSK_ORIGIN ) ) {
+			$allcaps['pay_for_order'] = true;
+		}
+
+		return $allcaps;
 	}
 
 	/**
