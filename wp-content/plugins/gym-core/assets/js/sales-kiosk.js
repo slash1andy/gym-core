@@ -384,6 +384,23 @@
 		} );
 	}
 
+	function buildFallbackPricing() {
+		var product = state.selectedProduct;
+		var downValue = downSlider ? parseInt( downSlider.value, 10 ) || 0 : 0;
+		var subPrice = product ? parseFloat( product.subscription_price ) || 0 : 0;
+		var billingLabel = product && product.billing_period === 'week' && product.billing_interval === 2
+			? ( config.strings.biweekly || 'Every 2 Weeks' )
+			: ( config.strings.monthly || 'Monthly' );
+
+		return {
+			down_payment:      downValue,
+			recurring_payment: subPrice,
+			effective_total:   subPrice + downValue,
+			discount:          0,
+			billing_label:     billingLabel,
+		};
+	}
+
 	// -----------------------------------------------------------------------
 	// Screen 3: Customer Info
 	// -----------------------------------------------------------------------
@@ -501,7 +518,8 @@
 
 	function populateReview() {
 		var product = state.selectedProduct;
-		var pricing = state.pricing;
+		var pricing = state.pricing || buildFallbackPricing();
+		state.pricing = pricing;
 		var customer = getFormData();
 		state.customer = customer;
 
