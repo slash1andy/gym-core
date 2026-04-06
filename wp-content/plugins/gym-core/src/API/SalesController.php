@@ -526,9 +526,13 @@ class SalesController extends BaseController {
 
 		// Fall back to subscription price when kiosk pricing is not explicitly configured.
 		if ( $base_total <= 0 && $subscription_price > 0 ) {
-			$base_total   = $subscription_price;
+			$period    = '' !== $billing_period ? $billing_period : 'month';
+			$interval  = $billing_interval > 0 ? $billing_interval : 1;
+			$per_year  = 'week' === $period ? (int) floor( 52 / $interval )
+				: ( 'month' === $period ? (int) floor( 12 / $interval ) : 1 );
+			$base_total   = round( $subscription_price * $per_year, 2 );
 			$min_down     = 0.0;
-			$max_down     = $subscription_price * 3;
+			$max_down     = $base_total;
 			$max_discount = 0.0;
 		}
 

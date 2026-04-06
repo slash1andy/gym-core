@@ -145,22 +145,7 @@ final class PricingCalculator {
 		$max_down     = (float) $product->get_meta( ProductMetaBox::META_MAX_DOWN, true );
 		$max_discount = (float) $product->get_meta( ProductMetaBox::META_MAX_DISCOUNT, true );
 
-		if ( $base_total <= 0.0 ) {
-			$sub_price = (float) $product->get_meta( '_subscription_price', true );
-			if ( $sub_price > 0.0 ) {
-				$base_total = $sub_price;
-				$min_down   = 0.0;
-				$max_down   = round( $sub_price * 3, 2 );
-				$max_discount = 0.0;
-			} else {
-				return $this->error_result(
-					$down_payment,
-					__( 'Product does not have pricing configured.', 'gym-core' )
-				);
-			}
-		}
-
-		// Read subscription billing settings.
+		// Read subscription billing settings early — needed for base_total fallback.
 		$billing_period   = (string) $product->get_meta( '_subscription_period', true );
 		$billing_interval = (int) $product->get_meta( '_subscription_period_interval', true );
 
@@ -169,6 +154,23 @@ final class PricingCalculator {
 		}
 		if ( 0 === $billing_interval ) {
 			$billing_interval = 1;
+		}
+
+		if ( $base_total <= 0.0 ) {
+			$sub_price = (float) $product->get_meta( '_subscription_price', true );
+			if ( $sub_price > 0.0 ) {
+				// Calculate annual contract value as base_total.
+				$installments = $this->get_installments( $billing_period, $billing_interval );
+				$base_total   = round( $sub_price * $installments, 2 );
+				$min_down     = 0.0;
+				$max_down     = $base_total;
+				$max_discount = 0.0;
+			} else {
+				return $this->error_result(
+					$down_payment,
+					__( 'Product does not have pricing configured.', 'gym-core' )
+				);
+			}
 		}
 
 		return $this->calculate(
