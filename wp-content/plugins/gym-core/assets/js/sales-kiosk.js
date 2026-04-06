@@ -193,17 +193,28 @@
 		}
 
 		// Group by first category.
+		var preferredOrder = [ 'Adult BJJ', 'Adult Kickboxing', 'Kids BJJ', 'Trials' ];
+		var hiddenGroups = [ 'Other' ];
 		var groups = {};
-		var groupOrder = [];
 		products.forEach( function ( product ) {
 			var category = product.categories && product.categories.length > 0
 				? product.categories[0]
 				: 'Other';
+			if ( hiddenGroups.indexOf( category ) !== -1 ) {
+				return;
+			}
 			if ( ! groups[ category ] ) {
 				groups[ category ] = [];
-				groupOrder.push( category );
 			}
 			groups[ category ].push( product );
+		} );
+
+		// Sort groups: preferred order first, then any remaining alphabetically.
+		var groupOrder = preferredOrder.filter( function ( c ) { return groups[ c ]; } );
+		Object.keys( groups ).forEach( function ( c ) {
+			if ( groupOrder.indexOf( c ) === -1 ) {
+				groupOrder.push( c );
+			}
 		} );
 
 		var chevronSvg = '<span class="sales-accordion-chevron">' +
