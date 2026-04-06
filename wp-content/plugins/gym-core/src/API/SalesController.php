@@ -585,7 +585,9 @@ class SalesController extends BaseController {
 				'description'       => __( 'Down payment amount.', 'gym-core' ),
 				'type'              => 'number',
 				'required'          => true,
-				'sanitize_callback' => 'floatval',
+				'sanitize_callback' => static function ( $value ) {
+					return (float) $value;
+				},
 			),
 			'email'        => array(
 				'description'       => __( 'Customer email address.', 'gym-core' ),

@@ -146,10 +146,18 @@ final class PricingCalculator {
 		$max_discount = (float) $product->get_meta( ProductMetaBox::META_MAX_DISCOUNT, true );
 
 		if ( $base_total <= 0.0 ) {
-			return $this->error_result(
-				$down_payment,
-				__( 'Product does not have sales kiosk pricing configured.', 'gym-core' )
-			);
+			$sub_price = (float) $product->get_meta( '_subscription_price', true );
+			if ( $sub_price > 0.0 ) {
+				$base_total = $sub_price;
+				$min_down   = 0.0;
+				$max_down   = round( $sub_price * 3, 2 );
+				$max_discount = 0.0;
+			} else {
+				return $this->error_result(
+					$down_payment,
+					__( 'Product does not have pricing configured.', 'gym-core' )
+				);
+			}
 		}
 
 		// Read subscription billing settings.
