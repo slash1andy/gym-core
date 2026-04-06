@@ -42,7 +42,7 @@ final class KioskEndpoint {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_checkout_styles' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'redirect_kiosk_thankyou' ) );
 		add_filter( 'user_has_cap', array( $this, 'allow_staff_pay_for_kiosk_orders' ), 99, 3 );
-		add_action( 'wp', array( $this, 'force_classic_pay_for_kiosk' ) );
+		add_action( 'template_redirect', array( $this, 'render_kiosk_pay_page' ), 1 );
 	}
 
 	/**
@@ -241,38 +241,107 @@ final class KioskEndpoint {
 	}
 
 	/**
-	 * Forces classic shortcode checkout on kiosk order-pay pages.
+	 * Renders a standalone pay page for kiosk orders.
 	 *
-	 * The Block Checkout's Store API enforces its own order ownership checks
-	 * that cannot be overridden via user_has_cap. By replacing the checkout
-	 * block with the classic shortcode on kiosk order-pay pages, we use the
-	 * classic form handler which respects our pay_for_order capability grant.
+	 * Intercepts the checkout order-pay page before WooCommerce Blocks can
+	 * redirect, and renders the classic payment form in a minimal kiosk-styled
+	 * template. This bypasses Block Checkout's Store API ownership checks.
 	 *
 	 * @return void
 	 */
-	public function force_classic_pay_for_kiosk(): void {
+	public function render_kiosk_pay_page(): void {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( empty( $_GET['gym_sales_kiosk'] ) || empty( $_GET['pay_for_order'] ) ) {
 			return;
 		}
 
-		// Replace the checkout block with the classic shortcode for this request.
-		$checkout_page_id = wc_get_page_id( 'checkout' );
-		if ( $checkout_page_id <= 0 ) {
+		if ( ! is_user_logged_in() ) {
 			return;
 		}
 
-		add_filter(
-			'the_content',
-			static function ( string $content ) use ( $checkout_page_id ): string {
-				if ( ! is_page( $checkout_page_id ) ) {
-					return $content;
-				}
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		$order_key = isset( $_GET['key'] ) ? sanitize_text_field( wp_unslash( $_GET['key'] ) ) : '';
 
-				return '[woocommerce_checkout]';
-			},
-			1
-		);
+		global $wp;
+		$order_id = isset( $wp->query_vars['order-pay'] ) ? absint( $wp->query_vars['order-pay'] ) : 0;
+		if ( ! $order_id ) {
+			return;
+		}
+
+		$order = wc_get_order( $order_id );
+		if ( ! $order || $order->get_order_key() !== $order_key ) {
+			return;
+		}
+
+		if ( '1' !== $order->get_meta( OrderBuilder::META_KIOSK_ORIGIN ) ) {
+			return;
+		}
+
+		if ( ! current_user_can( 'pay_for_order', $order_id ) ) {
+			return;
+		}
+
+		// Enqueue WooCommerce scripts needed for the pay form.
+		wp_enqueue_script( 'wc-checkout' );
+
+		// Render standalone pay page.
+		?>
+<!DOCTYPE html>
+<html <?php language_attributes(); ?>>
+<head>
+	<meta charset="<?php bloginfo( 'charset' ); ?>">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title><?php echo esc_html( sprintf( __( 'Payment — %s', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ); ?></title>
+	<?php wp_head(); ?>
+	<style>
+		body { margin: 0; padding: 0; background: #F5F5F7; font-family: "Inter", "Helvetica Neue", Arial, sans-serif; }
+		body #wpadminbar { display: none !important; }
+		html { margin-top: 0 !important; }
+		.kiosk-pay-wrapper { max-width: 600px; margin: 0 auto; padding: 32px 24px; }
+		.kiosk-pay-header { background: #1A1A1A; text-align: center; padding: 28px 24px; border-radius: 0 0 16px 16px; margin: 0 -24px 32px; }
+		.kiosk-pay-header h1 { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; color: #fff; font-size: 1.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; margin: 0 0 4px; }
+		.kiosk-pay-header p { color: #75787B; font-size: 0.875rem; margin: 0; }
+		.kiosk-pay-summary { background: #fff; border: 1px solid #E5E5E7; border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+		.kiosk-pay-summary h2 { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 0.75rem; color: #0032A0; text-transform: uppercase; letter-spacing: 0.12em; margin: 0 0 12px; }
+		.kiosk-pay-summary .total { font-size: 1.5rem; font-weight: 700; }
+		.kiosk-pay-form { background: #fff; border: 1px solid #E5E5E7; border-radius: 8px; padding: 24px; }
+		.kiosk-pay-form .button, .kiosk-pay-form #place_order { background: #0032A0 !important; color: #fff !important; border: none !important; border-radius: 4px !important; padding: 16px 32px !important; font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; cursor: pointer; width: 100%; min-height: 44px; }
+		.kiosk-pay-form .button:hover, .kiosk-pay-form #place_order:hover { background: #0041CC !important; }
+		.kiosk-pay-back { display: block; text-align: center; margin-top: 16px; color: #75787B; text-decoration: none; font-size: 0.875rem; }
+		.kiosk-pay-back:hover { color: #0032A0; }
+	</style>
+</head>
+<body class="gym-sales-kiosk-pay">
+	<div class="kiosk-pay-wrapper">
+		<div class="kiosk-pay-header">
+			<h1><?php echo esc_html( \Gym_Core\Utilities\Brand::name() ); ?></h1>
+			<p><?php esc_html_e( 'Complete Payment', 'gym-core' ); ?></p>
+		</div>
+
+		<div class="kiosk-pay-summary">
+			<h2><?php esc_html_e( 'Order Summary', 'gym-core' ); ?></h2>
+			<?php foreach ( $order->get_items() as $item ) : ?>
+				<p><?php echo esc_html( $item->get_name() ); ?></p>
+			<?php endforeach; ?>
+			<p class="total"><?php echo wp_kses_post( $order->get_formatted_order_total() ); ?></p>
+		</div>
+
+		<div class="kiosk-pay-form">
+			<?php
+			// Render the classic WooCommerce pay form.
+			\WC_Shortcode_Checkout::output( array() );
+			?>
+		</div>
+
+		<a href="<?php echo esc_url( home_url( '/' . self::SLUG . '/' ) ); ?>" class="kiosk-pay-back">
+			<?php esc_html_e( 'Cancel and return to sales', 'gym-core' ); ?>
+		</a>
+	</div>
+	<?php wp_footer(); ?>
+</body>
+</html>
+		<?php
+		exit;
 	}
 
 	/**
