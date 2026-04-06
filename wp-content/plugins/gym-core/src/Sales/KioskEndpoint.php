@@ -194,6 +194,20 @@ final class KioskEndpoint {
 				array(),
 				GYM_CORE_VERSION
 			);
+
+			// Dequeue block checkout scripts at wp_footer (they enqueue late).
+			add_action(
+				'wp_print_footer_scripts',
+				static function (): void {
+					wp_dequeue_script( 'wc-checkout-block-frontend' );
+					wp_dequeue_script( 'wc-checkout-block' );
+					wp_dequeue_script( 'wc-blocks-checkout' );
+					wp_dequeue_script( 'wc-cart-block-frontend' );
+					wp_dequeue_script( 'wc-cart-block' );
+					wp_dequeue_script( 'wc-blocks-cart' );
+				},
+				1
+			);
 		}
 	}
 
