@@ -41,7 +41,7 @@ final class KioskEndpoint {
 		add_filter( 'body_class', array( $this, 'add_checkout_body_class' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_checkout_styles' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'redirect_kiosk_thankyou' ) );
-		add_filter( 'user_has_cap', array( $this, 'allow_staff_pay_for_kiosk_orders' ), 10, 3 );
+		add_filter( 'user_has_cap', array( $this, 'allow_staff_pay_for_kiosk_orders' ), 99, 3 );
 	}
 
 	/**
