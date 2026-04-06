@@ -1,0 +1,48 @@
+/**
+ * Sales Kiosk Checkout Styles
+ *
+ * Applied when the WooCommerce pay page is accessed from the sales kiosk.
+ * Hides theme chrome for a clean, focused payment experience on tablets.
+ *
+ * Only active when <body> has the 'sales-kiosk-checkout' class.
+ *
+ * @package Gym_Core
+ * @since   4.0.0
+ */
+
+/* Hide theme chrome */
+.sales-kiosk-checkout .site-header,
+.sales-kiosk-checkout .wp-block-template-part:first-child,
+.sales-kiosk-checkout header,
+.sales-kiosk-checkout .site-footer,
+.sales-kiosk-checkout .wp-block-template-part:last-child,
+.sales-kiosk-checkout footer,
+.sales-kiosk-checkout .sidebar,
+.sales-kiosk-checkout .wp-block-navigation,
+.sales-kiosk-checkout #wpadminbar {
+	display: none !important;
+}
+
+.sales-kiosk-checkout html {
+	margin-top: 0 !important;
+}
+
+/* Center and clean up the payment form */
+.sales-kiosk-checkout body,
+.sales-kiosk-checkout {
+	background: #faf8f4;
+}
+
+.sales-kiosk-checkout .woocommerce {
+	max-width: 600px;
+	margin: 40px auto;
+	padding: 24px;
+}
+
+/* Make payment buttons touch-friendly */
+.sales-kiosk-checkout .woocommerce #payment #place_order,
+.sales-kiosk-checkout .woocommerce button.button {
+	padding: 18px 40px;
+	font-size: 1.125rem;
+	min-height: 56px;
+}
