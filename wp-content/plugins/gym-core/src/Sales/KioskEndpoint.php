@@ -42,6 +42,7 @@ final class KioskEndpoint {
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_checkout_styles' ) );
 		add_action( 'woocommerce_thankyou', array( $this, 'redirect_kiosk_thankyou' ) );
 		add_filter( 'user_has_cap', array( $this, 'allow_staff_pay_for_kiosk_orders' ), 99, 3 );
+		add_action( 'wp', array( $this, 'force_classic_pay_for_kiosk' ) );
 	}
 
 	/**
@@ -223,6 +224,41 @@ final class KioskEndpoint {
 
 		wp_safe_redirect( $redirect_url );
 		exit;
+	}
+
+	/**
+	 * Forces classic shortcode checkout on kiosk order-pay pages.
+	 *
+	 * The Block Checkout's Store API enforces its own order ownership checks
+	 * that cannot be overridden via user_has_cap. By replacing the checkout
+	 * block with the classic shortcode on kiosk order-pay pages, we use the
+	 * classic form handler which respects our pay_for_order capability grant.
+	 *
+	 * @return void
+	 */
+	public function force_classic_pay_for_kiosk(): void {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
+		if ( empty( $_GET['gym_sales_kiosk'] ) || empty( $_GET['pay_for_order'] ) ) {
+			return;
+		}
+
+		// Replace the checkout block with the classic shortcode for this request.
+		$checkout_page_id = wc_get_page_id( 'checkout' );
+		if ( $checkout_page_id <= 0 ) {
+			return;
+		}
+
+		add_filter(
+			'the_content',
+			static function ( string $content ) use ( $checkout_page_id ): string {
+				if ( ! is_page( $checkout_page_id ) ) {
+					return $content;
+				}
+
+				return '[woocommerce_checkout]';
+			},
+			1
+		);
 	}
 
 	/**

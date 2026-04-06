@@ -244,11 +244,20 @@ final class PricingCalculator {
 	 * @return int
 	 */
 	private function get_installments( string $period, int $interval ): int {
+		if ( 'year' === $period ) {
+			return max( 1, (int) floor( 1 / $interval ) );
+		}
+
 		if ( 'week' === $period && 2 === $interval ) {
 			return self::BIWEEKLY_INSTALLMENTS;
 		}
 
-		return self::MONTHLY_INSTALLMENTS;
+		if ( 'week' === $period ) {
+			return (int) floor( 52 / $interval );
+		}
+
+		// Monthly (default).
+		return (int) floor( self::MONTHLY_INSTALLMENTS / $interval );
 	}
 
 	/**
@@ -259,6 +268,10 @@ final class PricingCalculator {
 	 * @return string
 	 */
 	private function get_billing_label( string $period, int $interval ): string {
+		if ( 'year' === $period ) {
+			return __( 'per year', 'gym-core' );
+		}
+
 		if ( 'week' === $period && 2 === $interval ) {
 			return __( 'every 2 weeks', 'gym-core' );
 		}
