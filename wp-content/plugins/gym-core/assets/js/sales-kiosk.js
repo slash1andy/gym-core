@@ -194,19 +194,32 @@
 
 		// Group by first category.
 		var groups = {};
+		var groupOrder = [];
 		products.forEach( function ( product ) {
 			var category = product.categories && product.categories.length > 0
 				? product.categories[0]
 				: 'Other';
 			if ( ! groups[ category ] ) {
 				groups[ category ] = [];
+				groupOrder.push( category );
 			}
 			groups[ category ].push( product );
 		} );
 
+		var chevronSvg = '<span class="sales-accordion-chevron">' +
+			'<svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+			'</span>';
+
 		var html = '';
-		Object.keys( groups ).forEach( function ( category ) {
-			html += '<h3 class="sales-category-header">' + escapeHtml( category ) + '</h3>';
+		groupOrder.forEach( function ( category, index ) {
+			var isFirst = index === 0;
+			html += '<div class="sales-accordion-group' + ( isFirst ? ' open' : '' ) + '">';
+			html += '<button type="button" class="sales-accordion-header" ' +
+				'aria-expanded="' + ( isFirst ? 'true' : 'false' ) + '">' +
+				escapeHtml( category ) + chevronSvg + '</button>';
+			html += '<div class="sales-accordion-body">';
+			html += '<div class="sales-accordion-products">';
+
 			groups[ category ].forEach( function ( product ) {
 				var pricing = product.pricing || {};
 				var priceHtml;
@@ -228,9 +241,22 @@
 					'<div class="sales-product-card__pricing">' + priceHtml + '</div>' +
 					'</button>';
 			} );
+
+			html += '</div></div></div>';
 		} );
 
 		productGrid.innerHTML = html;
+
+		// Bind accordion toggle.
+		productGrid.querySelectorAll( '.sales-accordion-header' ).forEach( function ( header ) {
+			header.addEventListener( 'click', function ( e ) {
+				e.stopPropagation();
+				var group = header.closest( '.sales-accordion-group' );
+				var isOpen = group.classList.contains( 'open' );
+				group.classList.toggle( 'open', ! isOpen );
+				header.setAttribute( 'aria-expanded', ! isOpen ? 'true' : 'false' );
+			} );
+		} );
 	}
 
 	function handleProductSelect( event ) {
@@ -244,12 +270,29 @@
 			return p.id === productId;
 		} );
 
-		if ( ! state.selectedProduct || ! state.selectedProduct.pricing.configured ) {
+		if ( ! state.selectedProduct ) {
+			return;
+		}
+
+		var pricing = state.selectedProduct.pricing;
+
+		// If pricing is not configured, skip slider and go to customer info.
+		if ( ! pricing.configured ) {
+			state.pricing = {
+				down_payment:     0,
+				recurring_payment: state.selectedProduct.subscription_price,
+				effective_total:  state.selectedProduct.subscription_price,
+				discount:         0,
+				billing_label:    state.selectedProduct.billing_period === 'week' &&
+					state.selectedProduct.billing_interval === 2
+					? ( config.strings.biweekly || 'Every 2 Weeks' )
+					: ( config.strings.monthly || 'Monthly' ),
+			};
+			showScreen( 'customer' );
 			return;
 		}
 
 		// Set up pricing screen.
-		var pricing = state.selectedProduct.pricing;
 		productNameEl.textContent = state.selectedProduct.name;
 		downSlider.min = Math.floor( pricing.min_down );
 		downSlider.max = Math.floor( pricing.max_down );
@@ -628,7 +671,12 @@
 
 		// Customer navigation.
 		document.getElementById( 'customer-back' ).addEventListener( 'click', function () {
-			showScreen( 'pricing' );
+			// If pricing was not configured (skipped slider), go back to products.
+			if ( state.selectedProduct && ! state.selectedProduct.pricing.configured ) {
+				showScreen( 'products' );
+			} else {
+				showScreen( 'pricing' );
+			}
 		} );
 		document.getElementById( 'customer-save-lead' ).addEventListener( 'click', saveLead );
 		document.getElementById( 'customer-continue' ).addEventListener( 'click', function () {

@@ -524,6 +524,16 @@ class SalesController extends BaseController {
 		$max_down     = (float) $product->get_meta( ProductMetaBox::META_MAX_DOWN, true );
 		$max_discount = (float) $product->get_meta( ProductMetaBox::META_MAX_DISCOUNT, true );
 
+		// Fall back to subscription price when kiosk pricing is not explicitly configured.
+		if ( $base_total <= 0 && $subscription_price > 0 ) {
+			$base_total   = $subscription_price;
+			$min_down     = 0.0;
+			$max_down     = $subscription_price * 3;
+			$max_discount = 0.0;
+		}
+
+		$configured = $base_total > 0.0;
+
 		// Get location terms.
 		$location_terms = wp_get_object_terms( $id, Taxonomy::SLUG, array( 'fields' => 'slugs' ) );
 		$locations      = is_wp_error( $location_terms ) ? array() : $location_terms;
@@ -549,7 +559,7 @@ class SalesController extends BaseController {
 				'min_down'     => $min_down,
 				'max_down'     => $max_down,
 				'max_discount' => $max_discount,
-				'configured'   => $base_total > 0.0,
+				'configured'   => $configured,
 			),
 		);
 	}
