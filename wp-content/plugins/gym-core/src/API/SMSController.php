@@ -12,6 +12,7 @@ namespace Gym_Core\API;
 
 use Gym_Core\SMS\TwilioClient;
 use Gym_Core\SMS\MessageTemplates;
+use Gym_Core\Integrations\CrmSmsBridge;
 
 /**
  * Handles REST endpoints for SMS sending and conversation history.
@@ -88,6 +89,28 @@ class SMSController extends BaseController {
 						'validate_callback' => 'rest_validate_request_arg',
 						'description'       => __( 'CRM contact ID for rate limiting and conversation tracking.', 'gym-core' ),
 					),
+				),
+			)
+		);
+
+		register_rest_route(
+			$this->namespace,
+			'/sms/conversations/(?P<contact_id>[\d]+)',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_conversation_history' ),
+				'permission_callback' => array( $this, 'permissions_send_sms' ),
+				'args'                => array_merge(
+					$this->pagination_route_args(),
+					array(
+						'contact_id' => array(
+							'type'              => 'integer',
+							'required'          => true,
+							'sanitize_callback' => 'absint',
+							'validate_callback' => 'rest_validate_request_arg',
+							'description'       => __( 'Jetpack CRM contact ID.', 'gym-core' ),
+						),
+					)
 				),
 			)
 		);
@@ -185,6 +208,59 @@ class SMSController extends BaseController {
 			null,
 			201
 		);
+	}
+
+	/**
+	 * Returns SMS conversation history for a CRM contact.
+	 *
+	 * Queries Jetpack CRM activity logs for sms_sent and sms_received entries.
+	 *
+	 * @since 2.3.0
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function get_conversation_history( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		if ( ! CrmSmsBridge::is_crm_active() ) {
+			return $this->error_response( 'crm_unavailable', __( 'Jetpack CRM is not active.', 'gym-core' ), 503 );
+		}
+
+		$contact_id = (int) $request->get_param( 'contact_id' );
+		$page       = (int) $request->get_param( 'page' );
+		$per_page   = (int) $request->get_param( 'per_page' );
+		$offset     = ( $page - 1 ) * $per_page;
+
+		global $wpdb;
+		$table = $wpdb->prefix . 'zbs_logs';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$results = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT zbsl_type AS type, zbsl_shortdesc AS title, zbsl_longdesc AS body, zbsl_created AS created_at
+				FROM {$table}
+				WHERE zbsl_objid = %d
+				AND zbsl_objtype = 1
+				AND zbsl_type IN ('sms_sent', 'sms_received')
+				ORDER BY zbsl_created DESC
+				LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$contact_id,
+				$per_page,
+				$offset
+			),
+			ARRAY_A
+		) ?: array();
+
+		$messages = array();
+		foreach ( $results as $row ) {
+			$messages[] = array(
+				'direction'  => 'sms_sent' === $row['type'] ? 'outbound' : 'inbound',
+				'title'      => $row['title'],
+				'body'       => $row['body'],
+				'created_at' => $row['created_at'],
+			);
+		}
+
+		return $this->success_response( $messages );
 	}
 
 	/**

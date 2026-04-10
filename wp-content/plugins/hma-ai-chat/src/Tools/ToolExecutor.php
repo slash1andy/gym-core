@@ -113,11 +113,13 @@ class ToolExecutor {
 		}
 
 		// 4. Route to read or write handler.
+		$defaults = $tool['defaults'] ?? array();
+
 		if ( ! empty( $tool['write'] ) ) {
 			return $this->create_pending_action( $tool_name, $parameters, $user_id, $persona );
 		}
 
-		return $this->execute_read( $tool['endpoint'], $tool['method'], $parameters, $user_id );
+		return $this->execute_read( $tool['endpoint'], $tool['method'], $parameters, $user_id, $defaults );
 	}
 
 	/**
@@ -130,9 +132,15 @@ class ToolExecutor {
 	 * @param string $method   HTTP method (GET or POST).
 	 * @param array  $params   Parameters from the AI tool call.
 	 * @param int    $user_id  WordPress user ID for auth context.
+	 * @param array  $defaults Tool-level default parameters (merged before dispatch).
 	 * @return array{success: bool, data: mixed, error?: string}
 	 */
-	public function execute_read( string $endpoint, string $method, array $params, int $user_id ): array {
+	public function execute_read( string $endpoint, string $method, array $params, int $user_id, array $defaults = array() ): array {
+		// Merge tool-level defaults (e.g. prospects_only for sales CRM tools).
+		if ( ! empty( $defaults ) ) {
+			$params = array_merge( $defaults, $params );
+		}
+
 		// Resolve route namespace.
 		$route = $this->resolve_route( $endpoint, $params );
 

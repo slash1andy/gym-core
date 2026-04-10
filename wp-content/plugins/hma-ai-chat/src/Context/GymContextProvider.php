@@ -59,12 +59,15 @@ class GymContextProvider {
 				$sections[] = $this->get_trial_context();
 				$sections[] = $this->get_schedule_context();
 				$sections[] = $this->get_announcements_context();
+				$sections[] = $this->get_pipeline_summary();
+				$sections[] = $this->get_recent_leads();
 				break;
 
 			case 'coaching':
 				$sections[] = $this->get_schedule_context();
 				$sections[] = $this->get_foundations_summary();
 				$sections[] = $this->get_promotion_candidates();
+				$sections[] = $this->get_todays_rosters();
 				if ( $user_id > 0 ) {
 					$sections[] = $this->get_member_context( $user_id );
 				}
@@ -75,6 +78,8 @@ class GymContextProvider {
 				$sections[] = $this->get_mrr_context();
 				$sections[] = $this->get_failed_payments_context();
 				$sections[] = $this->get_new_signups_context();
+				$sections[] = $this->get_churn_summary();
+				$sections[] = $this->get_pipeline_summary();
 				break;
 
 			case 'admin':
@@ -82,6 +87,8 @@ class GymContextProvider {
 				$sections[] = $this->get_announcements_context();
 				$sections[] = $this->get_pending_social_context();
 				$sections[] = $this->get_schedule_context();
+				$sections[] = $this->get_pipeline_summary();
+				$sections[] = $this->get_churn_summary();
 				break;
 
 			default:
@@ -673,6 +680,215 @@ class GymContextProvider {
 		}
 
 		return implode( "\n", $lines );
+	}
+
+	// -------------------------------------------------------------------------
+	// CRM context helpers (new)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Get CRM pipeline summary — contact counts per stage.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @return string
+	 */
+	private function get_pipeline_summary(): string {
+		$cache_key = 'pipeline_summary';
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$data = $this->rest_get( '/gym/v1/crm/pipeline' );
+
+		if ( ! is_array( $data ) || empty( $data ) ) {
+			return '';
+		}
+
+		$lines   = array();
+		$lines[] = '## CRM Pipeline';
+
+		$total = 0;
+		foreach ( $data as $stage ) {
+			$name  = $stage['stage'] ?? 'Unknown';
+			$count = (int) ( $stage['count'] ?? 0 );
+			$total += $count;
+			$lines[] = sprintf( '- %s: %d', esc_html( $name ), $count );
+		}
+
+		$lines[] = sprintf( 'Total contacts: %d', $total );
+
+		$result = implode( "\n", $lines );
+
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return $result;
+	}
+
+	/**
+	 * Get the 5 most recent leads from CRM.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @return string
+	 */
+	private function get_recent_leads(): string {
+		$cache_key = 'recent_leads';
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$data = $this->rest_get( '/gym/v1/crm/contacts', array(
+			'status'         => 'Lead',
+			'per_page'       => 5,
+			'prospects_only' => true,
+		) );
+
+		if ( ! is_array( $data ) || empty( $data ) ) {
+			return '';
+		}
+
+		$lines   = array();
+		$lines[] = '## Recent Leads';
+
+		foreach ( $data as $contact ) {
+			$name  = trim( ( $contact['first_name'] ?? '' ) . ' ' . ( $contact['last_name'] ?? '' ) );
+			$email = $contact['email'] ?? '';
+			if ( '' === $name ) {
+				$name = $email ?: 'Unknown';
+			}
+			$lines[] = sprintf( '- %s (%s)', esc_html( $name ), esc_html( $email ) );
+		}
+
+		$result = implode( "\n", $lines );
+
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return $result;
+	}
+
+	// -------------------------------------------------------------------------
+	// Roster context helpers (new)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Get today's class rosters with expected student counts.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @return string
+	 */
+	private function get_todays_rosters(): string {
+		$cache_key = 'todays_rosters';
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$day_name = strtolower( wp_date( 'l' ) );
+		$today    = wp_date( 'Y-m-d' );
+
+		$locations = $this->rest_get( '/gym/v1/locations' );
+
+		if ( ! is_array( $locations ) ) {
+			return '';
+		}
+
+		$lines = array( "## Today's Class Rosters" );
+		$found = false;
+
+		foreach ( $locations as $location ) {
+			$slug = $location['slug'] ?? '';
+			if ( empty( $slug ) ) {
+				continue;
+			}
+
+			$schedule = $this->rest_get( '/gym/v1/schedule', array(
+				'location' => $slug,
+				'week_of'  => $today,
+			) );
+
+			if ( ! is_array( $schedule ) ) {
+				continue;
+			}
+
+			foreach ( $schedule as $class ) {
+				$class_day = strtolower( $class['day'] ?? $class['day_of_week'] ?? '' );
+				if ( $class_day !== $day_name ) {
+					continue;
+				}
+
+				$class_id = $class['id'] ?? $class['class_id'] ?? 0;
+				$title    = $class['title'] ?? $class['name'] ?? 'Class';
+				$time     = $class['time'] ?? $class['start_time'] ?? '';
+
+				if ( $class_id > 0 ) {
+					$roster = $this->rest_get( '/gym/v1/classes/' . $class_id . '/roster' );
+					$count  = is_array( $roster ) ? ( $roster['expected_count'] ?? 0 ) : 0;
+				} else {
+					$count = '?';
+				}
+
+				$found   = true;
+				$lines[] = sprintf( '- %s %s: %s expected', esc_html( $time ), esc_html( $title ), $count );
+			}
+		}
+
+		if ( ! $found ) {
+			return '';
+		}
+
+		$result = implode( "\n", $lines );
+
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return $result;
+	}
+
+	// -------------------------------------------------------------------------
+	// Churn context helpers (new)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Get churn summary for the current month.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @return string
+	 */
+	private function get_churn_summary(): string {
+		$cache_key = 'churn_summary';
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+
+		if ( false !== $cached ) {
+			return $cached;
+		}
+
+		$data = $this->rest_get( '/gym/v1/orders/churn', array( 'days' => 30 ) );
+
+		if ( ! is_array( $data ) ) {
+			return '';
+		}
+
+		$cancelled = $data['cancelled'] ?? 0;
+		$retention = $data['retention_rate'] ?? 100;
+		$new       = $data['new_signups'] ?? 0;
+
+		$result = sprintf(
+			"## Churn (30 days)\nCancellations: %d | New signups: %d | Retention: %s%%",
+			$cancelled,
+			$new,
+			number_format( (float) $retention, 1 )
+		);
+
+		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return $result;
 	}
 
 	// -------------------------------------------------------------------------

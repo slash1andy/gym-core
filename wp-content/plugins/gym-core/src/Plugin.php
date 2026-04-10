@@ -296,6 +296,18 @@ final class Plugin {
 					$inbound_handler->register_hooks();
 				}
 
+				// CRM controller (Jetpack CRM contacts, pipeline).
+				$crm_controller = new API\CrmController();
+				$crm_controller->register_hooks();
+
+				// Order controller (WC orders, billing, churn, refunds).
+				$order_controller = new API\OrderController();
+				$order_controller->register_hooks();
+
+				// Class roster controller.
+				$class_roster_controller = new API\ClassRosterController( $this->attendance_store, $this->rank_store );
+				$class_roster_controller->register_hooks();
+
 				// Foundations controller.
 				$foundations_controller = new API\FoundationsController( $this->foundations_clearance );
 				$foundations_controller->register_hooks();
