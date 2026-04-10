@@ -47,7 +47,65 @@ class ToolRegistry {
 	private ?array $tools = null;
 
 	/**
+	 * Full tool set for admin-level personas (finance + admin share this).
+	 *
+	 * @var list<string>
+	 */
+	private const ADMIN_TOOLS = array(
+		// Operations.
+		'get_today_attendance',
+		'get_schedule',
+		'get_locations',
+		'get_announcements',
+		// Training / coaching.
+		'get_member_rank',
+		'get_rank_history',
+		'get_attendance',
+		'get_badges',
+		'get_streak',
+		'get_briefing',
+		'get_briefing_today',
+		'get_foundations_status',
+		'get_active_foundations',
+		'get_promotion_eligible',
+		'flag_promotion',
+		'record_coach_roll',
+		'enroll_foundations',
+		'clear_foundations',
+		// Sales & SMS.
+		'get_pricing',
+		'get_trial_info',
+		'draft_sms',
+		'get_sms_templates',
+		// Announcements & social.
+		'draft_announcement',
+		'draft_social_post',
+		'get_social_pending',
+		'approve_social_post',
+		// CRM (new).
+		'search_crm_contacts',
+		'get_crm_contact',
+		'get_crm_contact_notes',
+		'add_crm_contact_note',
+		'get_crm_pipeline',
+		// Orders & billing (new).
+		'get_member_orders',
+		'get_member_billing',
+		'get_member_subscription_status',
+		'get_churn_metrics',
+		'issue_refund',
+		// SMS history (new).
+		'get_sms_history',
+		// Class rosters (new).
+		'get_class_roster',
+	);
+
+	/**
 	 * Persona-to-tool-names mapping.
+	 *
+	 * Sales and coaching have restricted tool sets.
+	 * Finance and admin share the full ADMIN_TOOLS set — differentiated by
+	 * system prompt only (Joyous has a finance-oriented persona).
 	 *
 	 * @var array<string, list<string>>
 	 */
@@ -60,6 +118,16 @@ class ToolRegistry {
 			'get_trial_info',
 			'get_announcements',
 			'get_today_attendance',
+			// CRM (new) — prospect-filtered via tool defaults.
+			'search_crm_contacts',
+			'get_crm_contact',
+			'get_crm_contact_notes',
+			'add_crm_contact_note',
+			'get_crm_pipeline',
+			// SMS history (new).
+			'get_sms_history',
+			// Class rosters (new).
+			'get_class_roster',
 		),
 		'coaching' => array(
 			'get_member_rank',
@@ -78,34 +146,13 @@ class ToolRegistry {
 			'get_today_attendance',
 			'get_promotion_eligible',
 			'get_announcements',
+			// Class rosters (new).
+			'get_class_roster',
+			// Subscription status — status only, no amounts (new).
+			'get_member_subscription_status',
 		),
-		'finance'  => array(
-			'get_revenue_summary',
-			'get_subscriptions',
-			'get_failed_payments',
-			'get_reports',
-			'get_today_attendance',
-			'get_locations',
-		),
-		'admin'    => array(
-			'get_today_attendance',
-			'get_schedule',
-			'get_promotion_eligible',
-			'draft_announcement',
-			'draft_social_post',
-			'get_briefing_today',
-			'get_announcements',
-			'get_active_foundations',
-			'draft_sms',
-			'get_sms_templates',
-			'get_locations',
-			'get_social_pending',
-			'approve_social_post',
-			'get_member_rank',
-			'get_attendance',
-			'get_badges',
-			'get_streak',
-		),
+		'finance'  => self::ADMIN_TOOLS,
+		'admin'    => self::ADMIN_TOOLS,
 	);
 
 	/**
@@ -884,6 +931,285 @@ class ToolRegistry {
 				'method'       => 'POST',
 				'auth_cap'     => 'gym_manage_announcements',
 				'write'        => true,
+			),
+
+			// -----------------------------------------------------------------
+			// CRM tools (new — Jetpack CRM contacts and pipeline)
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'search_crm_contacts',
+				'description'  => 'Search CRM contacts by name, email, or phone. Supports prospect-only filtering.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'search'         => array(
+							'type'        => 'string',
+							'description' => 'Search term (name, email, or phone).',
+						),
+						'status'         => array(
+							'type'        => 'string',
+							'description' => 'Filter by CRM status (e.g. "Lead", "Customer").',
+						),
+						'prospects_only' => array(
+							'type'        => 'boolean',
+							'description' => 'Only return contacts without an active subscription.',
+						),
+						'per_page'       => array(
+							'type'        => 'integer',
+							'description' => 'Results per page (default 10).',
+						),
+						'page'           => array(
+							'type'        => 'integer',
+							'description' => 'Page number.',
+						),
+					),
+					'required'   => array(),
+				),
+				'endpoint'     => '/crm/contacts',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => false,
+				'defaults'     => array( 'prospects_only' => true ),
+			),
+			array(
+				'name'         => 'get_crm_contact',
+				'description'  => 'Get full details for a CRM contact including tags, address, and pipeline stage.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'contact_id' => array(
+							'type'        => 'integer',
+							'description' => 'Jetpack CRM contact ID.',
+						),
+					),
+					'required'   => array( 'contact_id' ),
+				),
+				'endpoint'     => '/crm/contacts/{contact_id}',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'get_crm_contact_notes',
+				'description'  => 'Get activity log and notes for a CRM contact.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'contact_id' => array(
+							'type'        => 'integer',
+							'description' => 'Jetpack CRM contact ID.',
+						),
+						'per_page'   => array(
+							'type'        => 'integer',
+							'description' => 'Results per page (default 10).',
+						),
+						'page'       => array(
+							'type'        => 'integer',
+							'description' => 'Page number.',
+						),
+					),
+					'required'   => array( 'contact_id' ),
+				),
+				'endpoint'     => '/crm/contacts/{contact_id}/notes',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'add_crm_contact_note',
+				'description'  => 'Add a note to a CRM contact. Requires staff approval.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'contact_id' => array(
+							'type'        => 'integer',
+							'description' => 'Jetpack CRM contact ID.',
+						),
+						'note'       => array(
+							'type'        => 'string',
+							'description' => 'Note content to add.',
+						),
+					),
+					'required'   => array( 'contact_id', 'note' ),
+				),
+				'endpoint'     => '/crm/contacts/{contact_id}/notes',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => true,
+			),
+			array(
+				'name'         => 'get_crm_pipeline',
+				'description'  => 'Get pipeline summary — count of CRM contacts per pipeline stage.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => new \stdClass(),
+				),
+				'endpoint'     => '/crm/pipeline',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => false,
+			),
+
+			// -----------------------------------------------------------------
+			// Order & billing tools (new — WooCommerce orders, churn, refunds)
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'get_member_orders',
+				'description'  => 'Get order history for a member including dates, totals, and line items.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'user_id'  => array(
+							'type'        => 'integer',
+							'description' => 'WordPress user ID of the member.',
+						),
+						'per_page' => array(
+							'type'        => 'integer',
+							'description' => 'Results per page (default 10).',
+						),
+						'page'     => array(
+							'type'        => 'integer',
+							'description' => 'Page number.',
+						),
+					),
+					'required'   => array( 'user_id' ),
+				),
+				'endpoint'     => '/orders/member/{user_id}',
+				'method'       => 'GET',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'get_member_billing',
+				'description'  => 'Get billing details for a member: active subscriptions, payment methods, next renewal dates, and recent payment history.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'user_id' => array(
+							'type'        => 'integer',
+							'description' => 'WordPress user ID of the member.',
+						),
+					),
+					'required'   => array( 'user_id' ),
+				),
+				'endpoint'     => '/orders/member/{user_id}/billing',
+				'method'       => 'GET',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'get_member_subscription_status',
+				'description'  => 'Get subscription status for a member. Coaches see status only (active/lapsed/on-hold). Finance and admin also see amounts and payment details.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'user_id' => array(
+							'type'        => 'integer',
+							'description' => 'WordPress user ID of the member.',
+						),
+					),
+					'required'   => array( 'user_id' ),
+				),
+				'endpoint'     => '/subscriptions/member/{user_id}',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_view_attendance',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'get_churn_metrics',
+				'description'  => 'Get churn and retention metrics: cancellations, new signups, retention rate for a period.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'days' => array(
+							'type'        => 'integer',
+							'description' => 'Look-back period in days (default 30, max 365).',
+						),
+					),
+					'required'   => array(),
+				),
+				'endpoint'     => '/orders/churn',
+				'method'       => 'GET',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'issue_refund',
+				'description'  => 'Issue a refund on a WooCommerce order. Requires staff approval. Omit amount for full refund.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'order_id' => array(
+							'type'        => 'integer',
+							'description' => 'WooCommerce order ID.',
+						),
+						'amount'   => array(
+							'type'        => 'number',
+							'description' => 'Refund amount. Omit for full refund.',
+						),
+						'reason'   => array(
+							'type'        => 'string',
+							'description' => 'Reason for the refund.',
+						),
+					),
+					'required'   => array( 'order_id' ),
+				),
+				'endpoint'     => '/orders/{order_id}/refund',
+				'method'       => 'POST',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => true,
+			),
+
+			// -----------------------------------------------------------------
+			// SMS history tool (new)
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'get_sms_history',
+				'description'  => 'Get SMS conversation history for a CRM contact, showing sent and received messages.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'contact_id' => array(
+							'type'        => 'integer',
+							'description' => 'Jetpack CRM contact ID.',
+						),
+						'per_page'   => array(
+							'type'        => 'integer',
+							'description' => 'Results per page (default 10).',
+						),
+						'page'       => array(
+							'type'        => 'integer',
+							'description' => 'Page number.',
+						),
+					),
+					'required'   => array( 'contact_id' ),
+				),
+				'endpoint'     => '/sms/conversations/{contact_id}',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_send_sms',
+				'write'        => false,
+			),
+
+			// -----------------------------------------------------------------
+			// Class roster tool (new)
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'get_class_roster',
+				'description'  => 'Get the forecasted roster for a class based on recent attendance patterns. Shows expected students, their ranks, and Foundations status.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'class_id' => array(
+							'type'        => 'integer',
+							'description' => 'Class post ID.',
+						),
+					),
+					'required'   => array( 'class_id' ),
+				),
+				'endpoint'     => '/classes/{class_id}/roster',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_view_attendance',
+				'write'        => false,
 			),
 		);
 	}
