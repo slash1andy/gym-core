@@ -20,6 +20,20 @@ foreach ( $tables as $table ) {
 	$wpdb->query( "DROP TABLE IF EXISTS $table" );
 }
 
+// Delete agent user accounts and custom role.
+$agent_user_ids = get_option( 'hma_ai_chat_agent_user_ids', array() );
+if ( ! empty( $agent_user_ids ) ) {
+	if ( ! function_exists( 'wp_delete_user' ) ) {
+		require_once ABSPATH . 'wp-admin/includes/user.php';
+	}
+	foreach ( $agent_user_ids as $slug => $uid ) {
+		if ( get_userdata( $uid ) ) {
+			wp_delete_user( $uid );
+		}
+	}
+}
+remove_role( 'hma_ai_agent' );
+
 // Delete plugin options.
 $options = array(
 	'hma_ai_chat_webhook_secret',
@@ -27,6 +41,7 @@ $options = array(
 	'hma_ai_chat_webhook_rotation_at',
 	'hma_ai_chat_ip_allowlist',
 	'hma_ai_chat_db_version',
+	'hma_ai_chat_agent_user_ids',
 );
 
 foreach ( $options as $option ) {

@@ -80,6 +80,12 @@ class Plugin {
 			add_action( 'admin_init', array( $this->settings_page, 'register_settings' ) );
 		}
 
+		// Block login for agent user accounts.
+		add_filter( 'authenticate', array( Agents\AgentUserManager::class, 'block_agent_login' ), 100, 2 );
+
+		// Hide agent users from wp-admin Users list.
+		add_action( 'pre_get_users', array( Agents\AgentUserManager::class, 'hide_from_user_list' ) );
+
 		// Register agents on both admin and REST requests.
 		add_action( 'admin_init', array( $this, 'register_hooks' ) );
 		add_action( 'rest_api_init', array( $this, 'register_hooks' ) );
@@ -87,6 +93,12 @@ class Plugin {
 		add_action( 'admin_notices', array( $this, 'display_admin_notices' ) );
 		add_action( 'rest_api_init', array( $this, 'register_rest_routes' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_admin_scripts' ) );
+
+		// Register tools as WordPress abilities for MCP discoverability.
+		if ( function_exists( 'wp_register_ability' ) ) {
+			add_action( 'wp_abilities_api_categories_init', array( MCP\AbilitiesRegistrar::class, 'register_category' ) );
+			add_action( 'wp_abilities_api_init', array( MCP\AbilitiesRegistrar::class, 'register' ) );
+		}
 
 		// Schedule conversation retention purge (daily).
 		add_action( self::PURGE_CRON_HOOK, array( $this, 'run_conversation_purge' ) );
@@ -105,6 +117,9 @@ class Plugin {
 		// Initialize agent registry.
 		$agent_registry = Agents\AgentRegistry::instance();
 		$agent_registry->register_all_agents();
+
+		// Ensure agent user accounts exist and capabilities are current.
+		Agents\AgentUserManager::provision();
 
 		// Initialize tool layer.
 		$tool_registry      = Tools\ToolRegistry::instance();
