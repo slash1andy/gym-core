@@ -14,6 +14,7 @@ declare( strict_types=1 );
 
 namespace HMA_AI_Chat\Tools;
 
+use HMA_AI_Chat\Agents\AgentUserManager;
 use HMA_AI_Chat\Data\PendingActionStore;
 use WP_REST_Request;
 use WP_REST_Response;
@@ -214,14 +215,17 @@ class ToolExecutor {
 			);
 		}
 
+		$agent_user_id = AgentUserManager::get_agent_user_id( $persona );
+
 		$action_data = array(
-			'tool_name'   => $tool_name,
-			'description' => $tool['description'],
-			'endpoint'    => $tool['endpoint'],
-			'method'      => $tool['method'],
-			'parameters'  => $params,
-			'requested_by'=> $user_id,
-			'requested_at'=> gmdate( 'Y-m-d H:i:s' ),
+			'tool_name'     => $tool_name,
+			'description'   => $tool['description'],
+			'endpoint'      => $tool['endpoint'],
+			'method'        => $tool['method'],
+			'parameters'    => $params,
+			'requested_by'  => $user_id,
+			'agent_user_id' => $agent_user_id,
+			'requested_at'  => gmdate( 'Y-m-d H:i:s' ),
 		);
 
 		$agent_slug = '' !== $persona ? $persona : 'unknown';
@@ -268,6 +272,38 @@ class ToolExecutor {
 			'pending'   => true,
 			'action_id' => $action_id,
 		);
+	}
+
+	/**
+	 * Execute an approved write action using the agent's user context.
+	 *
+	 * Called by ActionEndpoint after staff approves a pending action.
+	 * Sets wp_set_current_user() to the agent's dedicated WP account so
+	 * that created content (posts, announcements) has the agent as author.
+	 *
+	 * @since 0.5.0
+	 *
+	 * @param array $action_data The action_data from the PendingAction record.
+	 * @return array{success: bool, data: mixed, error?: string}
+	 */
+	public function execute_approved_write( array $action_data ): array {
+		$endpoint = $action_data['endpoint'] ?? '';
+		$method   = $action_data['method'] ?? 'POST';
+		$params   = $action_data['parameters'] ?? array();
+
+		// Use agent user for content authorship if available,
+		// otherwise fall back to the requesting staff user.
+		$execute_as = $action_data['agent_user_id'] ?? $action_data['requested_by'] ?? 0;
+
+		if ( empty( $execute_as ) ) {
+			return array(
+				'success' => false,
+				'data'    => null,
+				'error'   => __( 'No user context available for write execution.', 'hma-ai-chat' ),
+			);
+		}
+
+		return $this->execute_read( $endpoint, $method, $params, (int) $execute_as );
 	}
 
 	// -------------------------------------------------------------------------

@@ -24,6 +24,7 @@ class Activator {
 	public static function activate() {
 		self::create_tables();
 		self::init_webhook_secret();
+		Agents\AgentUserManager::provision();
 	}
 
 	/**
