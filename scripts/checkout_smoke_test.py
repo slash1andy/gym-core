@@ -57,8 +57,17 @@ EXPECTED_PAGES = [
     "My account",
 ]
 
-# Expected product categories
-EXPECTED_CATEGORIES = ["Memberships", "Trials", "Retail", "Class Passes"]
+# Expected product categories.
+# The site uses program-specific categories (Adult BJJ, Kids BJJ, Adult Kickboxing)
+# rather than generic umbrella categories — browsing by program matches how
+# prospects think about joining. Trials and Class Passes are cross-program.
+EXPECTED_CATEGORIES = [
+    "Adult BJJ",
+    "Adult Kickboxing",
+    "Kids BJJ",
+    "Trials",
+    "Class Passes",
+]
 
 
 # ---------------------------------------------------------------------------
@@ -359,6 +368,8 @@ def check_currency_usd(_token):
 
 def check_woopayments_active(token):
     """14. WooPayments is active (via Pressable plugins API)."""
+    if not token:
+        return "WARN", "Pressable auth not available; verify WooPayments active manually"
     plugins = pressable_get_plugins(token)
     for p in plugins:
         name = p.get("name", "") or p.get("slug", "")
@@ -372,6 +383,8 @@ def check_woopayments_active(token):
 
 def check_subscriptions_active(token):
     """15. WC Subscriptions is active (via Pressable plugins API)."""
+    if not token:
+        return "WARN", "Pressable auth not available; verify WC Subscriptions active manually"
     plugins = pressable_get_plugins(token)
     for p in plugins:
         name = p.get("name", "") or p.get("slug", "")
@@ -385,6 +398,8 @@ def check_subscriptions_active(token):
 
 def check_woocommerce_active(token):
     """16. WooCommerce core is active (via Pressable plugins API)."""
+    if not token:
+        return "WARN", "Pressable auth not available; verify WooCommerce active manually"
     plugins = pressable_get_plugins(token)
     for p in plugins:
         name = p.get("name", "") or p.get("slug", "")
