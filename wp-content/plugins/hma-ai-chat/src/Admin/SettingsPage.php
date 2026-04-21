@@ -54,11 +54,21 @@ class SettingsPage {
 
 		// Chat is now served by StaffDashboard on the gym-core page.
 
-		// Submenu: Audit Log (admin only).
+		// Submenu: Audit Log (admin only). Show a pending-count bubble in the
+		// menu label so staff can spot new approval asks without clicking in.
+		$audit_label = esc_html__( 'Audit Log', 'hma-ai-chat' );
+		$pending     = 0;
+		if ( current_user_can( 'manage_options' ) ) {
+			$pending = ( new \HMA_AI_Chat\Data\PendingActionStore() )->get_pending_count();
+		}
+		if ( $pending > 0 ) {
+			$audit_label .= ' <span class="awaiting-mod">' . esc_html( (string) $pending ) . '</span>';
+		}
+
 		add_submenu_page(
 			'gym-core',
 			esc_html__( 'Audit Log', 'hma-ai-chat' ),
-			esc_html__( 'Audit Log', 'hma-ai-chat' ),
+			$audit_label,
 			'manage_options',
 			AuditLogPage::PAGE_SLUG,
 			array( new AuditLogPage(), 'render_page' )
@@ -154,6 +164,61 @@ class SettingsPage {
 			'hma_ai_chat_retention_days',
 			esc_html__( 'Conversation retention (days)', 'hma-ai-chat' ),
 			array( $this, 'render_retention_field' ),
+			self::PAGE_SLUG . '-general',
+			'hma_ai_chat_general'
+		);
+
+		// --- Notifications (new pending actions) ---
+		register_setting(
+			self::OPTION_GROUP,
+			\HMA_AI_Chat\Notifications\ActionNotifier::OPTION_NOTIFY_ENABLED,
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => true,
+			)
+		);
+
+		register_setting(
+			self::OPTION_GROUP,
+			\HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SLACK_WEBHOOK,
+			array(
+				'type'              => 'string',
+				'sanitize_callback' => array( $this, 'sanitize_webhook_url' ),
+				'default'           => '',
+			)
+		);
+
+		register_setting(
+			self::OPTION_GROUP,
+			\HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SMS_ADMIN_LIST,
+			array(
+				'type'              => 'array',
+				'sanitize_callback' => array( $this, 'sanitize_sms_admin_numbers' ),
+				'default'           => array(),
+			)
+		);
+
+		add_settings_field(
+			'hma_ai_chat_notify_enabled',
+			esc_html__( 'Notify on pending action', 'hma-ai-chat' ),
+			array( $this, 'render_notify_enabled_field' ),
+			self::PAGE_SLUG . '-general',
+			'hma_ai_chat_general'
+		);
+
+		add_settings_field(
+			'hma_ai_chat_slack_webhook_url',
+			esc_html__( 'Slack incoming webhook URL', 'hma-ai-chat' ),
+			array( $this, 'render_slack_webhook_field' ),
+			self::PAGE_SLUG . '-general',
+			'hma_ai_chat_general'
+		);
+
+		add_settings_field(
+			'hma_ai_chat_sms_admin_numbers',
+			esc_html__( 'SMS admin numbers (one per line)', 'hma-ai-chat' ),
+			array( $this, 'render_sms_admin_numbers_field' ),
 			self::PAGE_SLUG . '-general',
 			'hma_ai_chat_general'
 		);
@@ -410,6 +475,131 @@ class SettingsPage {
 			esc_attr( $days )
 		);
 		echo '<p class="description">' . esc_html__( 'Conversations older than this many days are automatically purged.', 'hma-ai-chat' ) . '</p>';
+	}
+
+	/**
+	 * Render the notify-on-pending toggle.
+	 *
+	 * @since 0.3.2
+	 * @internal
+	 */
+	public function render_notify_enabled_field() {
+		$enabled = (bool) get_option( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_NOTIFY_ENABLED, true );
+		printf(
+			'<label><input type="checkbox" name="%s" value="1" %s /> %s</label>',
+			esc_attr( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_NOTIFY_ENABLED ),
+			checked( $enabled, true, false ),
+			esc_html__( 'Send Slack / SMS notifications when Gandalf queues an action', 'hma-ai-chat' )
+		);
+		echo '<p class="description">' . esc_html__( 'The in-admin notice is always shown to admins; this toggle only controls the external channels below.', 'hma-ai-chat' ) . '</p>';
+	}
+
+	/**
+	 * Render the Slack webhook URL field.
+	 *
+	 * @since 0.3.2
+	 * @internal
+	 */
+	public function render_slack_webhook_field() {
+		$value = (string) get_option( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SLACK_WEBHOOK, '' );
+		printf(
+			'<input type="url" name="%s" value="%s" class="regular-text" placeholder="https://hooks.slack.com/services/..." />',
+			esc_attr( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SLACK_WEBHOOK ),
+			esc_attr( $value )
+		);
+		echo '<p class="description">' . esc_html__( 'Leave blank to disable Slack notifications. Paste the incoming-webhook URL from your Slack app.', 'hma-ai-chat' ) . '</p>';
+	}
+
+	/**
+	 * Render the SMS admin numbers field.
+	 *
+	 * @since 0.3.2
+	 * @internal
+	 */
+	public function render_sms_admin_numbers_field() {
+		$value = get_option( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SMS_ADMIN_LIST, array() );
+		if ( ! is_array( $value ) ) {
+			$value = array();
+		}
+		printf(
+			'<textarea name="%s" rows="4" cols="40" class="large-text code" placeholder="+13125551234&#10;+13125555678">%s</textarea>',
+			esc_attr( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SMS_ADMIN_LIST ),
+			esc_textarea( implode( "\n", $value ) )
+		);
+		echo '<p class="description">' . esc_html__( 'One E.164 number per line (e.g., +13125551234). Requires gym-core\'s Twilio credentials to be configured. Leave blank to disable SMS.', 'hma-ai-chat' ) . '</p>';
+	}
+
+	/**
+	 * Normalize a checkbox submission to boolean.
+	 *
+	 * @since 0.3.2
+	 *
+	 * @param mixed $value Submitted value.
+	 * @return bool
+	 */
+	public function sanitize_checkbox( $value ): bool {
+		return ! empty( $value );
+	}
+
+	/**
+	 * Sanitize a Slack incoming webhook URL. Rejects non-HTTPS or non-Slack-looking
+	 * URLs rather than silently accepting them, so staff get immediate feedback.
+	 *
+	 * @since 0.3.2
+	 *
+	 * @param mixed $value Submitted URL.
+	 * @return string
+	 */
+	public function sanitize_webhook_url( $value ): string {
+		$url = esc_url_raw( trim( (string) $value ) );
+		if ( '' === $url ) {
+			return '';
+		}
+		if ( 0 !== stripos( $url, 'https://' ) ) {
+			add_settings_error(
+				\HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SLACK_WEBHOOK,
+				'hma_slack_webhook_insecure',
+				__( 'Slack webhook URL must use HTTPS.', 'hma-ai-chat' )
+			);
+			return '';
+		}
+		return $url;
+	}
+
+	/**
+	 * Parse SMS admin numbers from a textarea (newline or comma delimited) or an
+	 * array. Strips formatting and keeps only digits + leading '+'.
+	 *
+	 * @since 0.3.2
+	 *
+	 * @param mixed $value Submitted value.
+	 * @return string[]
+	 */
+	public function sanitize_sms_admin_numbers( $value ): array {
+		if ( is_string( $value ) ) {
+			$value = preg_split( '/[\r\n,]+/', $value ) ?: array();
+		}
+		if ( ! is_array( $value ) ) {
+			return array();
+		}
+
+		$out = array();
+		foreach ( $value as $raw ) {
+			$raw = trim( (string) $raw );
+			if ( '' === $raw ) {
+				continue;
+			}
+			// Keep leading '+' and digits only.
+			$clean = preg_replace( '/[^\d+]/', '', $raw );
+			if ( null === $clean || '' === $clean ) {
+				continue;
+			}
+			if ( strlen( $clean ) < 8 ) {
+				continue;
+			}
+			$out[] = $clean;
+		}
+		return array_values( array_unique( $out ) );
 	}
 
 	/**

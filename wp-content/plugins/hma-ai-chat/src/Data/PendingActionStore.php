@@ -42,7 +42,34 @@ class PendingActionStore {
 			array( '%s', '%s', '%s', '%s', '%s' )
 		);
 
-		return $result ? $wpdb->insert_id : false;
+		if ( ! $result ) {
+			return false;
+		}
+
+		$action_id = (int) $wpdb->insert_id;
+		wp_cache_delete( 'hma_ai_pending_count' );
+
+		// Fire only for genuinely pending actions — callers that seed historic or
+		// pre-approved rows shouldn't trigger notifications.
+		if ( 'pending' === $status ) {
+			/**
+			 * Fires when a new action is stored awaiting approval.
+			 *
+			 * Notifier plumbing (admin notice, Slack webhook, SMS) listens on
+			 * this hook. Stays decoupled from the data layer so alternative
+			 * notifiers can be added without touching the store.
+			 *
+			 * @since 0.3.2
+			 *
+			 * @param int    $action_id   Action ID just inserted.
+			 * @param string $agent       Agent slug.
+			 * @param string $action_type Type of action.
+			 * @param array  $action_data Action data payload.
+			 */
+			do_action( 'hma_ai_chat_pending_action_created', $action_id, $agent, $action_type, $action_data );
+		}
+
+		return $action_id;
 	}
 
 	/**
@@ -103,6 +130,7 @@ class PendingActionStore {
 		);
 
 		if ( $result ) {
+			wp_cache_delete( 'hma_ai_pending_count' );
 			/**
 			 * Fires when an action is approved.
 			 *
@@ -160,6 +188,7 @@ class PendingActionStore {
 		);
 
 		if ( $result ) {
+			wp_cache_delete( 'hma_ai_pending_count' );
 			/**
 			 * Fires when an action is approved with staff-directed changes.
 			 *
@@ -278,6 +307,7 @@ class PendingActionStore {
 		);
 
 		if ( $result ) {
+			wp_cache_delete( 'hma_ai_pending_count' );
 			/**
 			 * Fires when an action is rejected.
 			 *
