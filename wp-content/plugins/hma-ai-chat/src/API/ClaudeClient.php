@@ -79,26 +79,47 @@ class ClaudeClient {
 			'messages'   => $messages,
 		);
 
-		$response = wp_remote_post(
-			self::API_URL,
-			array(
-				'timeout' => 60,
-				'headers' => array(
-					'Content-Type'      => 'application/json',
-					'x-api-key'         => $api_key,
-					'anthropic-version'  => self::API_VERSION,
-				),
-				'body'    => wp_json_encode( $body ),
-			)
+		$encoded_body = wp_json_encode( $body );
+		$args         = array(
+			'timeout' => 60,
+			'headers' => array(
+				'Content-Type'      => 'application/json',
+				'x-api-key'         => $api_key,
+				'anthropic-version' => self::API_VERSION,
+			),
+			'body'    => $encoded_body,
 		);
 
-		if ( is_wp_error( $response ) ) {
-			return $response;
-		}
+		$max_attempts = 3;
+		$response     = null;
+		$status       = 0;
+		$raw          = '';
+		$data         = array();
 
-		$status = wp_remote_retrieve_response_code( $response );
-		$raw    = wp_remote_retrieve_body( $response );
-		$data   = json_decode( $raw, true );
+		for ( $attempt = 1; $attempt <= $max_attempts; $attempt++ ) {
+			$response = wp_remote_post( self::API_URL, $args );
+
+			if ( is_wp_error( $response ) ) {
+				if ( $attempt < $max_attempts ) {
+					usleep( $this->backoff_microseconds( $attempt, null ) );
+					continue;
+				}
+				return $response;
+			}
+
+			$status = (int) wp_remote_retrieve_response_code( $response );
+			$raw    = wp_remote_retrieve_body( $response );
+			$data   = json_decode( $raw, true ) ?: array();
+
+			// Retry only transient classes (rate limit + 5xx, excluding 501/505).
+			if ( $attempt < $max_attempts && $this->is_retryable_status( $status ) ) {
+				$retry_after = wp_remote_retrieve_header( $response, 'retry-after' );
+				usleep( $this->backoff_microseconds( $attempt, $retry_after ) );
+				continue;
+			}
+
+			break;
+		}
 
 		if ( $status < 200 || $status >= 300 ) {
 			$error_msg = $data['error']['message'] ?? "HTTP {$status}";
@@ -124,5 +145,45 @@ class ClaudeClient {
 			'response'    => $text,
 			'tokens_used' => $input_tokens + $output_tokens,
 		);
+	}
+
+	/**
+	 * Whether an HTTP status from Anthropic should trigger a retry.
+	 *
+	 * @since 0.4.1
+	 */
+	private function is_retryable_status( int $status ): bool {
+		if ( 429 === $status ) {
+			return true;
+		}
+		// Retry transient 5xx; skip 501/505 (server doesn't support; will not improve).
+		return $status >= 500 && $status < 600 && 501 !== $status && 505 !== $status;
+	}
+
+	/**
+	 * Compute backoff in microseconds.
+	 *
+	 * Honors a Retry-After header when present (capped at 30s); otherwise uses
+	 * exponential backoff with jitter so simultaneous workers don't synchronize.
+	 *
+	 * @since 0.4.1
+	 *
+	 * @param int               $attempt     1-based attempt number that just failed.
+	 * @param string|array|null $retry_after Raw Retry-After header value, if any.
+	 */
+	private function backoff_microseconds( int $attempt, $retry_after ): int {
+		if ( is_array( $retry_after ) ) {
+			$retry_after = reset( $retry_after );
+		}
+
+		if ( is_string( $retry_after ) && '' !== $retry_after && ctype_digit( $retry_after ) ) {
+			$seconds = min( 30, max( 1, (int) $retry_after ) );
+			return $seconds * 1_000_000;
+		}
+
+		// Exponential: 500ms, 1s, 2s base; +/- 250ms jitter.
+		$base   = 500_000 * ( 2 ** ( $attempt - 1 ) );
+		$jitter = random_int( -250_000, 250_000 );
+		return max( 0, $base + $jitter );
 	}
 }
