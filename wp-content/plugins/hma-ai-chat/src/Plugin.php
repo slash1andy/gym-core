@@ -105,6 +105,9 @@ class Plugin {
 		if ( ! wp_next_scheduled( self::PURGE_CRON_HOOK ) ) {
 			wp_schedule_event( time(), 'daily', self::PURGE_CRON_HOOK );
 		}
+
+		// Wire the new-pending-action notifier (Slack + SMS channels).
+		( new Notifications\ActionNotifier() )->register();
 	}
 
 	/**
