@@ -114,9 +114,11 @@ class MessageEndpoint {
 			);
 		}
 
+		$conversation_store = new \HMA_AI_Chat\Data\ConversationStore();
+		$user_message_id    = null;
+
 		try {
 			// Get or create conversation.
-			$conversation_store = new \HMA_AI_Chat\Data\ConversationStore();
 			if ( ! $conversation_id ) {
 				$conversation_id = $conversation_store->create_conversation(
 					get_current_user_id(),
@@ -129,8 +131,10 @@ class MessageEndpoint {
 				}
 			}
 
-			// Store user message.
-			$conversation_store->save_message(
+			// Store user message. Capture the row ID so we can roll back if the
+			// Claude call fails — otherwise the orphan stays in history and
+			// gets re-sent on the next request, double-billing tokens.
+			$user_message_id = $conversation_store->save_message(
 				$conversation_id,
 				'user',
 				$message
@@ -162,6 +166,9 @@ class MessageEndpoint {
 				$result = $client->send( $system_prompt, $messages );
 
 				if ( is_wp_error( $result ) ) {
+					if ( $user_message_id ) {
+						$conversation_store->delete_message( (int) $user_message_id );
+					}
 					return $result;
 				}
 
@@ -170,6 +177,9 @@ class MessageEndpoint {
 			}
 
 			if ( is_wp_error( $response_text ) ) {
+				if ( $user_message_id ) {
+					$conversation_store->delete_message( (int) $user_message_id );
+				}
 				return $response_text;
 			}
 
@@ -190,6 +200,9 @@ class MessageEndpoint {
 				)
 			);
 		} catch ( \Exception $e ) {
+			if ( $user_message_id ) {
+				$conversation_store->delete_message( (int) $user_message_id );
+			}
 			return new WP_Error(
 				'processing_error',
 				$e->getMessage(),

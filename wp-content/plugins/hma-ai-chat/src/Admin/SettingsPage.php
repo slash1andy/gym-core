@@ -132,6 +132,12 @@ class SettingsPage {
 			'default'           => array(),
 		) );
 
+		register_setting( self::OPTION_GROUP, \HMA_AI_Chat\Security\WebhookValidator::IP_ALLOWLIST_ENFORCE_KEY, array(
+			'type'              => 'boolean',
+			'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+			'default'           => false,
+		) );
+
 		// --- General section ---
 		add_settings_section(
 			'hma_ai_chat_general',
@@ -199,6 +205,16 @@ class SettingsPage {
 			)
 		);
 
+		register_setting(
+			self::OPTION_GROUP,
+			\HMA_AI_Chat\Notifications\ActionNotifier::OPTION_INCLUDE_SUMMARY_SLACK,
+			array(
+				'type'              => 'boolean',
+				'sanitize_callback' => array( $this, 'sanitize_checkbox' ),
+				'default'           => false,
+			)
+		);
+
 		add_settings_field(
 			'hma_ai_chat_notify_enabled',
 			esc_html__( 'Notify on pending action', 'hma-ai-chat' ),
@@ -222,6 +238,35 @@ class SettingsPage {
 			self::PAGE_SLUG . '-general',
 			'hma_ai_chat_general'
 		);
+
+		add_settings_field(
+			'hma_ai_chat_notify_include_summary',
+			esc_html__( 'Include action summary in Slack', 'hma-ai-chat' ),
+			array( $this, 'render_include_summary_field' ),
+			self::PAGE_SLUG . '-general',
+			'hma_ai_chat_general'
+		);
+	}
+
+	/**
+	 * Render the "include summary in Slack" toggle.
+	 *
+	 * Action descriptions can carry PII (member names, refund reasons, phone
+	 * fragments). Default off — operator opts in only when their Slack
+	 * workspace is appropriately scoped.
+	 *
+	 * @since 0.4.1
+	 * @internal
+	 */
+	public function render_include_summary_field() {
+		$enabled = (bool) get_option( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_INCLUDE_SUMMARY_SLACK, false );
+		printf(
+			'<label><input type="checkbox" name="%s" value="1" %s /> %s</label>',
+			esc_attr( \HMA_AI_Chat\Notifications\ActionNotifier::OPTION_INCLUDE_SUMMARY_SLACK ),
+			checked( $enabled, true, false ),
+			esc_html__( 'Append the action description to Slack notifications.', 'hma-ai-chat' )
+		);
+		echo '<p class="description">' . esc_html__( 'Off by default. Action descriptions can include member names, refund reasons, or other PII. SMS bodies are always metadata-only regardless of this setting.', 'hma-ai-chat' ) . '</p>';
 	}
 
 	/**
@@ -385,7 +430,16 @@ class SettingsPage {
 		$validator = new \HMA_AI_Chat\Security\WebhookValidator();
 		$secret    = $validator->get_secret();
 		$allowlist = $validator->get_ip_allowlist();
+		$enforce   = $validator->is_ip_allowlist_enforced();
 		$ips_value = implode( "\n", $allowlist );
+
+		// Warn when the current configuration falls open.
+		if ( empty( $allowlist ) && ! $enforce ) {
+			echo '<div class="notice notice-warning inline"><p>';
+			echo '<strong>' . esc_html__( 'Heads up:', 'hma-ai-chat' ) . '</strong> ';
+			esc_html_e( 'The IP allowlist is empty and enforcement is off, so the webhook accepts any IP. Add Paperclip\'s egress IPs below and turn on "Enforce IP allowlist", or just turn enforcement on if you intend to deny all webhook traffic.', 'hma-ai-chat' );
+			echo '</p></div>';
+		}
 
 		// Webhook secret (read-only display + rotate button).
 		echo '<table class="form-table"><tbody>';
@@ -415,10 +469,22 @@ class SettingsPage {
 		printf(
 			'<td><textarea id="hma_ai_chat_ip_allowlist" name="%s" rows="5" class="large-text code" placeholder="%s">%s</textarea>',
 			esc_attr( \HMA_AI_Chat\Security\WebhookValidator::IP_ALLOWLIST_KEY ),
-			esc_attr__( 'One IP per line. Leave empty to allow all.', 'hma-ai-chat' ),
+			esc_attr__( 'One IP per line. Pre-seed Paperclip\'s production egress IPs here.', 'hma-ai-chat' ),
 			esc_textarea( $ips_value )
 		);
-		echo '<p class="description">' . esc_html__( 'Restrict webhook access to these IP addresses. One per line. Leave empty to allow all (not recommended for production).', 'hma-ai-chat' ) . '</p></td>';
+		echo '<p class="description">' . esc_html__( 'Restrict webhook access to these IP addresses. One per line. With enforcement on (below), an empty list denies all webhook traffic.', 'hma-ai-chat' ) . '</p></td>';
+		echo '</tr>';
+
+		// Enforce IP allowlist toggle (fail closed when empty).
+		echo '<tr>';
+		echo '<th scope="row"><label for="hma_ai_chat_ip_allowlist_enforce">' . esc_html__( 'Enforce IP allowlist', 'hma-ai-chat' ) . '</label></th>';
+		printf(
+			'<td><label><input type="checkbox" id="hma_ai_chat_ip_allowlist_enforce" name="%s" value="1" %s /> %s</label>',
+			esc_attr( \HMA_AI_Chat\Security\WebhookValidator::IP_ALLOWLIST_ENFORCE_KEY ),
+			checked( $enforce, true, false ),
+			esc_html__( 'Fail closed when the allowlist is empty (recommended).', 'hma-ai-chat' )
+		);
+		echo '<p class="description">' . esc_html__( 'When on, an empty allowlist blocks all webhook requests. When off, an empty allowlist accepts any IP (signature-only auth).', 'hma-ai-chat' ) . '</p></td>';
 		echo '</tr>';
 
 		echo '</tbody></table>';

@@ -209,15 +209,58 @@ class PendingActionStore {
 	}
 
 	/**
+	 * Identity keys that must NOT change between approve-with-changes and completion.
+	 *
+	 * Staff approve a specific action against a specific target. A revised
+	 * payload that swaps `order_id`, `phone`, `tool_name`, etc. would be
+	 * recorded against the audit row staff thought they approved.
+	 *
+	 * Filterable so site-specific tools can extend the lockset.
+	 *
+	 * @since 0.4.1
+	 *
+	 * @return string[]
+	 */
+	private function get_immutable_identity_keys() {
+		$keys = array(
+			'tool_name',
+			'endpoint',
+			'method',
+			'target_id',
+			'order_id',
+			'user_id',
+			'contact_id',
+			'phone',
+			'agent_user_id',
+			'agent_id',
+			'task_id',
+			'run_id',
+		);
+
+		/**
+		 * Filter the keys that may not be mutated by `complete_revised_action`.
+		 *
+		 * @since 0.4.1
+		 *
+		 * @param string[] $keys Immutable identity keys.
+		 */
+		return (array) apply_filters( 'hma_ai_chat_immutable_action_keys', $keys );
+	}
+
+	/**
 	 * Mark an approved-with-changes action as completed after agent revision.
 	 *
 	 * Called by the agent after incorporating staff changes and executing.
+	 *
+	 * Identity keys (tool, endpoint, target IDs) are pinned to the original
+	 * action_data — a revised payload that tries to swap them is rejected so
+	 * the completed audit row matches what staff approved.
 	 *
 	 * @since 0.1.0
 	 *
 	 * @param int   $action_id     Action ID.
 	 * @param array $revised_data  The revised action data after agent changes.
-	 * @return bool
+	 * @return bool|\WP_Error True on success, false on DB failure, WP_Error on identity-mutation rejection.
 	 */
 	public function complete_revised_action( $action_id, $revised_data = array() ) {
 		global $wpdb;
@@ -229,7 +272,21 @@ class PendingActionStore {
 			return false;
 		}
 
-		$action_data                  = $action['action_data'];
+		$action_data = $action['action_data'];
+
+		// Reject any revised_data that mutates identity keys staff approved.
+		$mutated = $this->find_identity_mutations( $action_data, (array) $revised_data );
+		if ( ! empty( $mutated ) ) {
+			return new \WP_Error(
+				'identity_mutation_rejected',
+				esc_html__( 'Revised action would mutate immutable identity keys.', 'hma-ai-chat' ),
+				array(
+					'status'        => 409,
+					'mutated_keys'  => $mutated,
+				)
+			);
+		}
+
 		$action_data['revised_data']  = $revised_data;
 		$action_data['completed_at']  = current_time( 'mysql' );
 
@@ -257,6 +314,31 @@ class PendingActionStore {
 		}
 
 		return false !== $result;
+	}
+
+	/**
+	 * Compare revised_data against original action_data on immutable keys.
+	 *
+	 * @since 0.4.1
+	 *
+	 * @param array $original Original action_data.
+	 * @param array $revised  Revised payload from the agent.
+	 * @return string[] Keys whose values differ. Empty when revision is safe.
+	 */
+	private function find_identity_mutations( array $original, array $revised ) {
+		$mutated = array();
+
+		foreach ( $this->get_immutable_identity_keys() as $key ) {
+			if ( ! array_key_exists( $key, $revised ) ) {
+				continue;
+			}
+			$original_value = array_key_exists( $key, $original ) ? $original[ $key ] : null;
+			if ( $revised[ $key ] !== $original_value ) {
+				$mutated[] = $key;
+			}
+		}
+
+		return $mutated;
 	}
 
 	/**

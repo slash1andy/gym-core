@@ -252,10 +252,35 @@ class HeartbeatEndpoint {
 		}
 
 		$action_store = new \HMA_AI_Chat\Data\PendingActionStore();
-		$result       = $action_store->complete_revised_action(
+
+		// Pin the completion to the run that originally created the action so a
+		// stale or hijacked runId can't complete a different run's action.
+		$existing = $action_store->get_action( $action_id );
+		if ( ! $existing ) {
+			return new WP_Error(
+				'not_found',
+				esc_html__( 'Action not found.', 'hma-ai-chat' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		$stored_run_id = isset( $existing['run_id'] ) ? (string) $existing['run_id'] : '';
+		if ( '' === $stored_run_id || ! hash_equals( $stored_run_id, (string) $run_id ) ) {
+			return new WP_Error(
+				'run_id_mismatch',
+				esc_html__( 'runId does not match the action that staff approved.', 'hma-ai-chat' ),
+				array( 'status' => 409 )
+			);
+		}
+
+		$result = $action_store->complete_revised_action(
 			$action_id,
 			is_array( $revised_data ) ? $revised_data : array()
 		);
+
+		if ( is_wp_error( $result ) ) {
+			return $result;
+		}
 
 		if ( ! $result ) {
 			return new WP_Error(

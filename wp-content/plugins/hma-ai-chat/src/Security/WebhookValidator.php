@@ -52,6 +52,17 @@ class WebhookValidator {
 	const IP_ALLOWLIST_KEY = 'hma_ai_chat_ip_allowlist';
 
 	/**
+	 * Option key for whether the IP allowlist is enforced.
+	 *
+	 * When true, an empty allowlist means *deny all*. When false (legacy
+	 * default), an empty allowlist falls open. Existing installs preserve
+	 * legacy behavior on upgrade; fresh installs ship with enforcement on.
+	 *
+	 * @since 0.4.1
+	 */
+	const IP_ALLOWLIST_ENFORCE_KEY = 'hma_ai_chat_ip_allowlist_enforce';
+
+	/**
 	 * Validate incoming webhook request.
 	 *
 	 * Accepts the current secret, and during a rotation grace period,
@@ -125,20 +136,47 @@ class WebhookValidator {
 	/**
 	 * Validate request IP address against allowlist.
 	 *
+	 * Behavior depends on the enforcement toggle:
+	 * - Enforcement on + empty allowlist => deny (fail closed).
+	 * - Enforcement on + populated allowlist => deny unless IP matches.
+	 * - Enforcement off + empty allowlist => allow (legacy behavior; warned in admin).
+	 * - Enforcement off + populated allowlist => deny unless IP matches.
+	 *
 	 * @since 0.1.0
 	 *
 	 * @return bool
 	 */
 	public function validate_ip() {
 		$allowlist = $this->get_ip_allowlist();
+		$enforce   = $this->is_ip_allowlist_enforced();
+
 		if ( empty( $allowlist ) ) {
-			// If no allowlist configured, allow all IPs (but fire action for monitoring).
+			if ( $enforce ) {
+				// Fail closed when the operator has opted in to enforcement.
+				do_action( 'hma_ai_chat_webhook_ip_denied_empty_allowlist' );
+				return false;
+			}
+			// Legacy behavior: empty allowlist falls open. Logged for monitoring.
 			do_action( 'hma_ai_chat_webhook_no_ip_allowlist' );
 			return true;
 		}
 
 		$client_ip = $this->get_client_ip();
 		return in_array( $client_ip, $allowlist, true );
+	}
+
+	/**
+	 * Whether the IP allowlist is enforced (fails closed when empty).
+	 *
+	 * Defaults true on fresh installs; existing installs without the option
+	 * read as false to preserve behavior until the operator opts in.
+	 *
+	 * @since 0.4.1
+	 *
+	 * @return bool
+	 */
+	public function is_ip_allowlist_enforced() {
+		return (bool) get_option( self::IP_ALLOWLIST_ENFORCE_KEY, false );
 	}
 
 	/**

@@ -75,6 +75,32 @@ class ConversationStore {
 	}
 
 	/**
+	 * Delete a single message row.
+	 *
+	 * Used by the chat endpoint to roll back the user-turn insert when the
+	 * downstream Claude call fails — without this, the orphan user message
+	 * stays in history and gets re-sent on the next request, double-billing
+	 * tokens.
+	 *
+	 * @since 0.4.1
+	 *
+	 * @param int $message_id Message row ID.
+	 * @return bool True on success.
+	 */
+	public function delete_message( $message_id ): bool {
+		global $wpdb;
+
+		$table  = $wpdb->prefix . 'hma_ai_messages';
+		$result = $wpdb->delete(
+			$table,
+			array( 'id' => absint( $message_id ) ),
+			array( '%d' )
+		);
+
+		return false !== $result;
+	}
+
+	/**
 	 * Get a conversation record by ID.
 	 *
 	 * @param int $conversation_id Conversation ID.
