@@ -14,6 +14,19 @@
 	}
 
 	const config = hmaAiChat;
+
+	// Wire the localized REST nonce into apiFetch before any request fires.
+	// Without this, non-admin (edit_posts) users hit rest_cookie_invalid_nonce
+	// 403s on every message/action/heartbeat.
+	if (
+		typeof wp !== 'undefined' &&
+		wp.apiFetch &&
+		typeof wp.apiFetch.createNonceMiddleware === 'function' &&
+		config.nonce
+	) {
+		wp.apiFetch.use(wp.apiFetch.createNonceMiddleware(config.nonce));
+	}
+
 	let currentConversationId = null;
 	let currentAgent = null;
 
@@ -57,7 +70,14 @@
 					</div>
 				</div>
 
-				<div id="hma-messages" class="hma-ai-chat-messages"></div>
+				<div
+					id="hma-messages"
+					class="hma-ai-chat-messages"
+					role="log"
+					aria-live="polite"
+					aria-relevant="additions"
+					aria-atomic="false"
+				></div>
 
 				<div class="hma-ai-chat-input-area">
 					<textarea
@@ -606,6 +626,9 @@
 		const div = document.createElement('div');
 		div.id = id;
 		div.className = 'hma-ai-message assistant';
+		// aria-hidden so the live region doesn't announce "dot dot dot" — the
+		// actual reply that follows is announced via additions on #hma-messages.
+		div.setAttribute('aria-hidden', 'true');
 		div.innerHTML = `
 			<div class="hma-ai-message-bubble hma-ai-typing-bubble">
 				<span class="hma-ai-typing-dot"></span>
@@ -613,6 +636,7 @@
 				<span class="hma-ai-typing-dot"></span>
 			</div>
 		`;
+		messagesContainer.setAttribute('aria-busy', 'true');
 		messagesContainer.appendChild(div);
 		messagesContainer.scrollTop = messagesContainer.scrollHeight;
 		return id;
@@ -626,6 +650,10 @@
 	function removeTypingIndicator(id) {
 		const el = document.getElementById(id);
 		if (el) el.remove();
+		const messagesContainer = document.getElementById('hma-messages');
+		if (messagesContainer) {
+			messagesContainer.setAttribute('aria-busy', 'false');
+		}
 	}
 
 	/**
