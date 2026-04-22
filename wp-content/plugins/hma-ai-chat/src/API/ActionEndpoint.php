@@ -570,6 +570,19 @@ class ActionEndpoint {
 			)
 		);
 
+		// Warm the user-object cache once for all distinct reviewers so the
+		// per-row get_userdata() lookups below stay O(1) cache hits.
+		$reviewer_ids = array();
+		foreach ( $result['items'] as $item ) {
+			if ( ! empty( $item['approved_by'] ) ) {
+				$reviewer_ids[] = (int) $item['approved_by'];
+			}
+		}
+		$reviewer_ids = array_values( array_unique( array_filter( $reviewer_ids ) ) );
+		if ( ! empty( $reviewer_ids ) ) {
+			cache_users( $reviewer_ids );
+		}
+
 		// Enrich items with approver display names.
 		foreach ( $result['items'] as &$item ) {
 			if ( ! empty( $item['approved_by'] ) ) {
@@ -577,6 +590,7 @@ class ActionEndpoint {
 				$item['approved_by_name'] = $user ? $user->display_name : __( 'Unknown', 'hma-ai-chat' );
 			}
 		}
+		unset( $item );
 
 		$response = rest_ensure_response( $result['items'] );
 		$response->header( 'X-WP-Total', $result['total'] );

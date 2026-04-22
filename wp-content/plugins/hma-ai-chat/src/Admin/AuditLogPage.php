@@ -56,6 +56,20 @@ class AuditLogPage {
 		$total       = $result['total'];
 		$total_pages = $result['total_pages'];
 
+		// Warm WP's user-object cache once for all reviewers on the page so the
+		// per-row get_userdata() calls below resolve from cache, avoiding a
+		// cold-cache fan-out of one user query per row.
+		$reviewer_ids = array();
+		foreach ( $items as $item ) {
+			if ( ! empty( $item['approved_by'] ) ) {
+				$reviewer_ids[] = (int) $item['approved_by'];
+			}
+		}
+		$reviewer_ids = array_values( array_unique( array_filter( $reviewer_ids ) ) );
+		if ( ! empty( $reviewer_ids ) ) {
+			cache_users( $reviewer_ids );
+		}
+
 		$statuses = array(
 			''                      => __( 'All Statuses', 'hma-ai-chat' ),
 			'pending'               => __( 'Pending', 'hma-ai-chat' ),

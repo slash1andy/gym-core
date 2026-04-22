@@ -71,6 +71,10 @@ class Plugin {
 	 * @internal
 	 */
 	public function init() {
+		// Run pending DB migrations on every load — dbDelta is idempotent and
+		// the version compare guards against the unconditional dbDelta cost.
+		add_action( 'plugins_loaded', array( $this, 'maybe_upgrade_db' ), 5 );
+
 		// Admin pages must hook into admin_menu (fires before admin_init).
 		if ( is_admin() ) {
 			$this->settings_page = new Admin\SettingsPage();
@@ -108,6 +112,23 @@ class Plugin {
 
 		// Wire the new-pending-action notifier (Slack + SMS channels).
 		( new Notifications\ActionNotifier() )->register();
+	}
+
+	/**
+	 * Apply pending DB schema migrations when the stored db_version is older
+	 * than the plugin version. Re-runs the activator's table builder, which
+	 * uses dbDelta and is idempotent for both column and index changes.
+	 *
+	 * @since 0.4.1
+	 * @internal
+	 */
+	public function maybe_upgrade_db(): void {
+		$current = (string) get_option( 'hma_ai_chat_db_version', '0.0.0' );
+		if ( version_compare( $current, HMA_AI_CHAT_VERSION, '>=' ) ) {
+			return;
+		}
+
+		Activator::activate();
 	}
 
 	/**
