@@ -40,8 +40,13 @@ $options = array(
 	'hma_ai_chat_webhook_secret_previous',
 	'hma_ai_chat_webhook_rotation_at',
 	'hma_ai_chat_ip_allowlist',
+	'hma_ai_chat_ip_allowlist_enforce',
 	'hma_ai_chat_db_version',
 	'hma_ai_chat_agent_user_ids',
+	'hma_ai_chat_slack_webhook_url',
+	'hma_ai_chat_sms_admin_numbers',
+	'hma_ai_chat_notify_on_pending',
+	'hma_ai_chat_notify_include_summary',
 );
 
 foreach ( $options as $option ) {

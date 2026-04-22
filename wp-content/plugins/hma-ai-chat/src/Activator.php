@@ -24,7 +24,24 @@ class Activator {
 	public static function activate() {
 		self::create_tables();
 		self::init_webhook_secret();
+		self::init_ip_allowlist_enforcement();
 		Agents\AgentUserManager::provision();
+	}
+
+	/**
+	 * Default IP allowlist enforcement to ON for fresh installs.
+	 *
+	 * Existing installs upgraded across this version keep the legacy fall-open
+	 * behavior until the operator opts in via the settings page; only sites
+	 * that have never set the option get the safe default.
+	 *
+	 * @since 0.4.1
+	 * @internal
+	 */
+	private static function init_ip_allowlist_enforcement() {
+		// add_option() is a no-op when the option already exists, so existing
+		// installs are untouched and only fresh installs get the safe default.
+		add_option( Security\WebhookValidator::IP_ALLOWLIST_ENFORCE_KEY, true );
 	}
 
 	/**
@@ -74,6 +91,8 @@ class Activator {
 		dbDelta( $messages_sql );
 
 		// Pending actions table.
+		// status_created composite index supports the audit-log query, which
+		// always filters by status and orders by created_at DESC.
 		$pending_table = $wpdb->prefix . 'hma_ai_pending_actions';
 		$pending_sql   = "CREATE TABLE IF NOT EXISTS $pending_table (
 			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
@@ -89,7 +108,8 @@ class Activator {
 			KEY agent (agent),
 			KEY status (status),
 			KEY run_id (run_id),
-			KEY created_at (created_at)
+			KEY created_at (created_at),
+			KEY status_created (status, created_at)
 		) $charset_collate;";
 
 		dbDelta( $pending_sql );
