@@ -641,3 +641,104 @@
 .hma-ai-chat-input::-ms-input-placeholder {
 	color: #999;
 }
+
+/* Tool-call audit block — surfaces what Gandalf actually called. */
+.hma-ai-tool-calls {
+	margin: 4px 0 0;
+	padding: 6px 10px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 6px;
+	font-size: 12px;
+	color: #50575e;
+}
+
+.hma-ai-tool-calls-summary {
+	cursor: pointer;
+	user-select: none;
+	font-weight: 600;
+}
+
+.hma-ai-tool-calls-list {
+	margin-top: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.hma-ai-tool-call {
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 4px;
+	padding: 4px 8px;
+}
+
+.hma-ai-tool-call > summary {
+	cursor: pointer;
+	user-select: none;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+}
+
+.hma-ai-tool-call-name {
+	flex: 1;
+	color: #2271b1;
+}
+
+.hma-ai-tool-call-badge {
+	font-size: 10px;
+	text-transform: uppercase;
+	padding: 1px 6px;
+	border-radius: 10px;
+	font-weight: 600;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.hma-ai-tool-call-badge--ok {
+	background: #d1e7dd;
+	color: #0a3622;
+}
+
+.hma-ai-tool-call-badge--error {
+	background: #f8d7da;
+	color: #842029;
+}
+
+.hma-ai-tool-call-badge--pending {
+	background: #fff3cd;
+	color: #664d03;
+}
+
+.hma-ai-tool-call-body {
+	margin-top: 6px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.hma-ai-tool-call-section {
+	background: #f6f7f7;
+	border-radius: 4px;
+	padding: 6px 8px;
+}
+
+.hma-ai-tool-call-label {
+	font-size: 10px;
+	font-weight: 700;
+	text-transform: uppercase;
+	color: #646970;
+	margin-bottom: 4px;
+}
+
+.hma-ai-tool-call pre {
+	margin: 0;
+	white-space: pre-wrap;
+	word-break: break-word;
+	font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+	font-size: 11px;
+	color: #1d2327;
+	max-height: 240px;
+	overflow: auto;
+}

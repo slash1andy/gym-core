@@ -204,7 +204,7 @@
 
 			if (response.success) {
 				currentConversationId = response.conversation_id;
-				addMessage('assistant', response.response);
+				addMessage('assistant', response.response, response.tool_calls);
 			} else {
 				addMessage('assistant', config.strings.errorMessage);
 			}
@@ -229,10 +229,12 @@
 	/**
 	 * Add a message to the display.
 	 *
-	 * @param {string} role    The message role (user or assistant).
-	 * @param {string} content The message content.
+	 * @param {string} role      The message role (user or assistant).
+	 * @param {string} content   The message content.
+	 * @param {Array=} toolCalls Optional list of tool calls executed for this turn.
+	 *                           Each entry: {name, input, output, is_error, pending}.
 	 */
-	function addMessage(role, content) {
+	function addMessage(role, content, toolCalls) {
 		const messagesContainer = document.getElementById('hma-messages');
 		const messageDiv = document.createElement('div');
 		const timestamp = new Date().toLocaleTimeString([], {
@@ -245,14 +247,79 @@
 			? renderMarkdown(content)
 			: escapeHtml(content);
 
+		const toolCallsHtml = (role === 'assistant' && Array.isArray(toolCalls) && toolCalls.length > 0)
+			? renderToolCalls(toolCalls)
+			: '';
+
 		messageDiv.className = `hma-ai-message ${role}`;
 		messageDiv.innerHTML = `
 			<div class="hma-ai-message-bubble">${rendered}</div>
+			${toolCallsHtml}
 			<div class="hma-ai-message-timestamp">${timestamp}</div>
 		`;
 
 		messagesContainer.appendChild(messageDiv);
 		messagesContainer.scrollTop = messagesContainer.scrollHeight;
+	}
+
+	/**
+	 * Render the tool-call audit block for an assistant turn.
+	 *
+	 * Each call is collapsed by default. Click to expand and see the
+	 * literal input/output that was sent to / received from the tool.
+	 *
+	 * @param {Array} toolCalls List of {name, input, output, is_error, pending}.
+	 * @returns {string} HTML for the tool-call block.
+	 */
+	function renderToolCalls(toolCalls) {
+		const items = toolCalls.map((call) => {
+			const name = escapeHtml(call.name || 'unknown_tool');
+			let badge;
+			let badgeClass;
+			if (call.is_error) {
+				badge = 'error';
+				badgeClass = 'error';
+			} else if (call.pending) {
+				badge = 'queued for approval';
+				badgeClass = 'pending';
+			} else {
+				badge = 'ok';
+				badgeClass = 'ok';
+			}
+
+			const input = escapeHtml(JSON.stringify(call.input ?? {}, null, 2));
+			const output = escapeHtml(JSON.stringify(call.output ?? null, null, 2));
+
+			return `
+				<details class="hma-ai-tool-call">
+					<summary>
+						<span class="hma-ai-tool-call-name">${name}</span>
+						<span class="hma-ai-tool-call-badge hma-ai-tool-call-badge--${badgeClass}">${badge}</span>
+					</summary>
+					<div class="hma-ai-tool-call-body">
+						<div class="hma-ai-tool-call-section">
+							<div class="hma-ai-tool-call-label">Input</div>
+							<pre>${input}</pre>
+						</div>
+						<div class="hma-ai-tool-call-section">
+							<div class="hma-ai-tool-call-label">Output</div>
+							<pre>${output}</pre>
+						</div>
+					</div>
+				</details>
+			`;
+		}).join('');
+
+		const summary = toolCalls.length === 1
+			? '1 tool call'
+			: `${toolCalls.length} tool calls`;
+
+		return `
+			<details class="hma-ai-tool-calls" open>
+				<summary class="hma-ai-tool-calls-summary">🔧 ${summary}</summary>
+				<div class="hma-ai-tool-calls-list">${items}</div>
+			</details>
+		`;
 	}
 
 	/**
