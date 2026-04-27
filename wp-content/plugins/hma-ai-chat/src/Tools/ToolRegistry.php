@@ -69,12 +69,16 @@ class ToolRegistry {
 		'get_foundations_status',
 		'get_active_foundations',
 		'get_promotion_eligible',
-		'flag_promotion',
+		'recommend_promotion',
+		'promote_member',
 		'record_coach_roll',
 		'enroll_foundations',
 		'clear_foundations',
 		// Sales & SMS.
 		'get_pricing',
+		'calculate_pricing',
+		'lookup_customer',
+		'create_lead',
 		'get_trial_info',
 		'draft_sms',
 		'get_sms_templates',
@@ -113,6 +117,9 @@ class ToolRegistry {
 	private const PERSONA_TOOLS = array(
 		'sales'    => array(
 			'get_pricing',
+			'calculate_pricing',
+			'lookup_customer',
+			'create_lead',
 			'get_schedule',
 			'get_locations',
 			'draft_sms',
@@ -137,7 +144,7 @@ class ToolRegistry {
 			'get_badges',
 			'get_streak',
 			'get_schedule',
-			'flag_promotion',
+			'recommend_promotion',
 			'get_briefing',
 			'get_foundations_status',
 			'record_coach_roll',
@@ -288,6 +295,84 @@ class ToolRegistry {
 				'method'       => 'GET',
 				'auth_cap'     => 'edit_posts',
 				'write'        => false,
+			),
+			array(
+				'name'         => 'calculate_pricing',
+				'description'  => 'Calculate the final price breakdown for a membership product given a down payment. Returns the financed amount, schedule, and any taxes/fees so the agent can quote a bundle without doing arithmetic locally.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'product_id'   => array(
+							'type'        => 'integer',
+							'description' => 'WooCommerce product ID for the membership/bundle.',
+						),
+						'down_payment' => array(
+							'type'        => 'number',
+							'description' => 'Down payment amount in the store currency (e.g. 99.00).',
+						),
+					),
+					'required'   => array( 'product_id', 'down_payment' ),
+				),
+				'endpoint'     => '/sales/calculate',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'lookup_customer',
+				'description'  => 'Search for an existing customer by name or email at the sales kiosk. Use before creating a lead or order to avoid duplicates.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'search' => array(
+							'type'        => 'string',
+							'description' => 'Search query — name or email fragment.',
+						),
+					),
+					'required'   => array( 'search' ),
+				),
+				'endpoint'     => '/sales/customer',
+				'method'       => 'GET',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'create_lead',
+				'description'  => 'Save a new prospect lead at the sales kiosk. Use when a walk-in or inquiry should be tracked but is not ready to purchase. All fields except the persisted record are optional, but at minimum capture either email or phone so the lead can be followed up.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'first_name' => array(
+							'type'        => 'string',
+							'description' => 'Lead first name.',
+						),
+						'last_name'  => array(
+							'type'        => 'string',
+							'description' => 'Lead last name.',
+						),
+						'email'      => array(
+							'type'        => 'string',
+							'description' => 'Lead email address.',
+						),
+						'phone'      => array(
+							'type'        => 'string',
+							'description' => 'Lead phone number in E.164 format (e.g. "+18155551234").',
+						),
+						'location'   => array(
+							'type'        => 'string',
+							'description' => 'Optional gym location slug to associate with the lead.',
+						),
+						'notes'      => array(
+							'type'        => 'string',
+							'description' => 'Optional staff notes (e.g. interest, source, follow-up cadence).',
+						),
+					),
+					'required'   => array(),
+				),
+				'endpoint'     => '/sales/lead',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => true,
 			),
 			array(
 				'name'         => 'get_schedule',
@@ -526,8 +611,8 @@ class ToolRegistry {
 				'write'        => false,
 			),
 			array(
-				'name'         => 'flag_promotion',
-				'description'  => 'Flag a member as recommended for promotion by a coach. Requires staff approval before the promotion is executed.',
+				'name'         => 'recommend_promotion',
+				'description'  => 'Record a coach\'s recommendation that a member is ready for promotion. This does NOT execute the promotion — it only flags the member for staff review. Use promote_member to actually advance a member\'s rank.',
 				'input_schema' => array(
 					'type'       => 'object',
 					'properties' => array(
@@ -543,6 +628,40 @@ class ToolRegistry {
 					'required'   => array( 'user_id', 'program' ),
 				),
 				'endpoint'     => '/promotions/recommend',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_promote_student',
+				'write'        => true,
+			),
+			array(
+				'name'         => 'promote_member',
+				'description'  => 'Execute a rank promotion for a member. This actually advances the member\'s rank — use only when the staff member explicitly confirms the promotion. For "ready for promotion" flags, use recommend_promotion instead.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'user_id' => array(
+							'type'        => 'integer',
+							'description' => 'WordPress user ID of the member being promoted.',
+						),
+						'program' => array(
+							'type'        => 'string',
+							'description' => 'Program slug (e.g. "bjj", "muay-thai").',
+						),
+						'belt'    => array(
+							'type'        => 'string',
+							'description' => 'Optional new belt color/level for the member after promotion.',
+						),
+						'stripes' => array(
+							'type'        => 'integer',
+							'description' => 'Optional new stripe count after promotion.',
+						),
+						'notes'   => array(
+							'type'        => 'string',
+							'description' => 'Optional staff notes attached to the promotion record.',
+						),
+					),
+					'required'   => array( 'user_id', 'program' ),
+				),
+				'endpoint'     => '/ranks/promote',
 				'method'       => 'POST',
 				'auth_cap'     => 'gym_promote_student',
 				'write'        => true,

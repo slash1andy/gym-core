@@ -193,8 +193,9 @@ class ToolExecutor {
 	/**
 	 * Queue a write tool as a pending action for staff approval.
 	 *
-	 * Write tools (draft_sms, flag_promotion, record_coach_roll,
-	 * draft_announcement) are never executed immediately. Instead they
+	 * Write tools (draft_sms, recommend_promotion, promote_member,
+	 * record_coach_roll, create_lead, draft_announcement) are never executed
+	 * immediately. Instead they
 	 * create a PendingAction record that surfaces in the admin approval
 	 * queue. Once approved, the action is dispatched by ActionEndpoint.
 	 *

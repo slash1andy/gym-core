@@ -685,6 +685,9 @@ All tools are defined in `HMA_AI_Chat\Tools\ToolRegistry`. Write tools are queue
 | Tool | Endpoint | Method | Write | Auth Cap |
 |------|----------|--------|-------|----------|
 | `get_pricing` | `/locations/{location}/products` | GET | No | `edit_posts` |
+| `calculate_pricing` | `/sales/calculate` | POST | No | `gym_process_sale` |
+| `lookup_customer` | `/sales/customer` | GET | No | `gym_process_sale` |
+| `create_lead` | `/sales/lead` | POST | Yes | `gym_process_sale` |
 | `get_schedule` | `/schedule` | GET | No | `edit_posts` |
 | `get_locations` | `/locations` | GET | No | `edit_posts` |
 | `draft_sms` | `/sms/send` | POST | Yes | `gym_send_sms` |
@@ -700,7 +703,8 @@ All tools are defined in `HMA_AI_Chat\Tools\ToolRegistry`. Write tools are queue
 | `get_badges` | `/members/{user_id}/badges` | GET | No | `gym_view_achievements` |
 | `get_streak` | `/members/{user_id}/streak` | GET | No | `gym_view_achievements` |
 | `get_schedule` | `/schedule` | GET | No | `edit_posts` |
-| `flag_promotion` | `/promotions/recommend` | POST | Yes | `gym_promote_student` |
+| `recommend_promotion` | `/promotions/recommend` | POST | Yes | `gym_promote_student` |
+| `promote_member` | `/ranks/promote` | POST | Yes | `gym_promote_student` |
 | `get_briefing` | `/briefings/class/{class_id}` | GET | No | `gym_view_briefing` |
 | `get_foundations_status` | `/foundations/{user_id}` | GET | No | `gym_view_ranks` |
 | `record_coach_roll` | `/foundations/coach-roll` | POST | Yes | `gym_promote_student` |
@@ -720,7 +724,12 @@ All tools are defined in `HMA_AI_Chat\Tools\ToolRegistry`. Write tools are queue
 |------|----------|--------|-------|----------|
 | `get_today_attendance` | `/attendance/today` | GET | No | `gym_view_attendance` |
 | `get_schedule` | `/schedule` | GET | No | `edit_posts` |
+| `get_classes` | `/classes` | GET | No | `edit_posts` |
 | `get_promotion_eligible` | `/promotions/eligible` | GET | No | `manage_woocommerce` |
+| `promote_member` | `/ranks/promote` | POST | Yes | `gym_promote_student` |
+| `calculate_pricing` | `/sales/calculate` | POST | No | `gym_process_sale` |
+| `lookup_customer` | `/sales/customer` | GET | No | `gym_process_sale` |
+| `create_lead` | `/sales/lead` | POST | Yes | `gym_process_sale` |
 | `draft_announcement` | `/announcements` | POST | Yes | `gym_manage_announcements` |
 | `draft_social_post` | `/social/draft` | POST | Yes | `gym_manage_announcements` |
 | `get_briefing_today` | `/briefings/today` | GET | No | `gym_view_briefing` |
