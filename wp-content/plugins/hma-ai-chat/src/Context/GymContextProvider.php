@@ -86,9 +86,12 @@ class GymContextProvider {
 				$sections[] = $this->get_attendance_summary();
 				$sections[] = $this->get_announcements_context();
 				$sections[] = $this->get_pending_social_context();
-				$sections[] = $this->get_schedule_context();
 				$sections[] = $this->get_pipeline_summary();
 				$sections[] = $this->get_churn_summary();
+				// Today's schedule is intentionally NOT injected for admin.
+				// It pre-loaded partial class data (today only) and biased the
+				// model toward answering class-config audits from a snapshot
+				// instead of calling get_classes / get_schedule explicitly.
 				break;
 
 			default:
