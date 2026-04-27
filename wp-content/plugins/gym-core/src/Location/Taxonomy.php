@@ -150,6 +150,12 @@ class Taxonomy {
 	 * Idempotent — safe to call on every activation. The taxonomy must be
 	 * registered before calling this method.
 	 *
+	 * Iterates a constant default map rather than get_location_labels(), since
+	 * on a fresh activation no terms exist yet — get_terms() would return an
+	 * empty array and nothing would be seeded. Runtime label lookups still go
+	 * through get_location_labels() (DB-backed), so admin-added locations work
+	 * without a code change.
+	 *
 	 * @since 1.0.0
 	 *
 	 * @return void
@@ -159,9 +165,33 @@ class Taxonomy {
 			return;
 		}
 
-		$terms = self::get_location_labels();
+		/**
+		 * Filters the default location terms inserted on first activation.
+		 *
+		 * Only consulted at activation time — runtime label lookups query the
+		 * taxonomy directly, so adding a third location via wp-admin works
+		 * without touching this filter.
+		 *
+		 * @since 1.0.0
+		 *
+		 * @param array<string, string> $defaults Slug => display name.
+		 */
+		$defaults = apply_filters(
+			'gym_core_default_locations',
+			array(
+				self::ROCKFORD => 'Rockford',
+				self::BELOIT   => 'Beloit',
+			)
+		);
 
-		foreach ( $terms as $slug => $name ) {
+		foreach ( $defaults as $slug => $name ) {
+			$slug = (string) $slug;
+			$name = (string) $name;
+
+			if ( '' === $slug || '' === $name ) {
+				continue;
+			}
+
 			if ( ! term_exists( $slug, self::SLUG ) ) {
 				wp_insert_term(
 					$name,
@@ -170,6 +200,9 @@ class Taxonomy {
 				);
 			}
 		}
+
+		// Drop the cached labels so subsequent reads pick up the freshly seeded terms.
+		wp_cache_delete( 'gym_location_labels', 'gym_core' );
 	}
 
 	/**
