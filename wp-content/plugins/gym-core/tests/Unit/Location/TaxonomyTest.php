@@ -35,9 +35,10 @@ class TaxonomyTest extends TestCase {
 		parent::setUp();
 		Monkey\setUp();
 
-		// Stub cache functions used by Taxonomy::get_location_labels().
 		// Stub cache to return location labels so Taxonomy::get_location_labels()
-		// short-circuits without calling get_terms / is_wp_error.
+		// short-circuits without calling get_terms / is_wp_error. Tests that need
+		// to exercise the empty-cache path override this with their own
+		// Functions\when( 'wp_cache_get' )->justReturn( false ).
 		Functions\when( 'wp_cache_get' )->justReturn(
 			array(
 				'rockford' => 'Rockford',
@@ -46,6 +47,9 @@ class TaxonomyTest extends TestCase {
 		);
 		Functions\when( 'wp_cache_set' )->justReturn( true );
 		Functions\when( 'wp_cache_delete' )->justReturn( true );
+
+		// Default passthrough for apply_filters — tests can override per-call.
+		Functions\when( 'apply_filters' )->returnArg( 2 );
 
 		$this->sut = new Taxonomy();
 	}
@@ -148,9 +152,21 @@ class TaxonomyTest extends TestCase {
 	}
 
 	/**
-	 * @testdox seed_terms should insert both terms when neither exists.
+	 * @testdox seed_terms should insert both terms when neither exists, even on a
+	 *          fresh activation where the labels cache is empty and get_terms()
+	 *          returns no rows.
+	 *
+	 * Regression test: a previous refactor made seed_terms() depend on
+	 * get_location_labels(), which queries the DB. On first activation that
+	 * query returned empty and nothing was seeded. This test pins the
+	 * empty-DB path so the regression cannot return.
 	 */
 	public function test_seed_terms_inserts_both_terms_when_none_exist(): void {
+		// Simulate a fresh activation: no cached labels, no terms in the DB.
+		Functions\when( 'wp_cache_get' )->justReturn( false );
+		Functions\when( 'get_terms' )->justReturn( array() );
+		Functions\when( 'is_wp_error' )->justReturn( false );
+
 		Functions\expect( 'taxonomy_exists' )
 			->once()
 			->with( Taxonomy::SLUG )
@@ -161,8 +177,14 @@ class TaxonomyTest extends TestCase {
 			->andReturn( null ); // null = term does not exist.
 
 		Functions\expect( 'wp_insert_term' )
-			->twice()
+			->once()
+			->with( 'Rockford', Taxonomy::SLUG, array( 'slug' => 'rockford' ) )
 			->andReturn( array( 'term_id' => 1, 'term_taxonomy_id' => 1 ) );
+
+		Functions\expect( 'wp_insert_term' )
+			->once()
+			->with( 'Beloit', Taxonomy::SLUG, array( 'slug' => 'beloit' ) )
+			->andReturn( array( 'term_id' => 2, 'term_taxonomy_id' => 2 ) );
 
 		Taxonomy::seed_terms();
 
@@ -188,6 +210,94 @@ class TaxonomyTest extends TestCase {
 		Taxonomy::seed_terms();
 
 		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
+		$this->assertTrue( true );
+	}
+
+	/**
+	 * @testdox seed_terms should honour the gym_core_default_locations filter.
+	 *
+	 * Locks in the filter contract so future code can override the seeded set
+	 * (e.g. for a third location) without modifying the plugin.
+	 */
+	public function test_seed_terms_honours_default_locations_filter(): void {
+		Functions\expect( 'taxonomy_exists' )
+			->once()
+			->with( Taxonomy::SLUG )
+			->andReturn( true );
+
+		// Override the apply_filters passthrough from setUp() with a custom
+		// override that injects a third location.
+		Functions\when( 'apply_filters' )->alias(
+			static function ( string $hook, $value ) {
+				if ( 'gym_core_default_locations' === $hook ) {
+					return array(
+						'rockford' => 'Rockford',
+						'beloit'   => 'Beloit',
+						'madison'  => 'Madison',
+					);
+				}
+				return $value;
+			}
+		);
+
+		Functions\expect( 'term_exists' )
+			->times( 3 )
+			->andReturn( null );
+
+		Functions\expect( 'wp_insert_term' )
+			->once()
+			->with( 'Rockford', Taxonomy::SLUG, array( 'slug' => 'rockford' ) )
+			->andReturn( array( 'term_id' => 1, 'term_taxonomy_id' => 1 ) );
+
+		Functions\expect( 'wp_insert_term' )
+			->once()
+			->with( 'Beloit', Taxonomy::SLUG, array( 'slug' => 'beloit' ) )
+			->andReturn( array( 'term_id' => 2, 'term_taxonomy_id' => 2 ) );
+
+		Functions\expect( 'wp_insert_term' )
+			->once()
+			->with( 'Madison', Taxonomy::SLUG, array( 'slug' => 'madison' ) )
+			->andReturn( array( 'term_id' => 3, 'term_taxonomy_id' => 3 ) );
+
+		Taxonomy::seed_terms();
+
+		// Brain\Monkey verifies expectations in tearDown; explicit assertion for PHPUnit.
+		$this->assertTrue( true );
+	}
+
+	/**
+	 * @testdox seed_terms should skip empty slug or name entries from a filter override.
+	 */
+	public function test_seed_terms_skips_empty_filter_entries(): void {
+		Functions\expect( 'taxonomy_exists' )
+			->once()
+			->with( Taxonomy::SLUG )
+			->andReturn( true );
+
+		Functions\when( 'apply_filters' )->alias(
+			static function ( string $hook, $value ) {
+				if ( 'gym_core_default_locations' === $hook ) {
+					return array(
+						''         => 'Empty Slug',
+						'rockford' => '',
+						'valid'    => 'Valid',
+					);
+				}
+				return $value;
+			}
+		);
+
+		Functions\expect( 'term_exists' )
+			->once()
+			->andReturn( null );
+
+		Functions\expect( 'wp_insert_term' )
+			->once()
+			->with( 'Valid', Taxonomy::SLUG, array( 'slug' => 'valid' ) )
+			->andReturn( array( 'term_id' => 1, 'term_taxonomy_id' => 1 ) );
+
+		Taxonomy::seed_terms();
+
 		$this->assertTrue( true );
 	}
 }
