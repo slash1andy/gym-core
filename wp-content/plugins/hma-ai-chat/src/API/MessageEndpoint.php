@@ -149,11 +149,13 @@ class MessageEndpoint {
 			$gym_context_provider = new \HMA_AI_Chat\Context\GymContextProvider();
 			$system_prompt       .= $gym_context_provider->get_context_for_persona( $agent_slug, get_current_user_id() );
 
-			// Call AI — use WP AI Client if available, otherwise direct ClaudeClient.
-			if ( function_exists( 'wp_ai_client_prompt' ) ) {
-				$response_text = $this->call_wp_ai_client( $system_prompt, $history, $message );
-				$tokens_used   = 0; // WP AI Client does not expose token counts.
-			} else {
+			// Call AI. Prefer ClaudeClient when an API key is configured so the
+			// tool-use loop runs (wp_ai_client_prompt does not currently
+			// auto-include registered abilities as Anthropic tools, so taking
+			// that path leaves Gandalf without a live tool surface).
+			$tool_calls = array();
+
+			if ( $this->has_anthropic_api_key() ) {
 				$messages = array();
 				foreach ( $history as $msg ) {
 					$messages[] = array(
@@ -162,8 +164,20 @@ class MessageEndpoint {
 					);
 				}
 
+				$tool_executor = \HMA_AI_Chat\Plugin::instance()->get_tool_executor();
+				$tool_registry = \HMA_AI_Chat\Tools\ToolRegistry::instance();
+				$persona_tools = $tool_registry->get_tools_for_persona( $agent_slug );
+
 				$client = new ClaudeClient();
-				$result = $client->send( $system_prompt, $messages );
+				$result = $client->send(
+					$system_prompt,
+					$messages,
+					'',
+					$persona_tools,
+					$tool_executor,
+					get_current_user_id(),
+					$agent_slug
+				);
 
 				if ( is_wp_error( $result ) ) {
 					if ( $user_message_id ) {
@@ -174,6 +188,19 @@ class MessageEndpoint {
 
 				$response_text = $result['response'];
 				$tokens_used   = $result['tokens_used'];
+				$tool_calls    = $result['tool_calls'] ?? array();
+			} elseif ( function_exists( 'wp_ai_client_prompt' ) ) {
+				$response_text = $this->call_wp_ai_client( $system_prompt, $history, $message );
+				$tokens_used   = 0;
+			} else {
+				if ( $user_message_id ) {
+					$conversation_store->delete_message( (int) $user_message_id );
+				}
+				return new WP_Error(
+					'no_ai_client',
+					esc_html__( 'No AI client is configured. Set the Anthropic API key in Gym > Settings or enable the WP AI Client.', 'hma-ai-chat' ),
+					array( 'status' => 500 )
+				);
 			}
 
 			if ( is_wp_error( $response_text ) ) {
@@ -183,12 +210,13 @@ class MessageEndpoint {
 				return $response_text;
 			}
 
-			// Store assistant message.
+			// Store assistant message with the tool-call audit trail.
 			$conversation_store->save_message(
 				$conversation_id,
 				'assistant',
 				$response_text,
-				$tokens_used
+				$tokens_used,
+				$tool_calls
 			);
 
 			return rest_ensure_response(
@@ -197,6 +225,7 @@ class MessageEndpoint {
 					'response'         => $response_text,
 					'conversation_id'  => $conversation_id,
 					'tokens_used'      => $tokens_used,
+					'tool_calls'       => $tool_calls,
 				)
 			);
 		} catch ( \Exception $e ) {
@@ -209,6 +238,16 @@ class MessageEndpoint {
 				array( 'status' => 500 )
 			);
 		}
+	}
+
+	/**
+	 * Whether an Anthropic API key is configured (constant or option).
+	 */
+	private function has_anthropic_api_key(): bool {
+		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY ) {
+			return true;
+		}
+		return '' !== (string) get_option( ClaudeClient::API_KEY_OPTION, '' );
 	}
 
 	/**
