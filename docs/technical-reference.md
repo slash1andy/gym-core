@@ -688,6 +688,7 @@ All tools are defined in `HMA_AI_Chat\Tools\ToolRegistry`. Write tools are queue
 | `calculate_pricing` | `/sales/calculate` | POST | No | `gym_process_sale` |
 | `lookup_customer` | `/sales/customer` | GET | No | `gym_process_sale` |
 | `create_lead` | `/sales/lead` | POST | Yes | `gym_process_sale` |
+| `create_kiosk_order` | `/sales/order` | POST | Yes | `gym_process_sale` |
 | `get_schedule` | `/schedule` | GET | No | `edit_posts` |
 | `get_locations` | `/locations` | GET | No | `edit_posts` |
 | `draft_sms` | `/sms/send` | POST | Yes | `gym_send_sms` |
@@ -730,6 +731,7 @@ All tools are defined in `HMA_AI_Chat\Tools\ToolRegistry`. Write tools are queue
 | `calculate_pricing` | `/sales/calculate` | POST | No | `gym_process_sale` |
 | `lookup_customer` | `/sales/customer` | GET | No | `gym_process_sale` |
 | `create_lead` | `/sales/lead` | POST | Yes | `gym_process_sale` |
+| `create_kiosk_order` | `/sales/order` | POST | Yes | `gym_process_sale` |
 | `draft_announcement` | `/announcements` | POST | Yes | `gym_manage_announcements` |
 | `draft_social_post` | `/social/draft` | POST | Yes | `gym_manage_announcements` |
 | `get_briefing_today` | `/briefings/today` | GET | No | `gym_view_briefing` |

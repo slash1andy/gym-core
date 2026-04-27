@@ -79,6 +79,7 @@ class ToolRegistry {
 		'calculate_pricing',
 		'lookup_customer',
 		'create_lead',
+		'create_kiosk_order',
 		'get_trial_info',
 		'draft_sms',
 		'get_sms_templates',
@@ -120,6 +121,7 @@ class ToolRegistry {
 			'calculate_pricing',
 			'lookup_customer',
 			'create_lead',
+			'create_kiosk_order',
 			'get_schedule',
 			'get_locations',
 			'draft_sms',
@@ -335,6 +337,64 @@ class ToolRegistry {
 				'method'       => 'GET',
 				'auth_cap'     => 'gym_process_sale',
 				'write'        => false,
+			),
+			array(
+				'name'         => 'create_kiosk_order',
+				'description'  => 'Create a sales order at the kiosk for a customer purchasing a membership/bundle. Revenue-touching write — only execute after the staff member explicitly confirms product, price, and customer details. Pair with calculate_pricing to verify the breakdown first, and lookup_customer to avoid creating a duplicate.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'product_id'   => array(
+							'type'        => 'integer',
+							'description' => 'WooCommerce product ID for the membership/bundle being purchased.',
+						),
+						'down_payment' => array(
+							'type'        => 'number',
+							'description' => 'Down payment amount in store currency (e.g. 99.00).',
+						),
+						'email'        => array(
+							'type'        => 'string',
+							'description' => 'Customer email address.',
+						),
+						'first_name'   => array(
+							'type'        => 'string',
+							'description' => 'Customer first name.',
+						),
+						'last_name'    => array(
+							'type'        => 'string',
+							'description' => 'Customer last name.',
+						),
+						'phone'        => array(
+							'type'        => 'string',
+							'description' => 'Optional customer phone number in E.164 format.',
+						),
+						'address_1'    => array(
+							'type'        => 'string',
+							'description' => 'Optional billing street address.',
+						),
+						'city'         => array(
+							'type'        => 'string',
+							'description' => 'Optional billing city.',
+						),
+						'state'        => array(
+							'type'        => 'string',
+							'description' => 'Optional billing state.',
+						),
+						'postcode'     => array(
+							'type'        => 'string',
+							'description' => 'Optional billing postal code.',
+						),
+						'location'     => array(
+							'type'        => 'string',
+							'description' => 'Optional gym location slug to associate with the order.',
+						),
+					),
+					'required'   => array( 'product_id', 'down_payment', 'email', 'first_name', 'last_name' ),
+				),
+				'endpoint'     => '/sales/order',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_process_sale',
+				'write'        => true,
 			),
 			array(
 				'name'         => 'create_lead',

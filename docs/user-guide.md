@@ -939,20 +939,20 @@ Gandalf is the staff-facing AI assistant, accessible at **Tools > Gandalf** in t
 
 ### Tool Reference by Persona
 
-**Sales tools:** `get_pricing`, `calculate_pricing`, `lookup_customer`, `create_lead`, `get_schedule`, `get_locations`, `draft_sms`, `get_trial_info`
+**Sales tools:** `get_pricing`, `calculate_pricing`, `lookup_customer`, `create_lead`, `create_kiosk_order`, `get_schedule`, `get_locations`, `draft_sms`, `get_trial_info`
 
 **Coaching tools:** `get_member_rank`, `get_rank_history`, `get_attendance`, `get_badges`, `get_streak`, `get_schedule`, `recommend_promotion`, `get_briefing`, `get_foundations_status`, `record_coach_roll`
 
 **Finance tools:** `get_revenue_summary`, `get_subscriptions`, `get_failed_payments`, `get_reports`
 
-**Admin tools:** `get_today_attendance`, `get_schedule`, `get_classes`, `get_promotion_eligible`, `promote_member`, `calculate_pricing`, `lookup_customer`, `create_lead`, `draft_announcement`, `draft_social_post`, `get_briefing_today`
+**Admin tools:** `get_today_attendance`, `get_schedule`, `get_classes`, `get_promotion_eligible`, `promote_member`, `calculate_pricing`, `lookup_customer`, `create_lead`, `create_kiosk_order`, `draft_announcement`, `draft_social_post`, `get_briefing_today`
 
 ### Read vs. Write Tools
 
 - **Read tools** execute immediately via internal REST dispatch (no HTTP overhead). They return data directly to the AI conversation.
 - **Write tools** (marked with `write: true`) are NEVER executed immediately. They are queued as **pending actions** that require staff approval.
 
-Write tools include: `draft_sms`, `recommend_promotion`, `promote_member`, `record_coach_roll`, `create_lead`, `draft_announcement`, `draft_social_post`
+Write tools include: `draft_sms`, `recommend_promotion`, `promote_member`, `record_coach_roll`, `create_lead`, `create_kiosk_order`, `draft_announcement`, `draft_social_post`
 
 ### Pending Action Approval Queue
 
