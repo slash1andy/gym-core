@@ -88,16 +88,12 @@ class ClaudeClient {
 		int $user_id = 0,
 		string $persona = ''
 	): array|\WP_Error {
-		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY ) {
-			$api_key = (string) HMA_AI_CHAT_ANTHROPIC_API_KEY;
-		} else {
-			$api_key = get_option( self::API_KEY_OPTION, '' );
-		}
+		$api_key = self::resolve_api_key();
 
 		if ( '' === $api_key ) {
 			return new \WP_Error(
 				'missing_api_key',
-				__( 'Anthropic API key is not configured. Go to Gym > Settings to add it.', 'hma-ai-chat' ),
+				__( 'Anthropic API key is not configured. Set it in Settings > Connectors (WordPress 7.0 AI Connectors), in Gym > Settings, or via the HMA_AI_CHAT_ANTHROPIC_API_KEY constant.', 'hma-ai-chat' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -229,6 +225,47 @@ class ClaudeClient {
 			'tokens_used' => $total_input_tokens + $total_output_tokens,
 			'tool_calls'  => $tool_calls_audit,
 		);
+	}
+
+	/**
+	 * Resolve the Anthropic API key from any configured source.
+	 *
+	 * Sources, in order of precedence:
+	 *   1. HMA_AI_CHAT_ANTHROPIC_API_KEY constant (plugin-specific override).
+	 *   2. WordPress 7.0 Connectors API option `connectors_ai_anthropic_api_key`
+	 *      (the canonical site-wide AI provider key — what most users will
+	 *      configure via Settings > Connectors).
+	 *   3. Legacy plugin option (`hma_ai_chat_anthropic_api_key`) for sites
+	 *      configured before WP 7.0 / for non-Anthropic-provider installs.
+	 *   4. ANTHROPIC_API_KEY environment variable (matches the AI Provider
+	 *      for Anthropic plugin's documented fallback).
+	 *
+	 * Public so MessageEndpoint can reuse the same lookup for its
+	 * has_anthropic_api_key() guard.
+	 *
+	 * @return string The configured API key, or '' when none is set.
+	 */
+	public static function resolve_api_key(): string {
+		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY ) {
+			return (string) HMA_AI_CHAT_ANTHROPIC_API_KEY;
+		}
+
+		$connectors_key = (string) get_option( 'connectors_ai_anthropic_api_key', '' );
+		if ( '' !== $connectors_key ) {
+			return $connectors_key;
+		}
+
+		$plugin_key = (string) get_option( self::API_KEY_OPTION, '' );
+		if ( '' !== $plugin_key ) {
+			return $plugin_key;
+		}
+
+		$env_key = getenv( 'ANTHROPIC_API_KEY' );
+		if ( is_string( $env_key ) && '' !== $env_key ) {
+			return $env_key;
+		}
+
+		return '';
 	}
 
 	/**
