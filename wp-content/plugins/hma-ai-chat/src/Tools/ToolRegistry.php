@@ -55,6 +55,7 @@ class ToolRegistry {
 		// Operations.
 		'get_today_attendance',
 		'get_schedule',
+		'get_classes',
 		'get_locations',
 		'get_announcements',
 		// Training / coaching.
@@ -310,6 +311,40 @@ class ToolRegistry {
 					'required'   => array( 'location' ),
 				),
 				'endpoint'     => '/schedule',
+				'method'       => 'GET',
+				'auth_cap'     => 'edit_posts',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'get_classes',
+				'description'  => 'List all active classes across the gym, optionally filtered by location, program, or instructor. Each class includes its assigned program (null when unassigned), location, instructor, capacity, and weekly time slot. Use this for audit-style queries that span all classes regardless of date — e.g. "which classes are missing a program" or "list every class an instructor teaches". Use get_schedule instead when you only need the day-by-day view for a single week.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'location'   => array(
+							'type'        => 'string',
+							'description' => 'Optional location slug to filter (e.g. "rockford", "beloit").',
+						),
+						'program'    => array(
+							'type'        => 'string',
+							'description' => 'Optional program slug to filter (e.g. "bjj", "muay-thai").',
+						),
+						'instructor' => array(
+							'type'        => 'integer',
+							'description' => 'Optional instructor user ID to filter.',
+						),
+						'per_page'   => array(
+							'type'        => 'integer',
+							'description' => 'Results per page (default 20, max 100).',
+						),
+						'page'       => array(
+							'type'        => 'integer',
+							'description' => 'Page number for pagination (default 1).',
+						),
+					),
+					'required'   => array(),
+				),
+				'endpoint'     => '/classes',
 				'method'       => 'GET',
 				'auth_cap'     => 'edit_posts',
 				'write'        => false,
