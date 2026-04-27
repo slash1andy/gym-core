@@ -81,6 +81,7 @@ class Activator {
 			role varchar(20) NOT NULL,
 			content longtext NOT NULL,
 			tokens_used int(11) DEFAULT NULL,
+			tool_calls longtext DEFAULT NULL,
 			created_at datetime DEFAULT CURRENT_TIMESTAMP,
 			PRIMARY KEY  (id),
 			KEY conversation_id (conversation_id),
@@ -89,6 +90,18 @@ class Activator {
 		) $charset_collate;";
 
 		dbDelta( $messages_sql );
+
+		// Backfill tool_calls column on existing installs (dbDelta misses
+		// columns added after the table already exists in some MySQL versions).
+		$has_tool_calls = $wpdb->get_var(
+			$wpdb->prepare(
+				"SHOW COLUMNS FROM $messages_table LIKE %s",
+				'tool_calls'
+			)
+		);
+		if ( null === $has_tool_calls ) {
+			$wpdb->query( "ALTER TABLE $messages_table ADD COLUMN tool_calls longtext DEFAULT NULL AFTER tokens_used" );
+		}
 
 		// Pending actions table.
 		// status_created composite index supports the audit-log query, which

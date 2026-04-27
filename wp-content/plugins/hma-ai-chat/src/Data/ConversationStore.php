@@ -44,13 +44,16 @@ class ConversationStore {
 	/**
 	 * Save a message to a conversation.
 	 *
-	 * @param int    $conversation_id Conversation ID.
-	 * @param string $role            Message role (user or assistant).
-	 * @param string $content         Message content.
-	 * @param int    $tokens_used     Optional token count.
+	 * @param int        $conversation_id Conversation ID.
+	 * @param string     $role            Message role (user or assistant).
+	 * @param string     $content         Message content.
+	 * @param int|null   $tokens_used     Optional token count.
+	 * @param array|null $tool_calls      Optional list of tool calls executed
+	 *                                    while producing this assistant turn.
+	 *                                    Each entry is {name, input, output, is_error}.
 	 * @return int|false Message ID on success, false on failure.
 	 */
-	public function save_message( $conversation_id, $role, $content, $tokens_used = null ) {
+	public function save_message( $conversation_id, $role, $content, $tokens_used = null, $tool_calls = null ) {
 		global $wpdb;
 
 		// Validate role.
@@ -60,6 +63,14 @@ class ConversationStore {
 
 		$table = $wpdb->prefix . 'hma_ai_messages';
 
+		$tool_calls_json = null;
+		if ( is_array( $tool_calls ) && ! empty( $tool_calls ) ) {
+			$encoded = wp_json_encode( $tool_calls );
+			if ( is_string( $encoded ) ) {
+				$tool_calls_json = $encoded;
+			}
+		}
+
 		$result = $wpdb->insert(
 			$table,
 			array(
@@ -67,8 +78,9 @@ class ConversationStore {
 				'role'            => $role,
 				'content'         => wp_kses_post( $content ),
 				'tokens_used'     => $tokens_used ? absint( $tokens_used ) : null,
+				'tool_calls'      => $tool_calls_json,
 			),
-			array( '%d', '%s', '%s', '%d' )
+			array( '%d', '%s', '%s', '%d', '%s' )
 		);
 
 		return $result ? $wpdb->insert_id : false;
