@@ -241,13 +241,15 @@ class MessageEndpoint {
 	}
 
 	/**
-	 * Whether an Anthropic API key is configured (constant or option).
+	 * Whether an Anthropic API key is configured anywhere ClaudeClient can find it.
+	 *
+	 * Delegates to ClaudeClient::resolve_api_key() so this guard stays in
+	 * lockstep with what the client will actually use — including the WP 7.0
+	 * Connectors option (`connectors_ai_anthropic_api_key`), which is where
+	 * most users configure the key via Settings > Connectors.
 	 */
 	private function has_anthropic_api_key(): bool {
-		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY ) {
-			return true;
-		}
-		return '' !== (string) get_option( ClaudeClient::API_KEY_OPTION, '' );
+		return '' !== ClaudeClient::resolve_api_key();
 	}
 
 	/**
