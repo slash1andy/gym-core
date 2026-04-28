@@ -453,6 +453,59 @@
 	outline-offset: 1px;
 }
 
+/* Content preview for body-bearing actions (announcements, social, SMS, CRM notes) */
+.hma-ai-action-preview {
+	flex-basis: 100%;
+	margin-top: 10px;
+	padding: 10px 12px;
+	background: #fafafa;
+	border: 1px solid #e5e5e5;
+	border-radius: 3px;
+	box-sizing: border-box;
+}
+
+.hma-ai-action-preview-title {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	margin-bottom: 6px;
+	line-height: 1.4;
+}
+
+.hma-ai-action-preview-body {
+	font-size: 13px;
+	color: #333;
+	line-height: 1.5;
+	white-space: pre-wrap;
+	word-break: break-word;
+	max-height: 240px;
+	overflow-y: auto;
+	padding: 8px 10px;
+	background: #fff;
+	border: 1px solid #eee;
+	border-radius: 3px;
+	box-sizing: border-box;
+}
+
+.hma-ai-action-preview-meta {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 2px 12px;
+	margin: 8px 0 0 0;
+	font-size: 12px;
+	color: #555;
+}
+
+.hma-ai-action-preview-meta dt {
+	font-weight: 600;
+	color: #444;
+}
+
+.hma-ai-action-preview-meta dd {
+	margin: 0;
+	word-break: break-word;
+}
+
 /* Approval sub-forms (changes textarea, rejection reason) */
 .hma-ai-action-changes-form,
 .hma-ai-action-reject-form {

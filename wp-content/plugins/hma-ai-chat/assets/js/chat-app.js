@@ -357,6 +357,101 @@
 	}
 
 	/**
+	 * Render a content preview for body-bearing pending actions so staff
+	 * can read what would be posted/sent before approving.
+	 *
+	 * The server-side `summary` line ("Announcement: <title>", etc.) is enough
+	 * for one-shot tools like promote_member. For tools whose value lives in
+	 * a body of text the staff member needs to read, we render the body here.
+	 *
+	 * @param {Object} action The pending action object.
+	 * @return {string} HTML string for the preview block, or empty string.
+	 */
+	function renderActionPreview(action) {
+		const params = (action.action_data && action.action_data.parameters) || {};
+		const type = action.action_type;
+
+		let title = '';
+		let body = '';
+		const meta = [];
+
+		switch (type) {
+			case 'draft_announcement':
+				title = params.title || '';
+				body = params.content || params.body || '';
+				if (params.type) {
+					let scope = params.type.charAt(0).toUpperCase() + params.type.slice(1);
+					if (params.target_location) {
+						scope += ` — ${params.target_location}`;
+					}
+					if (params.target_program) {
+						scope += ` — ${params.target_program}`;
+					}
+					meta.push({ label: 'Scope', value: scope });
+				}
+				if (params.start_date) {
+					meta.push({ label: 'Starts', value: params.start_date });
+				}
+				if (params.end_date) {
+					meta.push({ label: 'Ends', value: params.end_date });
+				}
+				if (params.pinned) {
+					meta.push({ label: 'Pinned', value: 'Yes' });
+				}
+				break;
+
+			case 'draft_social_post':
+				title = params.title || '';
+				body = params.content || params.body || '';
+				if (params.category) {
+					meta.push({ label: 'Category', value: params.category });
+				}
+				break;
+
+			case 'draft_sms':
+				body = params.message || '';
+				if (params.phone) {
+					meta.push({ label: 'To', value: params.phone });
+				}
+				if (params.template_slug) {
+					meta.push({ label: 'Template', value: params.template_slug });
+				}
+				break;
+
+			case 'add_crm_contact_note':
+				body = params.note || params.content || '';
+				if (params.contact_id) {
+					meta.push({ label: 'Contact', value: '#' + params.contact_id });
+				}
+				break;
+
+			default:
+				return '';
+		}
+
+		if (!title && !body && meta.length === 0) {
+			return '';
+		}
+
+		let html = '<div class="hma-ai-action-preview">';
+		if (title) {
+			html += `<div class="hma-ai-action-preview-title">${escapeHtml(title)}</div>`;
+		}
+		if (body) {
+			html += `<div class="hma-ai-action-preview-body">${escapeHtml(body)}</div>`;
+		}
+		if (meta.length > 0) {
+			html += '<dl class="hma-ai-action-preview-meta">';
+			meta.forEach((m) => {
+				html += `<dt>${escapeHtml(m.label)}</dt><dd>${escapeHtml(m.value)}</dd>`;
+			});
+			html += '</dl>';
+		}
+		html += '</div>';
+		return html;
+	}
+
+	/**
 	 * Render pending actions panel with three-path approval flow.
 	 *
 	 * Each action shows three buttons:
@@ -408,6 +503,7 @@
 						${config.strings.reject}
 					</button>
 				</div>
+				${renderActionPreview(action)}
 				<div class="hma-ai-action-changes-form" id="hma-changes-form-${action.id}" style="display:none;">
 					<textarea class="hma-ai-action-textarea" id="hma-changes-text-${action.id}"
 						placeholder="${config.strings.changesPlaceholder}"
