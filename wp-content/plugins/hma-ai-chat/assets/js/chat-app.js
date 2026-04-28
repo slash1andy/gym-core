@@ -143,6 +143,7 @@
 
 		if (currentAgent) {
 			messageInput.disabled = false;
+			sendBtn.disabled = false;
 			messageInput.focus();
 			currentConversationId = null;
 			clearMessages();
