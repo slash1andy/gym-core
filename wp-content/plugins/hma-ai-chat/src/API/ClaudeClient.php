@@ -170,9 +170,12 @@ class ClaudeClient {
 
 			// Append the assistant turn (verbatim — Anthropic requires it before
 			// we send tool_result blocks) and execute every tool_use block.
+			// Normalize tool_use blocks: when Claude calls a tool with no
+			// params, json_decode gives PHP array() for `input`, which we
+			// then re-encode as [] — Anthropic requires it to be a dict {}.
 			$claude_messages[] = array(
 				'role'    => 'assistant',
-				'content' => $content_blocks,
+				'content' => self::normalize_assistant_content( $content_blocks ),
 			);
 
 			$tool_result_blocks = array();
@@ -225,6 +228,37 @@ class ClaudeClient {
 			'tokens_used' => $total_input_tokens + $total_output_tokens,
 			'tool_calls'  => $tool_calls_audit,
 		);
+	}
+
+	/**
+	 * Normalize assistant content blocks before echoing them back to Anthropic.
+	 *
+	 * On a tool_use turn, Anthropic returns each block with `input` as either
+	 * an object (params present) or an empty object (no params). json_decode
+	 * collapses both into PHP arrays, and an empty PHP array re-encodes to
+	 * JSON `[]` — which Anthropic rejects with:
+	 *
+	 *   messages.N.content.M.tool_use.input: Input should be a valid dictionary
+	 *
+	 * Force `input` to a stdClass when empty so wp_json_encode emits `{}`.
+	 *
+	 * @param array $blocks Content blocks from a Claude response.
+	 * @return array
+	 */
+	private static function normalize_assistant_content( array $blocks ): array {
+		foreach ( $blocks as &$block ) {
+			if ( 'tool_use' !== ( $block['type'] ?? '' ) ) {
+				continue;
+			}
+			$input = $block['input'] ?? null;
+			if ( ! is_object( $input ) ) {
+				$block['input'] = ( is_array( $input ) && ! empty( $input ) )
+					? (object) $input
+					: new \stdClass();
+			}
+		}
+		unset( $block );
+		return $blocks;
 	}
 
 	/**
