@@ -41,6 +41,43 @@ final class KioskEndpoint {
 		add_filter( 'query_vars', array( $this, 'add_query_var' ) );
 		add_action( 'template_redirect', array( $this, 'render_kiosk' ) );
 		add_action( 'rest_api_init', array( $this, 'register_rest_fields' ) );
+		add_action( 'admin_menu', array( $this, 'register_admin_menu' ), 25 );
+	}
+
+	/**
+	 * Registers a Check-In submenu under the Gym admin menu.
+	 *
+	 * The kiosk lives at the front-end /check-in/ URL (rewrite rule above),
+	 * not in wp-admin. The menu entry is a small redirect shim — clicking it
+	 * goes to admin.php?page=gym-checkin-redirect, the callback fires a
+	 * wp_safe_redirect to the kiosk URL, and the front-end opens in the same
+	 * tab so attendants don't have to bookmark the kiosk URL separately.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return void
+	 */
+	public function register_admin_menu(): void {
+		add_submenu_page(
+			'gym-core',
+			__( 'Check-In Kiosk', 'gym-core' ),
+			__( 'Check-In', 'gym-core' ),
+			'gym_check_in_member',
+			'gym-checkin-redirect',
+			array( $this, 'redirect_to_kiosk' )
+		);
+	}
+
+	/**
+	 * Redirect the admin menu link to the front-end kiosk URL.
+	 *
+	 * @since 3.2.0
+	 *
+	 * @return void
+	 */
+	public function redirect_to_kiosk(): void {
+		wp_safe_redirect( home_url( '/' . self::SLUG . '/' ) );
+		exit;
 	}
 
 	/**
