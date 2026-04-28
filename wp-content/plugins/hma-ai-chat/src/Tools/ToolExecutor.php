@@ -218,8 +218,14 @@ class ToolExecutor {
 
 		$agent_user_id = AgentUserManager::get_agent_user_id( $persona );
 
+		// Two strings on every queued action:
+		//   - summary: request-specific "what is this asking" — surfaces in
+		//     the approval list ("Assign program 'kids-bjj' to class #113").
+		//   - description: original generic tool description, kept around for
+		//     audit-log context and tooltips.
 		$action_data = array(
 			'tool_name'     => $tool_name,
+			'summary'       => self::summarize_call( $tool_name, $params, $tool ),
 			'description'   => $tool['description'],
 			'endpoint'      => $tool['endpoint'],
 			'method'        => $tool['method'],
@@ -350,5 +356,168 @@ class ToolExecutor {
 		);
 
 		return $route;
+	}
+
+	/**
+	 * Build a request-specific summary line for a queued tool call.
+	 *
+	 * The approval UI renders one line per pending action; the previous code
+	 * used the tool's generic registry description, so 13 queued
+	 * assign_class_program actions all looked identical. This produces a
+	 * concise human summary grounded in the actual parameters so reviewers
+	 * can scan and bulk-approve confidently.
+	 *
+	 * @param string     $tool_name Tool name from the registry.
+	 * @param array      $params    Parameters from the AI tool call.
+	 * @param array|null $tool      Optional tool definition (used for label).
+	 * @return string
+	 */
+	private static function summarize_call( string $tool_name, array $params, ?array $tool = null ): string {
+		switch ( $tool_name ) {
+			case 'assign_class_program':
+				return sprintf(
+					/* translators: 1: program slug, 2: class id */
+					__( 'Assign program "%1$s" to class #%2$s', 'hma-ai-chat' ),
+					(string) ( $params['program'] ?? '?' ),
+					(string) ( $params['class_id'] ?? '?' )
+				);
+
+			case 'recommend_promotion':
+				return sprintf(
+					/* translators: 1: user id, 2: program slug */
+					__( 'Recommend user #%1$s for promotion in %2$s', 'hma-ai-chat' ),
+					(string) ( $params['user_id'] ?? '?' ),
+					(string) ( $params['program'] ?? '?' )
+				);
+
+			case 'promote_member':
+				$belt    = isset( $params['belt'] ) ? ' to ' . $params['belt'] : '';
+				$stripes = isset( $params['stripes'] ) ? ' (' . (int) $params['stripes'] . ' stripes)' : '';
+				return sprintf(
+					/* translators: 1: user id, 2: program slug, 3: " to <belt>", 4: " (<stripes> stripes)" */
+					__( 'Promote user #%1$s in %2$s%3$s%4$s', 'hma-ai-chat' ),
+					(string) ( $params['user_id'] ?? '?' ),
+					(string) ( $params['program'] ?? '?' ),
+					$belt,
+					$stripes
+				);
+
+			case 'record_coach_roll':
+				return sprintf(
+					/* translators: 1: user id, 2: roll outcome */
+					__( 'Record coach roll for user #%1$s — outcome: %2$s', 'hma-ai-chat' ),
+					(string) ( $params['user_id'] ?? '?' ),
+					(string) ( $params['result'] ?? $params['outcome'] ?? '?' )
+				);
+
+			case 'enroll_foundations':
+				return sprintf(
+					/* translators: %s: user id */
+					__( 'Enroll user #%s in Foundations', 'hma-ai-chat' ),
+					(string) ( $params['user_id'] ?? '?' )
+				);
+
+			case 'clear_foundations':
+				return sprintf(
+					/* translators: %s: user id */
+					__( 'Clear Foundations for user #%s', 'hma-ai-chat' ),
+					(string) ( $params['user_id'] ?? '?' )
+				);
+
+			case 'create_lead':
+				$name = trim( ( $params['first_name'] ?? '' ) . ' ' . ( $params['last_name'] ?? '' ) );
+				$contact = $params['email'] ?? $params['phone'] ?? '';
+				if ( '' !== $name && '' !== $contact ) {
+					return sprintf(
+						/* translators: 1: lead full name, 2: email or phone */
+						__( 'Create lead: %1$s (%2$s)', 'hma-ai-chat' ),
+						$name,
+						$contact
+					);
+				}
+				return __( 'Create lead', 'hma-ai-chat' ) . ( '' !== $name ? ': ' . $name : '' ) . ( '' !== $contact ? ' (' . $contact . ')' : '' );
+
+			case 'create_kiosk_order':
+				$name  = trim( ( $params['first_name'] ?? '' ) . ' ' . ( $params['last_name'] ?? '' ) );
+				$down  = isset( $params['down_payment'] ) ? '$' . number_format( (float) $params['down_payment'], 2 ) : '?';
+				$prod  = isset( $params['product_id'] ) ? '#' . (int) $params['product_id'] : '?';
+				return sprintf(
+					/* translators: 1: customer name (may be empty), 2: down payment, 3: product id */
+					__( 'Kiosk order for %1$s — %2$s down on product %3$s', 'hma-ai-chat' ),
+					'' !== $name ? $name : __( '(no name)', 'hma-ai-chat' ),
+					$down,
+					$prod
+				);
+
+			case 'draft_sms':
+				$body = $params['message'] ?? $params['template_slug'] ?? '';
+				$body = mb_substr( (string) $body, 0, 80 );
+				return sprintf(
+					/* translators: 1: phone, 2: truncated message body */
+					__( 'SMS to %1$s: "%2$s"', 'hma-ai-chat' ),
+					(string) ( $params['phone'] ?? '?' ),
+					$body
+				);
+
+			case 'draft_announcement':
+				$title = $params['title'] ?? mb_substr( (string) ( $params['body'] ?? $params['content'] ?? '' ), 0, 60 );
+				return sprintf(
+					/* translators: %s: announcement title or excerpt */
+					__( 'Announcement: %s', 'hma-ai-chat' ),
+					(string) $title
+				);
+
+			case 'draft_social_post':
+				$body = mb_substr( (string) ( $params['content'] ?? $params['body'] ?? '' ), 0, 80 );
+				return sprintf(
+					/* translators: %s: social post excerpt */
+					__( 'Social post: "%s"', 'hma-ai-chat' ),
+					$body
+				);
+
+			case 'approve_social_post':
+				return sprintf(
+					/* translators: %s: post id */
+					__( 'Approve social post #%s', 'hma-ai-chat' ),
+					(string) ( $params['post_id'] ?? $params['id'] ?? '?' )
+				);
+
+			case 'add_crm_contact_note':
+				$note = mb_substr( (string) ( $params['note'] ?? $params['content'] ?? '' ), 0, 80 );
+				return sprintf(
+					/* translators: 1: contact id, 2: truncated note */
+					__( 'CRM note on contact #%1$s: "%2$s"', 'hma-ai-chat' ),
+					(string) ( $params['contact_id'] ?? '?' ),
+					$note
+				);
+
+			case 'issue_refund':
+				$amount = isset( $params['amount'] ) ? '$' . number_format( (float) $params['amount'], 2 ) : __( 'full', 'hma-ai-chat' );
+				return sprintf(
+					/* translators: 1: amount, 2: order id */
+					__( 'Refund %1$s on order #%2$s', 'hma-ai-chat' ),
+					$amount,
+					(string) ( $params['order_id'] ?? '?' )
+				);
+		}
+
+		// Generic fallback: tool_name(key=value, key=value)
+		$pairs = array();
+		foreach ( $params as $key => $value ) {
+			if ( is_scalar( $value ) ) {
+				$str = (string) $value;
+			} else {
+				$encoded = wp_json_encode( $value );
+				$str     = is_string( $encoded ) ? $encoded : '?';
+			}
+			$pairs[] = $key . '=' . mb_substr( $str, 0, 60 );
+		}
+		$args_string = implode( ', ', $pairs );
+
+		if ( '' === $args_string ) {
+			return $tool_name;
+		}
+
+		return $tool_name . ' (' . $args_string . ')';
 	}
 }

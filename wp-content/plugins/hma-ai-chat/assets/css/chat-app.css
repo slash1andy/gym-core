@@ -370,6 +370,14 @@
 	line-height: 1.4;
 }
 
+.hma-ai-action-summary {
+	font-size: 14px;
+	font-weight: 600;
+	color: #1d2327;
+	margin-top: 4px;
+	line-height: 1.4;
+}
+
 .hma-ai-action-controls {
 	display: flex;
 	gap: 6px;

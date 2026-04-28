@@ -391,7 +391,7 @@
 				<div class="hma-ai-action-info">
 					<div class="hma-ai-action-agent">${escapeHtml(action.agent)}</div>
 					<div class="hma-ai-action-type">${escapeHtml(action.action_type)}</div>
-					${action.action_data && action.action_data.description ? `<div class="hma-ai-action-description">${escapeHtml(action.action_data.description)}</div>` : ''}
+					${action.action_data && action.action_data.summary ? `<div class="hma-ai-action-summary">${escapeHtml(action.action_data.summary)}</div>` : ''}
 					<div class="hma-ai-action-time">${formatDate(action.created_at)}</div>
 				</div>
 				<div class="hma-ai-action-controls">

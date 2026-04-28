@@ -305,7 +305,15 @@ class AuditLogPage {
 			);
 		}
 
-		// Fall back to description.
+		// Prefer the request-specific summary populated at queue time —
+		// "Assign program 'kids-bjj' to class #113" beats the generic tool
+		// description "Assign a program to a class. …" for scanning the log.
+		if ( ! empty( $data['summary'] ) ) {
+			return (string) $data['summary'];
+		}
+
+		// Fall back to description for legacy rows captured before the
+		// summary field was added.
 		if ( ! empty( $data['description'] ) ) {
 			return wp_trim_words( $data['description'], 12 );
 		}
