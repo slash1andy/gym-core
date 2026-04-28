@@ -112,7 +112,7 @@ class ToolRegistry {
 	 *
 	 * Sales and coaching have restricted tool sets.
 	 * Finance and admin share the full ADMIN_TOOLS set — differentiated by
-	 * system prompt only (Joyous has a finance-oriented persona).
+	 * system prompt only (Pippin has a finance-oriented persona).
 	 *
 	 * @var array<string, list<string>>
 	 */
