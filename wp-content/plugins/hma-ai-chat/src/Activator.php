@@ -144,4 +144,39 @@ class Activator {
 			$validator->generate_secret();
 		}
 	}
+
+	/**
+	 * Drop the stored "Joyous" finance-agent override after the Pippin rename.
+	 *
+	 * The chat page resolves the agent's display name from
+	 * `hma_ai_chat_agent_overrides[finance][name]` first, falling back to the
+	 * code default. Sites that customised the label while the default was
+	 * "Joyous" have it pinned in the option, so the rename to "Pippin" never
+	 * surfaces in the picker. We only drop the value when it's the literal
+	 * old default — any other custom label the operator chose is preserved.
+	 *
+	 * @since 0.5.1
+	 * @internal
+	 */
+	public static function clear_stale_finance_override(): void {
+		$overrides = get_option( 'hma_ai_chat_agent_overrides', array() );
+
+		if ( ! is_array( $overrides ) ) {
+			return;
+		}
+
+		if ( ! isset( $overrides['finance']['name'] ) || 'Joyous' !== $overrides['finance']['name'] ) {
+			return;
+		}
+
+		unset( $overrides['finance']['name'] );
+
+		// If the finance override row is now empty, drop the whole row so it
+		// doesn't linger as a no-op entry.
+		if ( empty( $overrides['finance'] ) ) {
+			unset( $overrides['finance'] );
+		}
+
+		update_option( 'hma_ai_chat_agent_overrides', $overrides );
+	}
 }
