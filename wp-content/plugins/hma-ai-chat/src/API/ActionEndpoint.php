@@ -320,13 +320,72 @@ class ActionEndpoint {
 			);
 		}
 
+		// Dispatch the approved write immediately. Without this the action
+		// sits forever at 'approved' and never mutates anything (the original
+		// design assumed an external "Paperclip" runner; on this site the
+		// approval IS the trigger).
+		$dispatch = $this->dispatch_approved( $action );
+
 		return rest_ensure_response(
 			array(
-				'success'   => true,
+				'success'   => $dispatch['success'],
 				'action_id' => $action_id,
-				'status'    => 'approved',
-				'message'   => esc_html__( 'Action approved. Executing now.', 'hma-ai-chat' ),
+				'status'    => $dispatch['success'] ? 'completed' : 'approved',
+				'message'   => $dispatch['success']
+					? esc_html__( 'Action approved and executed.', 'hma-ai-chat' )
+					: sprintf(
+						/* translators: %s: error message from the tool execution. */
+						esc_html__( 'Action approved but execution failed: %s', 'hma-ai-chat' ),
+						$dispatch['error'] ?? __( 'unknown error', 'hma-ai-chat' )
+					),
+				'executed'  => $dispatch['success'],
+				'error'     => $dispatch['error'] ?? null,
+				'result'    => $dispatch['result'] ?? null,
 			)
+		);
+	}
+
+	/**
+	 * Run an approved action through ToolExecutor and persist the outcome.
+	 *
+	 * Looks up the shared ToolExecutor (capability checks + write-tool routing
+	 * already live there). On success marks the row 'completed' and stores
+	 * the execution payload; on failure keeps it at 'approved' but records
+	 * the error so the audit log can surface what went wrong.
+	 *
+	 * @since 0.5.1
+	 *
+	 * @param array $action The pending action row, including parsed action_data.
+	 * @return array{success: bool, error?: string, result?: mixed}
+	 */
+	private function dispatch_approved( array $action ): array {
+		$executor = \HMA_AI_Chat\Plugin::instance()->get_tool_executor();
+		$store    = new \HMA_AI_Chat\Data\PendingActionStore();
+
+		if ( null === $executor ) {
+			$store->record_execution_error( (int) $action['id'], __( 'Tool executor unavailable.', 'hma-ai-chat' ) );
+			return array(
+				'success' => false,
+				'error'   => __( 'Tool executor unavailable.', 'hma-ai-chat' ),
+			);
+		}
+
+		$action_data = is_array( $action['action_data'] ) ? $action['action_data'] : array();
+		$result      = $executor->execute_approved_write( $action_data );
+
+		if ( ! empty( $result['success'] ) ) {
+			$store->mark_completed( (int) $action['id'], is_array( $result['data'] ?? null ) ? $result['data'] : array() );
+			return array(
+				'success' => true,
+				'result'  => $result['data'] ?? null,
+			);
+		}
+
+		$error = $result['error'] ?? __( 'Execution failed.', 'hma-ai-chat' );
+		$store->record_execution_error( (int) $action['id'], (string) $error );
+		return array(
+			'success' => false,
+			'error'   => (string) $error,
 		);
 	}
 
@@ -519,16 +578,38 @@ class ActionEndpoint {
 		if ( 'approve' === $operation ) {
 			$result = $store->bulk_approve( $action_ids, $user_id );
 
+			// Dispatch each approved action through the executor immediately.
+			// Same rationale as the single-action approve path: without this
+			// the rows stay at 'approved' forever and never mutate anything.
+			$executed = array();
+			$exec_failed = array();
+			foreach ( $result['approved'] as $action_id ) {
+				$action = $store->get_action( (int) $action_id );
+				if ( ! $action ) {
+					$exec_failed[] = array( 'id' => (int) $action_id, 'error' => __( 'Action vanished after approval.', 'hma-ai-chat' ) );
+					continue;
+				}
+				$dispatch = $this->dispatch_approved( $action );
+				if ( $dispatch['success'] ) {
+					$executed[] = (int) $action_id;
+				} else {
+					$exec_failed[] = array( 'id' => (int) $action_id, 'error' => $dispatch['error'] ?? __( 'unknown error', 'hma-ai-chat' ) );
+				}
+			}
+
 			return rest_ensure_response(
 				array(
-					'success'  => true,
-					'approved' => $result['approved'],
-					'failed'   => $result['failed'],
-					'message'  => sprintf(
-						/* translators: 1: approved count, 2: failed count */
-						esc_html__( '%1$d approved, %2$d failed.', 'hma-ai-chat' ),
-						count( $result['approved'] ),
-						count( $result['failed'] )
+					'success'         => true,
+					'approved'        => $result['approved'],
+					'failed'          => $result['failed'],
+					'executed'        => $executed,
+					'execution_failed' => $exec_failed,
+					'message'         => sprintf(
+						/* translators: 1: completed count, 2: approval-failed count, 3: execution-failed count */
+						esc_html__( '%1$d completed, %2$d failed to approve, %3$d failed to execute.', 'hma-ai-chat' ),
+						count( $executed ),
+						count( $result['failed'] ),
+						count( $exec_failed )
 					),
 				)
 			);

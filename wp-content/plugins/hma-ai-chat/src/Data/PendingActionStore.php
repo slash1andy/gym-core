@@ -146,6 +146,89 @@ class PendingActionStore {
 	}
 
 	/**
+	 * Mark an approved action as completed and store the execution result.
+	 *
+	 * Called immediately after ToolExecutor::execute_approved_write() succeeds
+	 * so the audit log shows the final state and the inline approval list
+	 * stops surfacing the row.
+	 *
+	 * @since 0.5.1
+	 *
+	 * @param int   $action_id      Action ID.
+	 * @param array $execution_data Result payload from the executor (typically
+	 *                              the updated record returned by the endpoint).
+	 * @return bool True on success.
+	 */
+	public function mark_completed( $action_id, array $execution_data = array() ): bool {
+		global $wpdb;
+
+		$action = $this->get_action( $action_id );
+		if ( ! $action ) {
+			return false;
+		}
+
+		$action_data                     = is_array( $action['action_data'] ) ? $action['action_data'] : array();
+		$action_data['executed_at']      = current_time( 'mysql' );
+		$action_data['execution_result'] = $execution_data;
+
+		$table  = $wpdb->prefix . 'hma_ai_pending_actions';
+		$result = $wpdb->update(
+			$table,
+			array(
+				'status'      => 'completed',
+				'action_data' => wp_json_encode( $action_data ),
+			),
+			array( 'id' => absint( $action_id ) ),
+			array( '%s', '%s' ),
+			array( '%d' )
+		);
+
+		if ( false !== $result ) {
+			wp_cache_delete( 'hma_ai_pending_count' );
+		}
+
+		return false !== $result;
+	}
+
+	/**
+	 * Record an execution failure on an approved action.
+	 *
+	 * Keeps the status at 'approved' so the audit log can show the row went
+	 * through approval but failed to execute, and merges the error message
+	 * into action_data so the reviewer can see what went wrong without
+	 * digging into server logs.
+	 *
+	 * @since 0.5.1
+	 *
+	 * @param int    $action_id Action ID.
+	 * @param string $error     Human-readable error message.
+	 * @return bool True on success.
+	 */
+	public function record_execution_error( $action_id, string $error ): bool {
+		global $wpdb;
+
+		$action = $this->get_action( $action_id );
+		if ( ! $action ) {
+			return false;
+		}
+
+		$action_data                     = is_array( $action['action_data'] ) ? $action['action_data'] : array();
+		$action_data['execution_error']  = $error;
+		$action_data['execution_failed'] = current_time( 'mysql' );
+
+		$table  = $wpdb->prefix . 'hma_ai_pending_actions';
+		$result = $wpdb->update(
+			$table,
+			array( 'action_data' => wp_json_encode( $action_data ) ),
+			array( 'id' => absint( $action_id ) ),
+			array( '%s' ),
+			array( '%d' )
+		);
+
+		return false !== $result;
+	}
+
+	/**
 	 * Approve a pending action with staff-directed changes.
 	 *
 	 * The agent will re-execute the action incorporating the staff's
