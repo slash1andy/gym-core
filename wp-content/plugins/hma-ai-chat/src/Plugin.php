@@ -128,6 +128,14 @@ class Plugin {
 			return;
 		}
 
+		// 0.5.0 → 0.5.1: drop the stored "Joyous" finance-agent override left
+		// behind by the rename to Pippin. Without this, the agent picker keeps
+		// showing the old name on installs that customised the agent label
+		// before the rename landed.
+		if ( version_compare( $current, '0.5.1', '<' ) ) {
+			Activator::clear_stale_finance_override();
+		}
+
 		Activator::activate();
 	}
 
