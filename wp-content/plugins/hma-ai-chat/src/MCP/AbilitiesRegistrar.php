@@ -99,25 +99,30 @@ class AbilitiesRegistrar {
 		// Convert snake_case tool name to kebab-case for ability naming.
 		$ability_name = self::NAMESPACE_PREFIX . '/' . str_replace( '_', '-', $tool_name );
 
-		wp_register_ability(
-			$ability_name,
-			array(
-				'label'               => self::tool_name_to_label( $tool_name ),
-				'description'         => $tool['description'] ?? '',
-				'category'            => self::CATEGORY_SLUG,
-				'input_schema'        => $tool['input_schema'] ?? array(),
-				'execute_callback'    => self::make_execute_callback( $tool_name ),
-				'permission_callback' => self::make_permission_callback( $tool ),
-				'meta'                => array(
-					'show_in_rest' => true,
-					'annotations'  => array(
-						'readonly'    => empty( $tool['write'] ),
-						'destructive' => false,
-						'idempotent'  => empty( $tool['write'] ),
-					),
+		$args = array(
+			'label'               => self::tool_name_to_label( $tool_name ),
+			'description'         => $tool['description'] ?? '',
+			'category'            => self::CATEGORY_SLUG,
+			'input_schema'        => $tool['input_schema'] ?? array(),
+			'execute_callback'    => self::make_execute_callback( $tool_name ),
+			'permission_callback' => self::make_permission_callback( $tool ),
+			'meta'                => array(
+				'show_in_rest' => true,
+				'annotations'  => array(
+					'readonly'    => empty( $tool['write'] ),
+					'destructive' => false,
+					'idempotent'  => empty( $tool['write'] ),
 				),
-			)
+			),
 		);
+
+		// Output schemas are optional — only forward when the tool defines one,
+		// so abilities-api validation isn't enforced for unschemaed tools.
+		if ( ! empty( $tool['output_schema'] ) && is_array( $tool['output_schema'] ) ) {
+			$args['output_schema'] = $tool['output_schema'];
+		}
+
+		wp_register_ability( $ability_name, $args );
 	}
 
 	/**
