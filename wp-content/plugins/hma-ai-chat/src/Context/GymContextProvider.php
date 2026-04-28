@@ -468,74 +468,96 @@ class GymContextProvider {
 	// -------------------------------------------------------------------------
 
 	/**
-	 * Get active subscription count.
+	 * Get active subscription count and on-hold count.
+	 *
+	 * Both this section and the MRR section read from the same gym/v1
+	 * endpoint so the two numbers can never drift apart.
 	 *
 	 * @return string
 	 */
 	private function get_subscription_summary(): string {
-		$subs = $this->rest_get( '/wc/v3/subscriptions', array(
-			'status'   => 'active',
-			'per_page' => 1,
-		) );
+		$summary = $this->get_subscriptions_summary_data();
 
-		// WC REST API returns total count in response headers; for internal
-		// dispatch we check the response envelope or count.
-		$count = 0;
-
-		if ( is_array( $subs ) ) {
-			// Try to get total from the response data if it includes a total field.
-			$count = count( $subs );
+		if ( null === $summary ) {
+			return '';
 		}
 
-		// Use a reports endpoint for a more accurate count.
-		$report = $this->rest_get( '/wc/v3/reports/customers/totals' );
-		$active_subs = $count;
+		$lines   = array();
+		$lines[] = '## Subscription Overview';
+		$lines[] = sprintf( 'Active subscriptions: %d', (int) ( $summary['active_count'] ?? 0 ) );
 
-		if ( is_array( $report ) ) {
-			foreach ( $report as $entry ) {
-				if ( isset( $entry['slug'] ) && 'paying' === $entry['slug'] ) {
-					$active_subs = (int) ( $entry['total'] ?? $count );
-					break;
-				}
-			}
+		$on_hold = (int) ( $summary['on_hold_count'] ?? 0 );
+		if ( $on_hold > 0 ) {
+			$lines[] = sprintf( 'On-hold / pending-cancel: %d', $on_hold );
 		}
 
-		return sprintf( "## Subscription Overview\nActive subscriptions: %d", $active_subs );
+		return implode( "\n", $lines );
 	}
 
 	/**
-	 * Get Monthly Recurring Revenue (MRR).
+	 * Get Monthly Recurring Revenue (MRR) from active subscriptions.
+	 *
+	 * Reads from the same gym/v1 endpoint as get_subscription_summary so the
+	 * count and MRR are always derived from the same set of subscriptions.
 	 *
 	 * @return string
 	 */
 	private function get_mrr_context(): string {
-		$first_of_month = wp_date( 'Y-m-01' );
-		$today          = wp_date( 'Y-m-d' );
+		$summary = $this->get_subscriptions_summary_data();
 
-		$revenue = $this->rest_get( '/wc/v3/reports/revenue/stats', array(
-			'period'   => 'custom',
-			'date_min' => $first_of_month,
-			'date_max' => $today,
-		) );
-
-		if ( ! is_array( $revenue ) ) {
+		if ( null === $summary ) {
 			return '';
 		}
 
-		// WC Analytics nests totals under 'totals'.
-		$totals     = $revenue['totals'] ?? $revenue;
-		$net        = $totals['net_revenue'] ?? $totals['total_sales'] ?? 0;
-		$refunds    = $totals['refunds'] ?? 0;
+		$mrr      = (float) ( $summary['mrr'] ?? 0 );
+		$arr      = (float) ( $summary['arr'] ?? 0 );
+		$currency = (string) ( $summary['currency'] ?? 'USD' );
 
 		$lines   = array();
-		$lines[] = '## Monthly Revenue (MTD)';
-		$lines[] = sprintf( 'Net Revenue: $%s', number_format( (float) $net, 2 ) );
+		$lines[] = '## Monthly Recurring Revenue';
+		$lines[] = sprintf( 'MRR: %s %s', $currency, number_format( $mrr, 2 ) );
+		$lines[] = sprintf( 'ARR: %s %s', $currency, number_format( $arr, 2 ) );
 
-		if ( $refunds ) {
-			$lines[] = sprintf( 'Refunds: $%s', number_format( abs( (float) $refunds ), 2 ) );
+		// Surface multi-currency state so the model doesn't pretend the MRR
+		// figure aggregates everything when subscriptions span currencies.
+		$by_currency = $summary['mrr_by_currency'] ?? array();
+		if ( is_array( $by_currency ) && count( $by_currency ) > 1 ) {
+			$parts = array();
+			foreach ( $by_currency as $code => $amount ) {
+				$parts[] = sprintf( '%s %s', (string) $code, number_format( (float) $amount, 2 ) );
+			}
+			$lines[] = sprintf( 'By currency: %s', implode( ', ', $parts ) );
 		}
 
 		return implode( "\n", $lines );
+	}
+
+	/**
+	 * Fetch the subscription summary payload with per-request caching.
+	 *
+	 * Two persona context sections read from this — caching the result keeps
+	 * the duplicate call cheap without persisting stale numbers across
+	 * requests longer than the configured TTL.
+	 *
+	 * @return array<string, mixed>|null Payload from /gym/v1/subscriptions/summary, or null on failure.
+	 */
+	private function get_subscriptions_summary_data(): ?array {
+		$cache_key = 'subscriptions_summary';
+		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+
+		if ( false !== $cached ) {
+			return is_array( $cached ) ? $cached : null;
+		}
+
+		$data = $this->rest_get( '/gym/v1/subscriptions/summary' );
+
+		if ( ! is_array( $data ) ) {
+			return null;
+		}
+
+		wp_cache_set( $cache_key, $data, self::CACHE_GROUP, self::CACHE_TTL );
+
+		return $data;
 	}
 
 	/**

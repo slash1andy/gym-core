@@ -314,6 +314,52 @@ if ( ! class_exists( 'WP_Term' ) ) {
 // WooCommerce product classes
 // -------------------------------------------------------------------------
 
+if ( ! class_exists( 'WC_Subscription' ) ) {
+	/**
+	 * Stub for WC_Subscription — used by OrderController for site-wide
+	 * subscription totals and MRR computation.
+	 *
+	 * Tests use Mockery to override the getter return values.
+	 */
+	class WC_Subscription { // phpcs:ignore
+		/**
+		 * Returns the recurring total per billing cycle.
+		 *
+		 * @return string
+		 */
+		public function get_total(): string {
+			return '0';
+		}
+
+		/**
+		 * Returns the billing period: 'day', 'week', 'month', or 'year'.
+		 *
+		 * @return string
+		 */
+		public function get_billing_period(): string {
+			return 'month';
+		}
+
+		/**
+		 * Returns the billing interval (e.g. 3 for "every 3 months").
+		 *
+		 * @return int
+		 */
+		public function get_billing_interval(): int {
+			return 1;
+		}
+
+		/**
+		 * Returns the subscription's currency code.
+		 *
+		 * @return string
+		 */
+		public function get_currency(): string {
+			return 'USD';
+		}
+	}
+}
+
 if ( ! class_exists( 'WC_Product' ) ) {
 	/**
 	 * Stub for WC_Product — used as a type hint in format_product().

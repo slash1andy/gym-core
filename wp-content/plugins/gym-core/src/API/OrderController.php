@@ -20,6 +20,7 @@ namespace Gym_Core\API;
  *   GET  /gym/v1/orders/member/{user_id}          Order history
  *   GET  /gym/v1/orders/member/{user_id}/billing   Billing details
  *   GET  /gym/v1/subscriptions/member/{user_id}    Subscription status (tiered)
+ *   GET  /gym/v1/subscriptions/summary             Active count + MRR (site-wide)
  *   GET  /gym/v1/orders/churn                      Churn metrics
  *   POST /gym/v1/orders/{order_id}/refund          Issue refund
  */
@@ -95,6 +96,18 @@ class OrderController extends BaseController {
 						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
+			)
+		);
+
+		// Site-wide subscription summary (active count, MRR).
+		register_rest_route(
+			$this->namespace,
+			'/subscriptions/summary',
+			array(
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => array( $this, 'get_subscriptions_summary' ),
+				'permission_callback' => array( $this, 'permissions_manage' ),
+				'args'                => array(),
 			)
 		);
 
@@ -331,6 +344,135 @@ class OrderController extends BaseController {
 		}
 
 		return $this->success_response( $data );
+	}
+
+	/**
+	 * Returns site-wide active subscription count and Monthly Recurring Revenue.
+	 *
+	 * Source of truth for both Pippin's injected context block and the
+	 * `get_mrr` tool. Backed by `wcs_get_subscriptions()` so the count and
+	 * MRR are always derived from the same query.
+	 *
+	 * MRR is the sum of each active subscription's recurring total, normalised
+	 * to a per-month equivalent based on the subscription's billing period and
+	 * interval (day → ×30.4375, week → ×4.345, year → ÷12). On-hold and
+	 * pending-cancel subscriptions are reported separately and are NOT included
+	 * in MRR — they're not currently billing.
+	 *
+	 * Returns 503 when WooCommerce Subscriptions is not active rather than
+	 * silently reporting zero, so callers can distinguish "no data" from
+	 * "no subscriptions".
+	 *
+	 * @since 2.4.0
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function get_subscriptions_summary( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		if ( ! function_exists( 'wcs_get_subscriptions' ) ) {
+			return $this->error_response( 'wcs_unavailable', __( 'WooCommerce Subscriptions is not active.', 'gym-core' ), 503 );
+		}
+
+		$active_subs = wcs_get_subscriptions(
+			array(
+				'subscription_status'    => array( 'active' ),
+				'subscriptions_per_page' => -1,
+			)
+		);
+
+		$on_hold_subs = wcs_get_subscriptions(
+			array(
+				'subscription_status'    => array( 'on-hold', 'pending-cancel' ),
+				'subscriptions_per_page' => -1,
+			)
+		);
+
+		$active_count  = is_array( $active_subs ) ? count( $active_subs ) : 0;
+		$on_hold_count = is_array( $on_hold_subs ) ? count( $on_hold_subs ) : 0;
+
+		$mrr_by_currency = array();
+
+		if ( is_array( $active_subs ) ) {
+			foreach ( $active_subs as $subscription ) {
+				$monthly = self::monthly_equivalent(
+					(float) $subscription->get_total(),
+					(string) $subscription->get_billing_period(),
+					(int) $subscription->get_billing_interval()
+				);
+
+				if ( $monthly <= 0.0 ) {
+					continue;
+				}
+
+				$currency = strtoupper( (string) $subscription->get_currency() );
+				if ( '' === $currency ) {
+					$currency = 'USD';
+				}
+
+				if ( ! isset( $mrr_by_currency[ $currency ] ) ) {
+					$mrr_by_currency[ $currency ] = 0.0;
+				}
+				$mrr_by_currency[ $currency ] += $monthly;
+			}
+		}
+
+		// Round each currency bucket to two decimals.
+		foreach ( $mrr_by_currency as $code => $amount ) {
+			$mrr_by_currency[ $code ] = round( $amount, 2 );
+		}
+
+		// Primary MRR figure: largest bucket (or 0 with USD when no subs).
+		$primary_currency = 'USD';
+		$mrr              = 0.0;
+
+		if ( ! empty( $mrr_by_currency ) ) {
+			arsort( $mrr_by_currency );
+			$primary_currency = (string) array_key_first( $mrr_by_currency );
+			$mrr              = (float) $mrr_by_currency[ $primary_currency ];
+		}
+
+		return $this->success_response(
+			array(
+				'active_count'    => $active_count,
+				'on_hold_count'   => $on_hold_count,
+				'mrr'             => $mrr,
+				'arr'             => round( $mrr * 12, 2 ),
+				'currency'        => $primary_currency,
+				'mrr_by_currency' => $mrr_by_currency,
+				'as_of'           => gmdate( 'c' ),
+			)
+		);
+	}
+
+	/**
+	 * Converts a subscription's recurring total to a per-month equivalent.
+	 *
+	 * @since 2.4.0
+	 *
+	 * @param float  $amount   Recurring total per billing cycle.
+	 * @param string $period   Billing period: 'day', 'week', 'month', 'year'.
+	 * @param int    $interval Billing interval (e.g. 3 for "every 3 months").
+	 * @return float Monthly-equivalent amount, or 0.0 when inputs are invalid.
+	 */
+	private static function monthly_equivalent( float $amount, string $period, int $interval ): float {
+		if ( $amount <= 0.0 || $interval < 1 ) {
+			return 0.0;
+		}
+
+		// Average days per month: 365.25 / 12.
+		$factor = match ( strtolower( $period ) ) {
+			'day'   => 30.4375,
+			'week'  => 30.4375 / 7,
+			'month' => 1.0,
+			'year'  => 1.0 / 12.0,
+			default => 0.0,
+		};
+
+		if ( 0.0 === $factor ) {
+			return 0.0;
+		}
+
+		return ( $amount * $factor ) / $interval;
 	}
 
 	/**
