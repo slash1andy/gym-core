@@ -7,23 +7,4 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
-    'HMA_AI_Chat\\API\\ActionEndpoint' => $baseDir . '/src/API/ActionEndpoint.php',
-    'HMA_AI_Chat\\API\\ClaudeClient' => $baseDir . '/src/API/ClaudeClient.php',
-    'HMA_AI_Chat\\API\\HeartbeatEndpoint' => $baseDir . '/src/API/HeartbeatEndpoint.php',
-    'HMA_AI_Chat\\API\\MessageEndpoint' => $baseDir . '/src/API/MessageEndpoint.php',
-    'HMA_AI_Chat\\Activator' => $baseDir . '/src/Activator.php',
-    'HMA_AI_Chat\\Admin\\AuditLogPage' => $baseDir . '/src/Admin/AuditLogPage.php',
-    'HMA_AI_Chat\\Admin\\ChatPage' => $baseDir . '/src/Admin/ChatPage.php',
-    'HMA_AI_Chat\\Admin\\SettingsPage' => $baseDir . '/src/Admin/SettingsPage.php',
-    'HMA_AI_Chat\\Agents\\AgentPersona' => $baseDir . '/src/Agents/AgentPersona.php',
-    'HMA_AI_Chat\\Agents\\AgentRegistry' => $baseDir . '/src/Agents/AgentRegistry.php',
-    'HMA_AI_Chat\\Context\\ConversationMemory' => $baseDir . '/src/Context/ConversationMemory.php',
-    'HMA_AI_Chat\\Context\\GymContextProvider' => $baseDir . '/src/Context/GymContextProvider.php',
-    'HMA_AI_Chat\\Data\\ConversationStore' => $baseDir . '/src/Data/ConversationStore.php',
-    'HMA_AI_Chat\\Data\\PendingActionStore' => $baseDir . '/src/Data/PendingActionStore.php',
-    'HMA_AI_Chat\\Deactivator' => $baseDir . '/src/Deactivator.php',
-    'HMA_AI_Chat\\Plugin' => $baseDir . '/src/Plugin.php',
-    'HMA_AI_Chat\\Security\\WebhookValidator' => $baseDir . '/src/Security/WebhookValidator.php',
-    'HMA_AI_Chat\\Tools\\ToolExecutor' => $baseDir . '/src/Tools/ToolExecutor.php',
-    'HMA_AI_Chat\\Tools\\ToolRegistry' => $baseDir . '/src/Tools/ToolRegistry.php',
 );

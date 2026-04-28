@@ -1,5 +1,7 @@
 includes:
+    - phar://phpstan.phar/conf/bleedingEdge.neon
     - vendor/szepeviktor/phpstan-wordpress/extension.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
 
 parameters:
     level: 6
@@ -13,7 +15,7 @@ parameters:
 
     excludePaths:
         - vendor/
-        - node_modules/
+        - node_modules/ (?)
         - tests/
         - assets/
         # Integration modules interact with commercial extensions (AutomateWoo,
@@ -36,7 +38,6 @@ parameters:
         - '#Unreachable statement - code above always terminates#'
         # Cookie constants are defined by WordPress at runtime.
         - '#Constant COOKIEPATH not found#'
-        - '#Constant COOKIE_DOMAIN not found#'
         # LocationController passes get_post_thumbnail_id() result (int|false) to
         # wp_get_attachment_url() which expects int. False case is handled by the ternary.
         -
@@ -48,12 +49,14 @@ parameters:
         - '#Function wcs_get_users_subscriptions not found#'
         - '#Function wc_memberships_get_user_active_memberships not found#'
         - '#WC_Subscription#'
+        - '#WC_Product_Subscription#'
+        # WC()->payment_gateways is a real WooCommerce property, missing from stubs.
+        - '#Access to an undefined property WooCommerce::\$payment_gateways#'
+        # ABSPATH . 'wp-admin/...' and template paths resolve at WP runtime, not at static analysis.
+        - '#Path in (require_once|include)\(\) ".+(wp-admin|templates).+" is not a file or it does not exist#'
         # Level 6 iterable value type hints — bulk suppressed since most are WP/WC
         # return types (get_results, get_terms, etc.) that are mixed by nature.
         - '#no value type specified in iterable type array#'
-        # Defensive is_wp_error() checks on values PHPStan proves are always
-        # non-error types. These are intentional runtime safety for WP API results.
-        - '#is_wp_error\(.+\) will always evaluate to false#'
         # Properties stored for future use or subclass access.
         - '#Property .+ is never read, only written#'
         # Boundary comparisons that PHPStan resolves statically.

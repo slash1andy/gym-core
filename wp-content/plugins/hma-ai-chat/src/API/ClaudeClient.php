@@ -358,7 +358,13 @@ class ClaudeClient {
 	 */
 	private function post_with_retry( string $api_key, array $body ) {
 		$encoded_body = wp_json_encode( $body );
-		$args         = array(
+		if ( false === $encoded_body ) {
+			return new \WP_Error(
+				'hma_ai_chat_json_encode_failed',
+				__( 'Failed to encode request body for Claude API.', 'hma-ai-chat' )
+			);
+		}
+		$args = array(
 			'timeout' => 60,
 			'headers' => array(
 				'Content-Type'      => 'application/json',
@@ -447,6 +453,6 @@ class ClaudeClient {
 		// Exponential: 500ms, 1s, 2s base; +/- 250ms jitter.
 		$base   = 500_000 * ( 2 ** ( $attempt - 1 ) );
 		$jitter = random_int( -250_000, 250_000 );
-		return max( 0, $base + $jitter );
+		return (int) max( 0, $base + $jitter );
 	}
 }

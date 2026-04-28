@@ -940,7 +940,7 @@ final class PromotionListTable extends \WP_List_Table {
 		$page     = $this->get_pagenum();
 		$offset   = ( $page - 1 ) * $per_page;
 
-		$this->items = array_slice( array_values( $members ), $offset, $per_page );
+		$this->items = array_slice( $members, $offset, $per_page );
 
 		$this->set_pagination_args(
 			array(

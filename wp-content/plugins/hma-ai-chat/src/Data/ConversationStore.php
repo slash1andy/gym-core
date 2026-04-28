@@ -249,8 +249,9 @@ class ConversationStore {
 		$retention_days = (int) apply_filters( 'hma_ai_chat_retention_days', $retention_days );
 		$retention_days = max( 1, $retention_days ); // Minimum 1 day.
 
-		$table    = $wpdb->prefix . 'hma_ai_conversations';
-		$cutoff   = gmdate( 'Y-m-d H:i:s', strtotime( "-{$retention_days} days" ) );
+		$table     = $wpdb->prefix . 'hma_ai_conversations';
+		$cutoff_ts = strtotime( "-{$retention_days} days" );
+		$cutoff    = gmdate( 'Y-m-d H:i:s', false === $cutoff_ts ? time() : $cutoff_ts );
 
 		// Foreign key CASCADE handles message deletion.
 		$deleted = $wpdb->query(

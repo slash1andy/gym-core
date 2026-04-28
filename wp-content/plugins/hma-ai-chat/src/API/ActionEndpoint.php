@@ -674,8 +674,8 @@ class ActionEndpoint {
 		unset( $item );
 
 		$response = rest_ensure_response( $result['items'] );
-		$response->header( 'X-WP-Total', $result['total'] );
-		$response->header( 'X-WP-TotalPages', $result['total_pages'] );
+		$response->header( 'X-WP-Total', (string) $result['total'] );
+		$response->header( 'X-WP-TotalPages', (string) $result['total_pages'] );
 
 		return $response;
 	}

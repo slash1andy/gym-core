@@ -156,7 +156,9 @@ final class ProductMetaBox {
 		echo '</div>';
 
 		// Show/hide based on product type via inline JS.
-		wc_enqueue_js(
+		// wc-admin-meta-boxes is enqueued on the WC product edit screen.
+		wp_add_inline_script(
+			'wc-admin-meta-boxes',
 			"jQuery(function($) {
 				function toggleSalesPricing() {
 					var type = $('select#product-type').val();

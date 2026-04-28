@@ -34,13 +34,6 @@ class ToolExecutor {
 	private const GYM_NAMESPACE = 'gym/v1';
 
 	/**
-	 * REST namespace for WooCommerce endpoints.
-	 *
-	 * @var string
-	 */
-	private const WC_NAMESPACE = 'wc/v3';
-
-	/**
 	 * Tool registry instance.
 	 *
 	 * @var ToolRegistry
@@ -211,7 +204,8 @@ class ToolExecutor {
 		if ( null === $tool ) {
 			return array(
 				'success' => false,
-				'data'    => null,
+				'data'    => array(),
+				'pending' => false,
 				'error'   => __( 'Unknown tool.', 'hma-ai-chat' ),
 			);
 		}
@@ -246,7 +240,7 @@ class ToolExecutor {
 		if ( false === $action_id ) {
 			return array(
 				'success' => false,
-				'data'    => null,
+				'data'    => array(),
 				'pending' => false,
 				'error'   => __( 'Failed to queue action for approval.', 'hma-ai-chat' ),
 			);
