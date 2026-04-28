@@ -350,8 +350,8 @@ class GymContextProvider {
 			return $cached;
 		}
 
-		$today    = wp_date( 'Y-m-d' );
-		$day_name = wp_date( 'l' );
+		$today    = (string) wp_date( 'Y-m-d' );
+		$day_name = (string) wp_date( 'l' );
 
 		$lines   = array();
 		$lines[] = sprintf( "## Today's Schedule (%s, %s)", $day_name, $today );
@@ -451,7 +451,7 @@ class GymContextProvider {
 			}
 
 			$found   = true;
-			$lines[] = sprintf( "\n### %s", ucfirst( str_replace( '-', ' ', $program ) ) );
+			$lines[] = sprintf( "\n### %s", ucfirst( str_replace( '-', ' ', (string) $program ) ) );
 
 			foreach ( $eligible as $member ) {
 				$name   = $member['display_name'] ?? $member['name'] ?? 'Member';
@@ -697,10 +697,11 @@ class GymContextProvider {
 		$lines[] = sprintf( '## Pending Social Posts (%d awaiting approval)', $count );
 
 		foreach ( $posts as $post ) {
+			$ts      = strtotime( $post->post_date );
 			$lines[] = sprintf(
 				'- "%s" — drafted %s',
 				esc_html( $post->post_title ),
-				wp_date( 'M j', strtotime( $post->post_date ) )
+				wp_date( 'M j', false === $ts ? null : $ts )
 			);
 		}
 
@@ -815,7 +816,7 @@ class GymContextProvider {
 			return $cached;
 		}
 
-		$day_name = strtolower( wp_date( 'l' ) );
+		$day_name = strtolower( (string) wp_date( 'l' ) );
 		$today    = wp_date( 'Y-m-d' );
 
 		$locations = $this->rest_get( '/gym/v1/locations' );

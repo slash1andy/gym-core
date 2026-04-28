@@ -538,7 +538,7 @@ class SettingsPage {
 		$days = (int) get_option( 'hma_ai_chat_retention_days', 30 );
 		printf(
 			'<input type="number" id="hma_ai_chat_retention_days" name="hma_ai_chat_retention_days" value="%d" min="1" max="365" class="small-text" />',
-			esc_attr( $days )
+			esc_attr( (string) $days )
 		);
 		echo '<p class="description">' . esc_html__( 'Conversations older than this many days are automatically purged.', 'hma-ai-chat' ) . '</p>';
 	}
@@ -809,7 +809,7 @@ class SettingsPage {
 		if ( ! is_string( $input ) ) {
 			if ( is_array( $input ) ) {
 				return array_values( array_filter( $input, function ( $ip ) {
-					return filter_var( sanitize_text_field( $ip ), FILTER_VALIDATE_IP );
+					return false !== filter_var( sanitize_text_field( $ip ), FILTER_VALIDATE_IP );
 				} ) );
 			}
 			return array();

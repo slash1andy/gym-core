@@ -551,7 +551,7 @@ final class ImportCommand {
 			}
 
 			if ( function_exists( 'zeroBSCRM_addUpdateLog' ) ) {
-				zeroBSCRM_addUpdateLog( // @phpstan-ignore-line
+				zeroBSCRM_addUpdateLog(
 					$contact_id,
 					-1,
 					-1,
@@ -587,7 +587,7 @@ final class ImportCommand {
 	private function resolve_crm_contact_by_email( string $email ): int {
 		// Try Jetpack CRM's native email lookup.
 		if ( function_exists( 'zeroBS_getContactByEmail' ) ) {
-			$contact = zeroBS_getContactByEmail( $email ); // @phpstan-ignore-line
+			$contact = zeroBS_getContactByEmail( $email );
 			if ( ! empty( $contact ) && isset( $contact['id'] ) ) {
 				return (int) $contact['id'];
 			}
@@ -601,7 +601,7 @@ final class ImportCommand {
 
 		// Jetpack CRM stores a WP user → contact link.
 		if ( function_exists( 'zeroBS_getCustomerIDWithEmail' ) ) {
-			$id = zeroBS_getCustomerIDWithEmail( $email ); // @phpstan-ignore-line
+			$id = zeroBS_getCustomerIDWithEmail( $email );
 			if ( $id ) {
 				return (int) $id;
 			}
@@ -619,25 +619,21 @@ final class ImportCommand {
 	private function read_csv( string $file ): array {
 		if ( '' === $file ) {
 			\WP_CLI::error( 'The --file argument is required.' );
-			return null;
 		}
 
 		if ( ! file_exists( $file ) ) {
 			\WP_CLI::error( "File not found: {$file}" );
-			return null;
 		}
 
 		$handle = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
 		if ( false === $handle ) {
 			\WP_CLI::error( "Cannot open file: {$file}" );
-			return null;
 		}
 
 		$headers = fgetcsv( $handle );
 		if ( false === $headers ) {
-			\WP_CLI::error( 'CSV file is empty or has no header row.' );
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
-			return null;
+			\WP_CLI::error( 'CSV file is empty or has no header row.' );
 		}
 
 		// Normalize header names.

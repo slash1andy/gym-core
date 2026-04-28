@@ -245,7 +245,7 @@ class ConversationMemory {
 		if ( empty( $note ) ) {
 			return array(
 				'success' => false,
-				'data'    => null,
+				'data'    => array(),
 				'error'   => __( 'A note is required.', 'hma-ai-chat' ),
 			);
 		}

@@ -334,7 +334,7 @@ class SalesController extends BaseController {
 
 		// Search Jetpack CRM contacts if available.
 		if ( function_exists( 'zeroBS_searchContacts' ) ) {
-			$crm_results = zeroBS_searchContacts( $search, 10 ); // @phpstan-ignore-line
+			$crm_results = zeroBS_searchContacts( $search, 10 );
 
 			if ( is_array( $crm_results ) ) {
 				foreach ( $crm_results as $contact ) {
@@ -456,7 +456,7 @@ class SalesController extends BaseController {
 				'tags'    => $tags,
 			);
 
-			$contact_id = zeroBS_integrations_addOrUpdateContact( // @phpstan-ignore-line
+			$contact_id = zeroBS_integrations_addOrUpdateContact(
 				'gym-core-sales-kiosk',
 				! empty( $fields['email'] ) ? $fields['email'] : $fields['phone'],
 				$contact_data
@@ -464,7 +464,7 @@ class SalesController extends BaseController {
 
 			// Add notes if provided.
 			if ( $contact_id && ! empty( $fields['notes'] ) && function_exists( 'zeroBS_addNote' ) ) {
-				zeroBS_addNote( // @phpstan-ignore-line
+				zeroBS_addNote(
 					$contact_id,
 					-1,
 					-1,

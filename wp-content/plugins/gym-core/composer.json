@@ -14,9 +14,10 @@
 		"php-stubs/woocommerce-stubs": "^10.6",
 		"php-stubs/wp-cli-stubs": "^2.12",
 		"phpcompatibility/phpcompatibility-wp": "*",
-		"phpstan/phpstan": "^1.10",
+		"phpstan/phpstan": "^2.0",
+		"phpstan/phpstan-deprecation-rules": "^2.0",
 		"phpunit/phpunit": "^10.0",
-		"szepeviktor/phpstan-wordpress": "^1.3",
+		"szepeviktor/phpstan-wordpress": "^2.0",
 		"wp-coding-standards/wpcs": "^3.0"
 	},
 	"autoload": {
@@ -32,7 +33,7 @@
 	"scripts": {
 		"lint": "phpcs --standard=phpcs.xml.dist",
 		"lint-fix": "phpcbf --standard=phpcs.xml.dist",
-		"phpstan": "phpstan analyse --no-progress --memory-limit=512M",
+		"phpstan": "phpstan analyse --no-progress --memory-limit=1500M",
 		"test-unit": "phpunit --testsuite unit",
 		"test-integration": "phpunit --testsuite integration",
 		"test-all": [

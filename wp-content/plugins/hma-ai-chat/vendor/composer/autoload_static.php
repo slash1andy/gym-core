@@ -22,25 +22,6 @@ class ComposerStaticInitfa347bfe4bd76156e47a60cb18d65f45
 
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
-        'HMA_AI_Chat\\API\\ActionEndpoint' => __DIR__ . '/../..' . '/src/API/ActionEndpoint.php',
-        'HMA_AI_Chat\\API\\ClaudeClient' => __DIR__ . '/../..' . '/src/API/ClaudeClient.php',
-        'HMA_AI_Chat\\API\\HeartbeatEndpoint' => __DIR__ . '/../..' . '/src/API/HeartbeatEndpoint.php',
-        'HMA_AI_Chat\\API\\MessageEndpoint' => __DIR__ . '/../..' . '/src/API/MessageEndpoint.php',
-        'HMA_AI_Chat\\Activator' => __DIR__ . '/../..' . '/src/Activator.php',
-        'HMA_AI_Chat\\Admin\\AuditLogPage' => __DIR__ . '/../..' . '/src/Admin/AuditLogPage.php',
-        'HMA_AI_Chat\\Admin\\ChatPage' => __DIR__ . '/../..' . '/src/Admin/ChatPage.php',
-        'HMA_AI_Chat\\Admin\\SettingsPage' => __DIR__ . '/../..' . '/src/Admin/SettingsPage.php',
-        'HMA_AI_Chat\\Agents\\AgentPersona' => __DIR__ . '/../..' . '/src/Agents/AgentPersona.php',
-        'HMA_AI_Chat\\Agents\\AgentRegistry' => __DIR__ . '/../..' . '/src/Agents/AgentRegistry.php',
-        'HMA_AI_Chat\\Context\\ConversationMemory' => __DIR__ . '/../..' . '/src/Context/ConversationMemory.php',
-        'HMA_AI_Chat\\Context\\GymContextProvider' => __DIR__ . '/../..' . '/src/Context/GymContextProvider.php',
-        'HMA_AI_Chat\\Data\\ConversationStore' => __DIR__ . '/../..' . '/src/Data/ConversationStore.php',
-        'HMA_AI_Chat\\Data\\PendingActionStore' => __DIR__ . '/../..' . '/src/Data/PendingActionStore.php',
-        'HMA_AI_Chat\\Deactivator' => __DIR__ . '/../..' . '/src/Deactivator.php',
-        'HMA_AI_Chat\\Plugin' => __DIR__ . '/../..' . '/src/Plugin.php',
-        'HMA_AI_Chat\\Security\\WebhookValidator' => __DIR__ . '/../..' . '/src/Security/WebhookValidator.php',
-        'HMA_AI_Chat\\Tools\\ToolExecutor' => __DIR__ . '/../..' . '/src/Tools/ToolExecutor.php',
-        'HMA_AI_Chat\\Tools\\ToolRegistry' => __DIR__ . '/../..' . '/src/Tools/ToolRegistry.php',
     );
 
     public static function getInitializer(ClassLoader $loader)

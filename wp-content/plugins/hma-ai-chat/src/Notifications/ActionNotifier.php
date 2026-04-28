@@ -140,12 +140,18 @@ class ActionNotifier {
 			esc_url_raw( $audit_url )
 		);
 
+		$body = wp_json_encode( array( 'text' => $text ) );
+		if ( false === $body ) {
+			$this->log_error( 'slack', 'wp_json_encode failed for Slack payload' );
+			return;
+		}
+
 		$response = wp_remote_post(
 			$webhook_url,
 			array(
 				'timeout' => 5,
 				'headers' => array( 'Content-Type' => 'application/json' ),
-				'body'    => wp_json_encode( array( 'text' => $text ) ),
+				'body'    => $body,
 			)
 		);
 

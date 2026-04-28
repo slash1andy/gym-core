@@ -120,10 +120,18 @@ class MessageEndpoint {
 		try {
 			// Get or create conversation.
 			if ( ! $conversation_id ) {
-				$conversation_id = $conversation_store->create_conversation(
+				$created_id = $conversation_store->create_conversation(
 					get_current_user_id(),
 					$agent_slug
 				);
+				if ( false === $created_id ) {
+					return new \WP_Error(
+						'hma_ai_chat_conversation_create_failed',
+						__( 'Failed to create conversation.', 'hma-ai-chat' ),
+						array( 'status' => 500 )
+					);
+				}
+				$conversation_id = $created_id;
 			} else {
 				$conversation = $conversation_store->get_conversation_record( $conversation_id );
 				if ( $conversation && (int) $conversation['user_id'] !== get_current_user_id() && ! current_user_can( 'manage_options' ) ) {
