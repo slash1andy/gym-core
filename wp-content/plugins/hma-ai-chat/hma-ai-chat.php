@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 defined( 'ABSPATH' ) || exit;
 
-define( 'HMA_AI_CHAT_VERSION', '0.4.1' );
+define( 'HMA_AI_CHAT_VERSION', '0.5.0' );
 define( 'HMA_AI_CHAT_FILE', __FILE__ );
 define( 'HMA_AI_CHAT_PATH', plugin_dir_path( __FILE__ ) );
 define( 'HMA_AI_CHAT_URL', plugin_dir_url( __FILE__ ) );
