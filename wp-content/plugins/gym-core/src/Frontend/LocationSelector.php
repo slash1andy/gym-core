@@ -116,11 +116,11 @@ class LocationSelector {
 			self::SCRIPT_HANDLE,
 			'gymLocation',
 			array(
-				'ajaxUrl'    => admin_url( 'admin-ajax.php' ),
-				'nonce'      => wp_create_nonce( 'gym_location_nonce' ),
-				'current'    => $this->manager->get_current_location(),
-				'locations'  => $this->get_location_coordinates(),
-				'i18n'       => array(
+				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
+				'nonce'     => wp_create_nonce( 'gym_location_nonce' ),
+				'current'   => $this->manager->get_current_location(),
+				'locations' => $this->get_location_coordinates(),
+				'i18n'      => array(
 					'switching' => __( 'Switching location…', 'gym-core' ),
 					'error'     => __( 'Could not switch location. Please try again.', 'gym-core' ),
 				),

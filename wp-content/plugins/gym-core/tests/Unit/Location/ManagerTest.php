@@ -216,7 +216,7 @@ class ManagerTest extends TestCase {
 	 *
 	 * @return array<string, array<string>>
 	 */
-	public function invalid_location_provider(): array {
+	public static function invalid_location_provider(): array {
 		return array(
 			'empty string'  => array( '' ),
 			'unknown city'  => array( 'chicago' ),

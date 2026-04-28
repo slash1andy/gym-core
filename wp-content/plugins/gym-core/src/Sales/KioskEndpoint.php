@@ -291,8 +291,18 @@ final class KioskEndpoint {
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title><?php echo esc_html( sprintf( __( 'Payment — %s', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ); ?></title>
-	<?php wp_head(); ?>
+	<title>
+		<?php
+		echo esc_html(
+			sprintf(
+				/* translators: %s: brand name */
+				__( 'Payment — %s', 'gym-core' ),
+				\Gym_Core\Utilities\Brand::name()
+			)
+		);
+		?>
+	</title>
+		<?php wp_head(); ?>
 	<style>
 		body { margin: 0; padding: 0; background: #F5F5F7; font-family: "Inter", "Helvetica Neue", Arial, sans-serif; }
 		body #wpadminbar { display: none !important; }
@@ -337,7 +347,7 @@ final class KioskEndpoint {
 			<?php esc_html_e( 'Cancel and return to sales', 'gym-core' ); ?>
 		</a>
 	</div>
-	<?php wp_footer(); ?>
+		<?php wp_footer(); ?>
 </body>
 </html>
 		<?php

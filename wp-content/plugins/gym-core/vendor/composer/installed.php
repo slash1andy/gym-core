@@ -3,7 +3,7 @@
         'name' => 'haanpaa-martial-arts/gym-core',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '9a0a4e44f66da8fc6546ab240c0223dae7003a4a',
+        'reference' => '339f69944c958a5cb0b258ab2e2ce30b13a727b1',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'haanpaa-martial-arts/gym-core' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '9a0a4e44f66da8fc6546ab240c0223dae7003a4a',
+            'reference' => '339f69944c958a5cb0b258ab2e2ce30b13a727b1',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

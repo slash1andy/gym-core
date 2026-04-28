@@ -422,8 +422,8 @@ final class PromotionDashboard {
 					}
 
 					if ( (int) $rank->stripes < $max_stripes ) {
-						/* translators: 1: belt name, 2: stripe number */
 						$target = sprintf(
+							/* translators: 1: belt name, 2: stripe number */
 							__( '%1$s — Stripe %2$d', 'gym-core' ),
 							$current,
 							(int) $rank->stripes + 1
@@ -532,8 +532,8 @@ final class PromotionDashboard {
 			}
 		}
 
-		/* translators: 1: number promoted, 2: number failed */
 		$message = sprintf(
+			/* translators: 1: number promoted, 2: number failed */
 			__( '%1$d member(s) promoted successfully. %2$d failed.', 'gym-core' ),
 			$promoted,
 			$failed
@@ -561,8 +561,8 @@ final class PromotionDashboard {
 			++$recommended;
 		}
 
-		/* translators: %d: number of recommendations set */
 		$message = sprintf(
+			/* translators: %d: number of recommendations set */
 			__( '%d member(s) recommended for promotion.', 'gym-core' ),
 			$recommended
 		);
@@ -1101,8 +1101,8 @@ final class PromotionListTable extends \WP_List_Table {
 			}
 		}
 
-		/* translators: 1: current stripes, 2: max stripes */
 		$label = sprintf(
+			/* translators: 1: current stripes, 2: max stripes */
 			__( '%1$d of %2$d stripes', 'gym-core' ),
 			$current,
 			$max

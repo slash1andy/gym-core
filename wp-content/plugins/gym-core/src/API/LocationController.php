@@ -64,7 +64,7 @@ class LocationController extends BaseController {
 	 * @return void
 	 */
 	public function register_routes(): void {
-		// GET /gym/v1/locations
+		// GET /gym/v1/locations.
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base,
@@ -78,7 +78,7 @@ class LocationController extends BaseController {
 			)
 		);
 
-		// GET /gym/v1/locations/{slug}
+		// GET /gym/v1/locations/{slug}.
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base . '/(?P<slug>[a-z0-9-]+)',
@@ -93,7 +93,7 @@ class LocationController extends BaseController {
 			)
 		);
 
-		// GET /gym/v1/locations/{slug}/products
+		// GET /gym/v1/locations/{slug}/products.
 		register_rest_route(
 			$this->namespace,
 			'/' . $this->rest_base . '/(?P<slug>[a-z0-9-]+)/products',
@@ -110,7 +110,7 @@ class LocationController extends BaseController {
 			)
 		);
 
-		// GET + PUT /gym/v1/user/location
+		// GET + PUT /gym/v1/user/location.
 		register_rest_route(
 			$this->namespace,
 			'/user/location',

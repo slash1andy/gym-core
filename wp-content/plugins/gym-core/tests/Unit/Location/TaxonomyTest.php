@@ -99,7 +99,7 @@ class TaxonomyTest extends TestCase {
 	 *
 	 * @return array<string, array<string>>
 	 */
-	public function invalid_slug_provider(): array {
+	public static function invalid_slug_provider(): array {
 		return array(
 			'arbitrary string'   => array( 'chicago' ),
 			'SQL injection'      => array( "' OR 1=1 --" ),

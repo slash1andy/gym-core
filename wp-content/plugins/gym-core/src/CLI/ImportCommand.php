@@ -240,9 +240,8 @@ final class ImportCommand {
 		if ( ! empty( $batch ) && ! $dry_run ) {
 			$this->flush_attendance_batch( $tables['attendance'], $batch );
 			$imported += count( $batch );
-		} elseif ( $dry_run ) {
-			// Count was tracked in loop.
 		}
+		// On dry runs the count was already tracked in the loop above.
 
 		$this->report( 'attendance', $imported, $skipped, $dry_run );
 	}

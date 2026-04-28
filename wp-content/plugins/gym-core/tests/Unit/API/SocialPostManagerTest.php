@@ -39,6 +39,7 @@ class SocialPostManagerTest extends TestCase {
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'sanitize_text_field' )->returnArg( 1 );
 		Functions\when( 'wp_kses_post' )->returnArg( 1 );
+		Functions\when( 'esc_html' )->returnArg( 1 );
 		Functions\when( 'absint' )->alias(
 			static function ( mixed $val ): int {
 				return abs( (int) $val );
