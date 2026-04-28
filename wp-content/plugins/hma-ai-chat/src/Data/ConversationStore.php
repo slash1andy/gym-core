@@ -71,17 +71,28 @@ class ConversationStore {
 			}
 		}
 
-		$result = $wpdb->insert(
-			$table,
-			array(
-				'conversation_id' => absint( $conversation_id ),
-				'role'            => $role,
-				'content'         => wp_kses_post( $content ),
-				'tokens_used'     => $tokens_used ? absint( $tokens_used ) : null,
-				'tool_calls'      => $tool_calls_json,
-			),
-			array( '%d', '%s', '%s', '%d', '%s' )
+		$row     = array(
+			'conversation_id' => absint( $conversation_id ),
+			'role'            => $role,
+			'content'         => wp_kses_post( $content ),
+			'tokens_used'     => $tokens_used ? absint( $tokens_used ) : null,
+			'tool_calls'      => $tool_calls_json,
 		);
+		$formats = array( '%d', '%s', '%s', '%d', '%s' );
+
+		$result = $wpdb->insert( $table, $row, $formats );
+
+		// Fallback: if the tool_calls column hasn't been migrated yet on this
+		// install, the insert above fails silently and a new user turn never
+		// lands in history — which then makes Anthropic reject the request
+		// with "messages: at least one message is required". Retry without
+		// the column so chat keeps working until the next page load triggers
+		// maybe_upgrade_db().
+		if ( false === $result ) {
+			unset( $row['tool_calls'] );
+			array_pop( $formats );
+			$result = $wpdb->insert( $table, $row, $formats );
+		}
 
 		return $result ? $wpdb->insert_id : false;
 	}
