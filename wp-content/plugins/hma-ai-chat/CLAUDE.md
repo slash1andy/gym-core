@@ -60,12 +60,14 @@ src/
 - `hma_ai_chat_execution_complete` — fires when Paperclip run completes
 
 ### Agent Personas
-| Agent | Capability | Icon |
-|-------|-----------|------|
-| Sales | `edit_posts` | 💼 |
-| Coaching | `edit_posts` | 🥋 |
-| Finance | `manage_options` | 💰 |
-| Admin | `manage_options` | ⚙️ |
+| Slug | Display name | Capability | Icon |
+|------|--------------|-----------|------|
+| `sales` | Sales | `edit_posts` | 💼 |
+| `coaching` | Coaching | `edit_posts` | 🥋 |
+| `finance` | Pippin | `manage_options` | 🍎 |
+| `admin` | Gandalf (Admin Agent) | `manage_options` | ⚙️ |
+
+The `finance` and `admin` personas share the full `ADMIN_TOOLS` set — they're differentiated by system prompt only. Pippin and Gandalf reference each other in their prompts (Pippin defers staffing/policy questions to Gandalf; Gandalf trusts Pippin's tool-grounded numbers).
 
 ## Current Status
 
