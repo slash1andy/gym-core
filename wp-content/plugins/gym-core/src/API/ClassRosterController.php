@@ -129,12 +129,12 @@ class ClassRosterController extends BaseController {
 
 		return $this->success_response(
 			array(
-				'class_id'        => $class_id,
-				'class_name'      => $class_post->post_title,
-				'program'         => $program,
-				'capacity'        => $capacity > 0 ? $capacity : null,
-				'expected_count'  => count( $enriched ),
-				'students'        => $enriched,
+				'class_id'       => $class_id,
+				'class_name'     => $class_post->post_title,
+				'program'        => $program,
+				'capacity'       => $capacity > 0 ? $capacity : null,
+				'expected_count' => count( $enriched ),
+				'students'       => $enriched,
 			)
 		);
 	}

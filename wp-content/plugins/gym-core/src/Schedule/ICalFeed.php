@@ -1,6 +1,6 @@
 <?php
 /**
- * iCalendar (.ics) feed for the gym class schedule.
+ * ICalendar (.ics) feed for the gym class schedule.
  *
  * Provides subscribable calendar feeds at:
  * - /gym-calendar.ics           (all locations)

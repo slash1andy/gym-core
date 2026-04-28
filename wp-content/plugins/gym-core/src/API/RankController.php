@@ -216,7 +216,7 @@ class RankController extends BaseController {
 				return array(
 					'program'      => $record->program,
 					'from_belt'    => $record->from_belt,
-					'from_stripes' => $record->from_stripes !== null ? (int) $record->from_stripes : null,
+					'from_stripes' => null !== $record->from_stripes ? (int) $record->from_stripes : null,
 					'to_belt'      => $record->to_belt,
 					'to_stripes'   => (int) $record->to_stripes,
 					'promoted_at'  => $record->promoted_at,

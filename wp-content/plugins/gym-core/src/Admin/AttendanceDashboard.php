@@ -940,7 +940,7 @@ final class AttendanceDashboard {
 				echo '<a href="' . esc_url( $profile_url ) . '">' . esc_html( $member->display_name ) . '</a>';
 				echo '<span class="days-absent">';
 				/* translators: %d: number of days since last check-in */
-				printf( esc_html__( '%d days ago', 'gym-core' ), $days_ago );
+				printf( esc_html__( '%d days ago', 'gym-core' ), (int) $days_ago );
 				echo '</span>';
 				echo '</li>';
 			}

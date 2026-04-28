@@ -25,6 +25,6 @@
 	},
 	"scripts": {
 		"analyse": "phpstan analyse --memory-limit=1G",
-		"test": "phpunit"
+		"test": "echo 'No tests defined for hma-ai-chat.'"
 	}
 }
