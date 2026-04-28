@@ -121,7 +121,7 @@ class ClaudeClient {
 			$api_tools[] = array(
 				'name'         => $tool['name'],
 				'description'  => $tool['description'] ?? '',
-				'input_schema' => $tool['input_schema'] ?? array( 'type' => 'object', 'properties' => new \stdClass() ),
+				'input_schema' => self::normalize_input_schema( $tool['input_schema'] ?? null ),
 			);
 		}
 
@@ -225,6 +225,53 @@ class ClaudeClient {
 			'tokens_used' => $total_input_tokens + $total_output_tokens,
 			'tool_calls'  => $tool_calls_audit,
 		);
+	}
+
+	/**
+	 * Normalize an input_schema for Anthropic.
+	 *
+	 * Anthropic's tools.input_schema requires `properties` to be a JSON object
+	 * (`{}`), not a JSON array (`[]`). PHP's `wp_json_encode( array() )` emits
+	 * `[]`, which the API rejects with:
+	 *
+	 *   tools.N.custom.input_schema.properties: Input should be a valid dictionary
+	 *
+	 * Ensure `type` is set, and force `properties` (and the optional
+	 * top-level `required` array) into shapes that always serialize as the
+	 * right JSON type — `properties` as an object, `required` as a list.
+	 *
+	 * @param mixed $schema Raw input_schema from the registry, or null.
+	 * @return array
+	 */
+	private static function normalize_input_schema( $schema ): array {
+		$schema = is_array( $schema ) ? $schema : array();
+
+		if ( empty( $schema['type'] ) ) {
+			$schema['type'] = 'object';
+		}
+
+		$properties = $schema['properties'] ?? null;
+		if ( ! is_object( $properties ) ) {
+			if ( is_array( $properties ) && ! empty( $properties ) ) {
+				// Force associative-array semantics so json_encode emits an object,
+				// even if registry passed a numerically-indexed list by accident.
+				$schema['properties'] = (object) $properties;
+			} else {
+				$schema['properties'] = new \stdClass();
+			}
+		}
+
+		// `required` must be a JSON array; drop the field if it's empty so we
+		// don't send `"required": {}` when a registry author wrote array().
+		if ( isset( $schema['required'] ) ) {
+			if ( is_array( $schema['required'] ) && ! empty( $schema['required'] ) ) {
+				$schema['required'] = array_values( $schema['required'] );
+			} else {
+				unset( $schema['required'] );
+			}
+		}
+
+		return $schema;
 	}
 
 	/**
