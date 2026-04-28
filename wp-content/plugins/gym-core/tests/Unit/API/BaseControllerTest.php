@@ -13,6 +13,7 @@ use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Gym_Core\API\BaseController;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Concrete implementation used to test the abstract BaseController.
@@ -22,14 +23,14 @@ use PHPUnit\Framework\TestCase;
  */
 class ConcreteController extends BaseController {
 
-	/**
+/**
 	 * No routes needed for unit testing the base class.
 	 *
 	 * @return void
 	 */
 	public function register_routes(): void {}
 
-	/**
+/**
 	 * Proxy for the protected success_response() method.
 	 *
 	 * @param mixed                    $data   Response payload.
@@ -41,7 +42,7 @@ class ConcreteController extends BaseController {
 		return $this->success_response( $data, $meta, $status );
 	}
 
-	/**
+/**
 	 * Proxy for the protected error_response() method.
 	 *
 	 * @param string $code    Error code.
@@ -53,7 +54,7 @@ class ConcreteController extends BaseController {
 		return $this->error_response( $code, $message, $status );
 	}
 
-	/**
+/**
 	 * Proxy for the protected pagination_meta() method.
 	 *
 	 * @param int $total       Total items.
@@ -66,7 +67,7 @@ class ConcreteController extends BaseController {
 		return $this->pagination_meta( $total, $total_pages, $page, $per_page );
 	}
 
-	/**
+/**
 	 * Proxy for the protected check_rate_limit() method.
 	 *
 	 * @param string $key    Rate limit bucket key.
@@ -78,7 +79,7 @@ class ConcreteController extends BaseController {
 		return $this->check_rate_limit( $key, $max, $window );
 	}
 
-	/**
+/**
 	 * Proxy for the protected pagination_route_args() method.
 	 *
 	 * @return array<string, array<string, mixed>>
@@ -93,7 +94,7 @@ class ConcreteController extends BaseController {
  */
 class BaseControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var ConcreteController
@@ -122,7 +123,7 @@ class BaseControllerTest extends TestCase {
 		$this->request = new \WP_REST_Request();
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -136,9 +137,7 @@ class BaseControllerTest extends TestCase {
 	// Constructor / namespace
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox Namespace should be set to gym/v1 on construction.
-	 */
+	#[TestDox('Namespace should be set to gym/v1 on construction.')]
 	public function test_namespace_is_set_on_construction(): void {
 		$this->assertSame( 'gym/v1', BaseController::REST_NAMESPACE );
 	}
@@ -147,9 +146,7 @@ class BaseControllerTest extends TestCase {
 	// register_hooks
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox register_hooks should add register_routes to rest_api_init.
-	 */
+	#[TestDox('register_hooks should add register_routes to rest_api_init.')]
 	public function test_register_hooks_adds_rest_api_init_action(): void {
 		Functions\expect( 'add_action' )
 			->once()
@@ -165,9 +162,7 @@ class BaseControllerTest extends TestCase {
 	// permissions_public
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_public should always return true.
-	 */
+	#[TestDox('permissions_public should always return true.')]
 	public function test_permissions_public_returns_true(): void {
 		$result = $this->sut->permissions_public( $this->request );
 
@@ -178,9 +173,7 @@ class BaseControllerTest extends TestCase {
 	// permissions_authenticated
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_authenticated should return true for a logged-in user.
-	 */
+	#[TestDox('permissions_authenticated should return true for a logged-in user.')]
 	public function test_permissions_authenticated_returns_true_when_logged_in(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 
@@ -189,9 +182,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_authenticated should return WP_Error(401) when not logged in.
-	 */
+	#[TestDox('permissions_authenticated should return WP_Error(401) when not logged in.')]
 	public function test_permissions_authenticated_returns_401_error_when_not_logged_in(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 
@@ -206,9 +197,7 @@ class BaseControllerTest extends TestCase {
 	// permissions_manage
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_manage should return true when user has manage_woocommerce.
-	 */
+	#[TestDox('permissions_manage should return true when user has manage_woocommerce.')]
 	public function test_permissions_manage_returns_true_with_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( true );
 
@@ -217,9 +206,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_manage should return WP_Error when capability is absent.
-	 */
+	#[TestDox('permissions_manage should return WP_Error when capability is absent.')]
 	public function test_permissions_manage_returns_error_without_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 		Functions\when( 'rest_authorization_required_code' )->justReturn( 403 );
@@ -235,9 +222,7 @@ class BaseControllerTest extends TestCase {
 	// success_response
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox success_response should set success=true and wrap data in the envelope.
-	 */
+	#[TestDox('success_response should set success=true and wrap data in the envelope.')]
 	public function test_success_response_wraps_data_in_envelope(): void {
 		$data     = array( 'slug' => 'rockford' );
 		$response = $this->sut->call_success_response( $data );
@@ -248,9 +233,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertSame( 200, $response->get_status() );
 	}
 
-	/**
-	 * @testdox success_response should include meta when provided.
-	 */
+	#[TestDox('success_response should include meta when provided.')]
 	public function test_success_response_includes_meta_when_provided(): void {
 		$meta     = array( 'pagination' => array( 'total' => 5 ) );
 		$response = $this->sut->call_success_response( array(), $meta );
@@ -260,9 +243,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertSame( $meta, $body['meta'] );
 	}
 
-	/**
-	 * @testdox success_response should omit the meta key when meta is null.
-	 */
+	#[TestDox('success_response should omit the meta key when meta is null.')]
 	public function test_success_response_omits_meta_key_when_null(): void {
 		$response = $this->sut->call_success_response( 'value', null );
 
@@ -270,18 +251,14 @@ class BaseControllerTest extends TestCase {
 		$this->assertArrayNotHasKey( 'meta', $body );
 	}
 
-	/**
-	 * @testdox success_response should use the provided HTTP status code.
-	 */
+	#[TestDox('success_response should use the provided HTTP status code.')]
 	public function test_success_response_uses_provided_status_code(): void {
 		$response = $this->sut->call_success_response( null, null, 201 );
 
 		$this->assertSame( 201, $response->get_status() );
 	}
 
-	/**
-	 * @testdox success_response should accept null as data payload.
-	 */
+	#[TestDox('success_response should accept null as data payload.')]
 	public function test_success_response_accepts_null_data(): void {
 		$response = $this->sut->call_success_response( null );
 
@@ -294,9 +271,7 @@ class BaseControllerTest extends TestCase {
 	// error_response
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox error_response should return a WP_Error with the given code and status.
-	 */
+	#[TestDox('error_response should return a WP_Error with the given code and status.')]
 	public function test_error_response_returns_wp_error_with_code_and_status(): void {
 		$error = $this->sut->call_error_response( 'my_error', 'Something went wrong.', 422 );
 
@@ -306,9 +281,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 422 ), $error->get_error_data() );
 	}
 
-	/**
-	 * @testdox error_response should default to HTTP 400.
-	 */
+	#[TestDox('error_response should default to HTTP 400.')]
 	public function test_error_response_defaults_to_400(): void {
 		$error = $this->sut->call_error_response( 'code', 'msg' );
 
@@ -319,9 +292,7 @@ class BaseControllerTest extends TestCase {
 	// pagination_meta
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox pagination_meta should build the correct nested structure.
-	 */
+	#[TestDox('pagination_meta should build the correct nested structure.')]
 	public function test_pagination_meta_returns_correct_structure(): void {
 		$meta = $this->sut->call_pagination_meta( 50, 5, 2, 10 );
 
@@ -342,9 +313,7 @@ class BaseControllerTest extends TestCase {
 	// pagination_route_args
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox pagination_route_args should define page and per_page keys.
-	 */
+	#[TestDox('pagination_route_args should define page and per_page keys.')]
 	public function test_pagination_route_args_has_page_and_per_page(): void {
 		Functions\when( '__' )->returnArg( 1 );
 
@@ -354,9 +323,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertArrayHasKey( 'per_page', $args );
 	}
 
-	/**
-	 * @testdox pagination_route_args should set sensible defaults and limits.
-	 */
+	#[TestDox('pagination_route_args should set sensible defaults and limits.')]
 	public function test_pagination_route_args_has_correct_defaults_and_limits(): void {
 		Functions\when( '__' )->returnArg( 1 );
 
@@ -373,9 +340,7 @@ class BaseControllerTest extends TestCase {
 	// check_rate_limit
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox check_rate_limit should return true when under the limit.
-	 */
+	#[TestDox('check_rate_limit should return true when under the limit.')]
 	public function test_check_rate_limit_returns_true_under_limit(): void {
 		Functions\when( 'get_transient' )->justReturn( false );
 		Functions\when( 'set_transient' )->justReturn( true );
@@ -385,9 +350,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox check_rate_limit should return false when count equals the max.
-	 */
+	#[TestDox('check_rate_limit should return false when count equals the max.')]
 	public function test_check_rate_limit_returns_false_when_limit_reached(): void {
 		Functions\when( 'get_transient' )->justReturn( array( 'count' => 5, 'start' => time() ) );
 
@@ -396,9 +359,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertFalse( $result );
 	}
 
-	/**
-	 * @testdox check_rate_limit should return false when count exceeds the max.
-	 */
+	#[TestDox('check_rate_limit should return false when count exceeds the max.')]
 	public function test_check_rate_limit_returns_false_when_limit_exceeded(): void {
 		Functions\when( 'get_transient' )->justReturn( array( 'count' => 10, 'start' => time() ) );
 
@@ -407,9 +368,7 @@ class BaseControllerTest extends TestCase {
 		$this->assertFalse( $result );
 	}
 
-	/**
-	 * @testdox check_rate_limit should increment the transient counter on each allowed call.
-	 */
+	#[TestDox('check_rate_limit should increment the transient counter on each allowed call.')]
 	public function test_check_rate_limit_increments_counter(): void {
 		$start = time();
 		Functions\when( 'get_transient' )->justReturn( array( 'count' => 3, 'start' => $start ) );

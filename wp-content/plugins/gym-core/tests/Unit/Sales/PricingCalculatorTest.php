@@ -13,13 +13,14 @@ use Gym_Core\Sales\PricingCalculator;
 use PHPUnit\Framework\TestCase;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Tests for the sliding-discount pricing calculator.
  */
 class PricingCalculatorTest extends TestCase {
 
-	/**
+/**
 	 * @var PricingCalculator
 	 */
 	private PricingCalculator $calculator;
@@ -45,8 +46,8 @@ class PricingCalculatorTest extends TestCase {
 	}
 
 	/**
-	 * @test
 	 */
+	#[Test]
 	public function it_calculates_monthly_at_min_down_payment(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2455.0,
@@ -69,9 +70,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertSame( '', $result['error'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_calculates_monthly_at_max_down_payment(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2455.0,
@@ -90,9 +89,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertStringContainsString( '$200.00', $result['savings_label'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_calculates_proportional_discount_at_midpoint(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2455.0,
@@ -111,9 +108,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertSame( 150.5, $result['recurring_payment'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_calculates_biweekly_installments(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2249.0,
@@ -137,9 +132,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertSame( 72.69, $result['recurring_payment'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_rejects_down_payment_below_minimum(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2455.0,
@@ -154,9 +147,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertSame( 0.0, $result['recurring_payment'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_rejects_down_payment_above_maximum(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2455.0,
@@ -170,9 +161,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertStringContainsString( '$999.00', $result['error'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_rejects_zero_base_total(): void {
 		$result = $this->calculator->calculate(
 			base_total: 0.0,
@@ -185,9 +174,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertFalse( $result['is_valid'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_rejects_down_payment_exceeding_effective_total(): void {
 		// With a very high down payment and discount, the remaining could be <= 0.
 		$result = $this->calculator->calculate(
@@ -202,9 +189,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertFalse( $result['is_valid'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_handles_equal_min_and_max_down_payment(): void {
 		$result = $this->calculator->calculate(
 			base_total: 2000.0,
@@ -222,9 +207,7 @@ class PricingCalculatorTest extends TestCase {
 		$this->assertSame( 125.0, $result['recurring_payment'] );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function it_defaults_to_monthly_billing(): void {
 		$result = $this->calculator->calculate(
 			base_total: 1200.0,

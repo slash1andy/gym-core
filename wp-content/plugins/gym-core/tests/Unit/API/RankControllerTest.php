@@ -17,6 +17,7 @@ use Gym_Core\Rank\RankDefinitions;
 use Gym_Core\Attendance\AttendanceStore;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the RankController REST endpoint handlers.
@@ -26,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  */
 class RankControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var RankController
@@ -70,7 +71,7 @@ class RankControllerTest extends TestCase {
 		$this->sut         = new RankController( $this->ranks, $this->attendance );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -85,7 +86,7 @@ class RankControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -102,7 +103,7 @@ class RankControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a rank record object with the given field values.
 	 *
 	 * @param array<string, mixed> $fields Overrides for rank properties.
@@ -121,7 +122,7 @@ class RankControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Builds a rank history record object.
 	 *
 	 * @param array<string, mixed> $fields Overrides for history properties.
@@ -143,7 +144,7 @@ class RankControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Stubs get_userdata to return a mock user with the given display name.
 	 *
 	 * @param string $display_name Display name for the mock user.
@@ -156,7 +157,7 @@ class RankControllerTest extends TestCase {
 		Functions\when( 'get_userdata' )->justReturn( $user );
 	}
 
-	/**
+/**
 	 * Stubs the WordPress filter functions so the real RankDefinitions static
 	 * methods work without a running WordPress environment.
 	 *
@@ -170,9 +171,7 @@ class RankControllerTest extends TestCase {
 	// get_rank
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_rank should return empty array when no rank exists for the given program.
-	 */
+	#[TestDox('get_rank should return empty array when no rank exists for the given program.')]
 	public function test_get_rank_returns_empty_array_when_no_rank_for_program(): void {
 		$request = $this->make_request( array( 'id' => 5, 'program' => 'adult-bjj' ) );
 
@@ -187,9 +186,7 @@ class RankControllerTest extends TestCase {
 		$this->assertSame( array(), $body['data'] );
 	}
 
-	/**
-	 * @testdox get_rank should return formatted rank data for a specific program.
-	 */
+	#[TestDox('get_rank should return formatted rank data for a specific program.')]
 	public function test_get_rank_returns_formatted_rank_for_specific_program(): void {
 		$rank    = $this->make_rank( array( 'belt' => 'blue', 'stripes' => 1 ) );
 		$request = $this->make_request( array( 'id' => 5, 'program' => 'adult-bjj' ) );
@@ -213,9 +210,7 @@ class RankControllerTest extends TestCase {
 		$this->assertSame( 'Coach Darby', $body['data'][0]['promoted_by']['name'] );
 	}
 
-	/**
-	 * @testdox get_rank should return all ranks when no program is specified.
-	 */
+	#[TestDox('get_rank should return all ranks when no program is specified.')]
 	public function test_get_rank_returns_all_ranks_when_no_program_specified(): void {
 		$rank_bjj  = $this->make_rank( array( 'program' => 'adult-bjj', 'belt' => 'white', 'stripes' => 3 ) );
 		$rank_kids = $this->make_rank( array( 'program' => 'kids-bjj', 'belt' => 'yellow', 'stripes' => 0 ) );
@@ -241,9 +236,7 @@ class RankControllerTest extends TestCase {
 	// get_rank_history
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_rank_history should return paginated promotion history.
-	 */
+	#[TestDox('get_rank_history should return paginated promotion history.')]
 	public function test_get_rank_history_returns_paginated_history(): void {
 		$records = array(
 			$this->make_history_record( array( 'to_belt' => 'blue', 'to_stripes' => 0 ) ),
@@ -284,9 +277,7 @@ class RankControllerTest extends TestCase {
 	// promote
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox promote should return 404 for a non-existent user.
-	 */
+	#[TestDox('promote should return 404 for a non-existent user.')]
 	public function test_promote_returns_404_for_nonexistent_user(): void {
 		$request = $this->make_request(
 			array(
@@ -307,9 +298,7 @@ class RankControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 404 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox promote should return 400 for an invalid program.
-	 */
+	#[TestDox('promote should return 400 for an invalid program.')]
 	public function test_promote_returns_400_for_invalid_program(): void {
 		$request = $this->make_request(
 			array(
@@ -331,9 +320,7 @@ class RankControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 400 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox promote should add a stripe when no belt is specified.
-	 */
+	#[TestDox('promote should add a stripe when no belt is specified.')]
 	public function test_promote_adds_stripe_when_no_belt_specified(): void {
 		$request = $this->make_request(
 			array(
@@ -373,9 +360,7 @@ class RankControllerTest extends TestCase {
 	// permissions_promote
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_promote should return true when user has gym_promote_student.
-	 */
+	#[TestDox('permissions_promote should return true when user has gym_promote_student.')]
 	public function test_permissions_promote_returns_true_with_gym_promote_student(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {
@@ -389,9 +374,7 @@ class RankControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_promote should return WP_Error when user lacks capability.
-	 */
+	#[TestDox('permissions_promote should return WP_Error when user lacks capability.')]
 	public function test_permissions_promote_returns_error_without_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 

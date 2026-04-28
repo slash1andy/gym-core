@@ -15,13 +15,14 @@ use Gym_Core\API\FoundationsController;
 use Gym_Core\Attendance\FoundationsClearance;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the FoundationsController REST endpoint handlers.
  */
 class FoundationsControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var FoundationsController
@@ -56,7 +57,7 @@ class FoundationsControllerTest extends TestCase {
 		$this->sut         = new FoundationsController( $this->foundations );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -71,7 +72,7 @@ class FoundationsControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -88,7 +89,7 @@ class FoundationsControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a mock WP_User with the given properties.
 	 *
 	 * @param int    $id           User ID.
@@ -102,7 +103,7 @@ class FoundationsControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Returns a standard foundations status array.
 	 *
 	 * @param array<string, mixed> $overrides Override individual fields.
@@ -125,9 +126,7 @@ class FoundationsControllerTest extends TestCase {
 	// get_status
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_status returns 404 for a non-existent user.
-	 */
+	#[TestDox('get_status returns 404 for a non-existent user.')]
 	public function test_get_status_returns_404_for_nonexistent_user(): void {
 		Functions\when( 'get_userdata' )->justReturn( false );
 
@@ -139,9 +138,7 @@ class FoundationsControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 404 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_status returns success with merged user and foundations data.
-	 */
+	#[TestDox('get_status returns success with merged user and foundations data.')]
 	public function test_get_status_returns_merged_user_and_foundations_data(): void {
 		$user   = $this->make_user( 10, 'Jane Doe' );
 		$status = $this->foundations_status();
@@ -172,9 +169,7 @@ class FoundationsControllerTest extends TestCase {
 	// enroll
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox enroll returns 201 on successful enrollment.
-	 */
+	#[TestDox('enroll returns 201 on successful enrollment.')]
 	public function test_enroll_returns_201_on_success(): void {
 		$user = $this->make_user( 8, 'New Student' );
 
@@ -208,9 +203,7 @@ class FoundationsControllerTest extends TestCase {
 		$this->assertTrue( $body['data']['in_foundations'] );
 	}
 
-	/**
-	 * @testdox enroll returns 409 when student is already enrolled.
-	 */
+	#[TestDox('enroll returns 409 when student is already enrolled.')]
 	public function test_enroll_returns_409_when_already_enrolled(): void {
 		$user = $this->make_user( 12, 'Existing Student' );
 
@@ -231,9 +224,7 @@ class FoundationsControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 409 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox enroll returns 400 when foundations gate is disabled.
-	 */
+	#[TestDox('enroll returns 400 when foundations gate is disabled.')]
 	public function test_enroll_returns_400_when_foundations_disabled(): void {
 		$user = $this->make_user( 5 );
 
@@ -254,9 +245,7 @@ class FoundationsControllerTest extends TestCase {
 	// record_coach_roll
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox record_coach_roll returns 400 when student is not in foundations.
-	 */
+	#[TestDox('record_coach_roll returns 400 when student is not in foundations.')]
 	public function test_record_coach_roll_returns_400_when_not_in_foundations(): void {
 		$user = $this->make_user( 20 );
 
@@ -275,9 +264,7 @@ class FoundationsControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 400 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox record_coach_roll returns success when roll is recorded.
-	 */
+	#[TestDox('record_coach_roll returns success when roll is recorded.')]
 	public function test_record_coach_roll_returns_success(): void {
 		$user = $this->make_user( 20 );
 
@@ -308,9 +295,7 @@ class FoundationsControllerTest extends TestCase {
 	// clear
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox clear returns success on clearance.
-	 */
+	#[TestDox('clear returns success on clearance.')]
 	public function test_clear_returns_success(): void {
 		$user = $this->make_user( 30 );
 
@@ -345,9 +330,7 @@ class FoundationsControllerTest extends TestCase {
 	// permissions_view
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_view allows access to own data.
-	 */
+	#[TestDox('permissions_view allows access to own data.')]
 	public function test_permissions_view_allows_own_data(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 50 );
@@ -358,9 +341,7 @@ class FoundationsControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_view denies other users without capability.
-	 */
+	#[TestDox('permissions_view denies other users without capability.')]
 	public function test_permissions_view_denies_without_capability(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 50 );
@@ -378,9 +359,7 @@ class FoundationsControllerTest extends TestCase {
 	// permissions_coach
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_coach returns true with gym_promote_student capability.
-	 */
+	#[TestDox('permissions_coach returns true with gym_promote_student capability.')]
 	public function test_permissions_coach_allows_with_promote_cap(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {

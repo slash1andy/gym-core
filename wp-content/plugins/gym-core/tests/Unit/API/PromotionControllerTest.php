@@ -15,6 +15,7 @@ use Gym_Core\API\PromotionController;
 use Gym_Core\Attendance\PromotionEligibility;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the PromotionController REST endpoint handlers.
@@ -24,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  */
 class PromotionControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var PromotionController
@@ -60,7 +61,7 @@ class PromotionControllerTest extends TestCase {
 		$this->sut         = new PromotionController( $this->eligibility );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -75,7 +76,7 @@ class PromotionControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -96,9 +97,7 @@ class PromotionControllerTest extends TestCase {
 	// get_eligible
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_eligible should return paginated eligible members.
-	 */
+	#[TestDox('get_eligible should return paginated eligible members.')]
 	public function test_get_eligible_returns_paginated_eligible_members(): void {
 		$members = array(
 			array( 'user_id' => 5, 'name' => 'Alice', 'status' => 'eligible' ),
@@ -136,9 +135,7 @@ class PromotionControllerTest extends TestCase {
 		$this->assertSame( 2, $body['meta']['pagination']['per_page'] );
 	}
 
-	/**
-	 * @testdox get_eligible should return empty data when no eligible members exist.
-	 */
+	#[TestDox('get_eligible should return empty data when no eligible members exist.')]
 	public function test_get_eligible_returns_empty_when_no_eligible_members(): void {
 		$request = $this->make_request(
 			array(
@@ -164,9 +161,7 @@ class PromotionControllerTest extends TestCase {
 	// recommend
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox recommend should return 201 on success.
-	 */
+	#[TestDox('recommend should return 201 on success.')]
 	public function test_recommend_returns_201_on_success(): void {
 		$request = $this->make_request(
 			array(
@@ -197,9 +192,7 @@ class PromotionControllerTest extends TestCase {
 		$this->assertArrayHasKey( 'recommended_at', $body['data'] );
 	}
 
-	/**
-	 * @testdox recommend should return 404 for a non-existent user.
-	 */
+	#[TestDox('recommend should return 404 for a non-existent user.')]
 	public function test_recommend_returns_404_for_nonexistent_user(): void {
 		$request = $this->make_request(
 			array(
@@ -221,9 +214,7 @@ class PromotionControllerTest extends TestCase {
 	// permissions_coach
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_coach should return true when user has gym_promote_student.
-	 */
+	#[TestDox('permissions_coach should return true when user has gym_promote_student.')]
 	public function test_permissions_coach_returns_true_with_capability(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {
@@ -237,9 +228,7 @@ class PromotionControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_coach should return WP_Error when user lacks capability.
-	 */
+	#[TestDox('permissions_coach should return WP_Error when user lacks capability.')]
 	public function test_permissions_coach_returns_error_without_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 

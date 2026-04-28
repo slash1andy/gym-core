@@ -13,13 +13,15 @@ use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Gym_Core\Location\Taxonomy;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests for the Taxonomy class.
  */
 class TaxonomyTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var Taxonomy
@@ -54,7 +56,7 @@ class TaxonomyTest extends TestCase {
 		$this->sut = new Taxonomy();
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -64,37 +66,28 @@ class TaxonomyTest extends TestCase {
 		parent::tearDown();
 	}
 
-	/**
-	 * @testdox Should return true for the rockford slug.
-	 */
+	#[TestDox('Should return true for the rockford slug.')]
 	public function test_is_valid_returns_true_for_rockford(): void {
 		$this->assertTrue( Taxonomy::is_valid( 'rockford' ) );
 	}
 
-	/**
-	 * @testdox Should return true for the beloit slug.
-	 */
+	#[TestDox('Should return true for the beloit slug.')]
 	public function test_is_valid_returns_true_for_beloit(): void {
 		$this->assertTrue( Taxonomy::is_valid( 'beloit' ) );
 	}
 
-	/**
-	 * @testdox Should return false for an empty string.
-	 */
+	#[TestDox('Should return false for an empty string.')]
 	public function test_is_valid_returns_false_for_empty_string(): void {
 		$this->assertFalse( Taxonomy::is_valid( '' ) );
 	}
 
-	/**
-	 * @testdox Should return false for an unrecognised location slug.
-	 *
-	 * @dataProvider invalid_slug_provider
-	 */
+	#[TestDox('Should return false for an unrecognised location slug.')]
+	#[DataProvider('invalid_slug_provider')]
 	public function test_is_valid_returns_false_for_unrecognised_slug( string $slug ): void {
 		$this->assertFalse( Taxonomy::is_valid( $slug ) );
 	}
 
-	/**
+/**
 	 * Data provider for invalid location slugs.
 	 *
 	 * @return array<string, array<string>>
@@ -110,31 +103,23 @@ class TaxonomyTest extends TestCase {
 		);
 	}
 
-	/**
-	 * @testdox VALID_LOCATIONS constant should contain both expected slugs.
-	 */
+	#[TestDox('VALID_LOCATIONS constant should contain both expected slugs.')]
 	public function test_valid_locations_contains_rockford_and_beloit(): void {
 		$this->assertContains( 'rockford', Taxonomy::VALID_LOCATIONS );
 		$this->assertContains( 'beloit', Taxonomy::VALID_LOCATIONS );
 	}
 
-	/**
-	 * @testdox VALID_LOCATIONS constant should contain exactly two entries.
-	 */
+	#[TestDox('VALID_LOCATIONS constant should contain exactly two entries.')]
 	public function test_valid_locations_contains_exactly_two_entries(): void {
 		$this->assertCount( 2, Taxonomy::VALID_LOCATIONS );
 	}
 
-	/**
-	 * @testdox SLUG constant should equal 'gym_location'.
-	 */
+	#[TestDox('SLUG constant should equal \'gym_location\'.')]
 	public function test_slug_constant_value(): void {
 		$this->assertSame( 'gym_location', Taxonomy::SLUG );
 	}
 
-	/**
-	 * @testdox seed_terms should skip insertion when taxonomy does not exist.
-	 */
+	#[TestDox('seed_terms should skip insertion when taxonomy does not exist.')]
 	public function test_seed_terms_skips_when_taxonomy_not_registered(): void {
 		Functions\expect( 'taxonomy_exists' )
 			->once()
@@ -151,16 +136,14 @@ class TaxonomyTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox seed_terms should insert both terms when neither exists, even on a
-	 *          fresh activation where the labels cache is empty and get_terms()
-	 *          returns no rows.
+/**
 	 *
 	 * Regression test: a previous refactor made seed_terms() depend on
 	 * get_location_labels(), which queries the DB. On first activation that
 	 * query returned empty and nothing was seeded. This test pins the
 	 * empty-DB path so the regression cannot return.
 	 */
+	#[TestDox('seed_terms should insert both terms when neither exists, even on a fresh activation where the labels cache is empty and get_terms() returns no rows.')]
 	public function test_seed_terms_inserts_both_terms_when_none_exist(): void {
 		// Simulate a fresh activation: no cached labels, no terms in the DB.
 		Functions\when( 'wp_cache_get' )->justReturn( false );
@@ -192,9 +175,7 @@ class TaxonomyTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox seed_terms should skip insertion for terms that already exist.
-	 */
+	#[TestDox('seed_terms should skip insertion for terms that already exist.')]
 	public function test_seed_terms_skips_existing_terms(): void {
 		Functions\expect( 'taxonomy_exists' )
 			->once()
@@ -213,12 +194,12 @@ class TaxonomyTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox seed_terms should honour the gym_core_default_locations filter.
+/**
 	 *
 	 * Locks in the filter contract so future code can override the seeded set
 	 * (e.g. for a third location) without modifying the plugin.
 	 */
+	#[TestDox('seed_terms should honour the gym_core_default_locations filter.')]
 	public function test_seed_terms_honours_default_locations_filter(): void {
 		Functions\expect( 'taxonomy_exists' )
 			->once()
@@ -265,9 +246,7 @@ class TaxonomyTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox seed_terms should skip empty slug or name entries from a filter override.
-	 */
+	#[TestDox('seed_terms should skip empty slug or name entries from a filter override.')]
 	public function test_seed_terms_skips_empty_filter_entries(): void {
 		Functions\expect( 'taxonomy_exists' )
 			->once()

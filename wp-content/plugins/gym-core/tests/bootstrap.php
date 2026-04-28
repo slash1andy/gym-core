@@ -12,6 +12,9 @@
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
 // Allow Mockery to mock final classes (e.g. BadgeEngine, StreakTracker, FoundationsClearance).
+// Restrict to src/ only — bypass-finals must not patch PHPUnit internals, since PHP 8.2+ readonly
+// classes cannot extend non-readonly parents, and stripping readonly globally breaks PHPUnit 11.
+DG\BypassFinals::allowPaths( [ realpath( dirname( __DIR__ ) . '/src' ) ] );
 DG\BypassFinals::enable();
 
 // Stub constants so classes that reference them can be loaded without WordPress.

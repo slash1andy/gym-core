@@ -15,13 +15,14 @@ use Gym_Core\API\BriefingController;
 use Gym_Core\Briefing\BriefingGenerator;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the BriefingController REST endpoint handlers.
  */
 class BriefingControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var BriefingController
@@ -57,7 +58,7 @@ class BriefingControllerTest extends TestCase {
 		$this->sut       = new BriefingController( $this->generator );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -72,7 +73,7 @@ class BriefingControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -89,7 +90,7 @@ class BriefingControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Returns sample briefing data for a class.
 	 *
 	 * @param int    $class_id   Class ID.
@@ -118,9 +119,7 @@ class BriefingControllerTest extends TestCase {
 	// get_class_briefing
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_class_briefing should return success with briefing data.
-	 */
+	#[TestDox('get_class_briefing should return success with briefing data.')]
 	public function test_get_class_briefing_returns_success_with_briefing_data(): void {
 		$briefing = $this->make_briefing( 1, 'Adult BJJ', '18:00' );
 
@@ -146,9 +145,7 @@ class BriefingControllerTest extends TestCase {
 		$this->assertArrayHasKey( 'notes', $body['data'] );
 	}
 
-	/**
-	 * @testdox get_class_briefing should forward WP_Error from generator.
-	 */
+	#[TestDox('get_class_briefing should forward WP_Error from generator.')]
 	public function test_get_class_briefing_forwards_wp_error_from_generator(): void {
 		$wp_error = new \WP_Error( 'class_not_found', 'Class not found.', array( 'status' => 404 ) );
 
@@ -175,9 +172,7 @@ class BriefingControllerTest extends TestCase {
 	// get_today_briefings
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_today_briefings should return sorted briefings array.
-	 */
+	#[TestDox('get_today_briefings should return sorted briefings array.')]
 	public function test_get_today_briefings_returns_sorted_briefings_array(): void {
 		$this->generator
 			->expects( 'get_todays_classes' )
@@ -226,9 +221,7 @@ class BriefingControllerTest extends TestCase {
 	// get_announcements
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_announcements should return paginated announcements.
-	 */
+	#[TestDox('get_announcements should return paginated announcements.')]
 	public function test_get_announcements_returns_paginated_announcements(): void {
 		// Preset WP_Query stub results for AnnouncementPostType::get_active_announcements().
 		$post_a              = new \stdClass();
@@ -323,9 +316,7 @@ class BriefingControllerTest extends TestCase {
 	// create_announcement
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox create_announcement should return 201 on success.
-	 */
+	#[TestDox('create_announcement should return 201 on success.')]
 	public function test_create_announcement_returns_201_on_success(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 1 );
 		Functions\when( 'wp_insert_post' )->justReturn( 42 );
@@ -366,9 +357,7 @@ class BriefingControllerTest extends TestCase {
 		$this->assertSame( 'Test Announcement', $body['data']['title'] );
 	}
 
-	/**
-	 * @testdox create_announcement should return 500 when wp_insert_post fails.
-	 */
+	#[TestDox('create_announcement should return 500 when wp_insert_post fails.')]
 	public function test_create_announcement_returns_500_when_wp_insert_post_fails(): void {
 		$wp_error = new \WP_Error( 'db_insert_error', 'Could not insert post.' );
 
@@ -403,9 +392,7 @@ class BriefingControllerTest extends TestCase {
 	// permissions_view_briefing
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_view_briefing should return true with gym_view_briefing capability.
-	 */
+	#[TestDox('permissions_view_briefing should return true with gym_view_briefing capability.')]
 	public function test_permissions_view_briefing_returns_true_with_cap(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {
@@ -423,9 +410,7 @@ class BriefingControllerTest extends TestCase {
 	// permissions_manage_announcements
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_manage_announcements should return WP_Error without capability.
-	 */
+	#[TestDox('permissions_manage_announcements should return WP_Error without capability.')]
 	public function test_permissions_manage_announcements_returns_error_without_cap(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 

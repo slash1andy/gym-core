@@ -25,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  */
 class OrderControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var OrderController
@@ -53,7 +53,7 @@ class OrderControllerTest extends TestCase {
 		$this->sut = new OrderController();
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -64,7 +64,7 @@ class OrderControllerTest extends TestCase {
 		parent::tearDown();
 	}
 
-	/**
+/**
 	 * Builds a mock WC_Subscription configured with the supplied financials.
 	 *
 	 * @param string $total    Recurring total per billing cycle.
@@ -83,7 +83,7 @@ class OrderControllerTest extends TestCase {
 		return $sub;
 	}
 
-	/**
+/**
 	 * Builds a mock WP_REST_Request — endpoint takes no params, kept for
 	 * symmetry with the controller signature.
 	 *
@@ -97,7 +97,7 @@ class OrderControllerTest extends TestCase {
 	// get_subscriptions_summary
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Regression: a store with N active subscriptions reports active_count = N.
 	 *
 	 * The original Pippin context bug returned 0 because the upstream query
@@ -136,7 +136,7 @@ class OrderControllerTest extends TestCase {
 		$this->assertSame( 0, $body['data']['on_hold_count'] );
 	}
 
-	/**
+/**
 	 * MRR is the sum of monthly-equivalent recurring totals across active subs.
 	 *
 	 * Verifies period normalisation: a $1200/year sub contributes $100/mo;
@@ -169,7 +169,7 @@ class OrderControllerTest extends TestCase {
 		$this->assertSame( array( 'USD' => 150.00 ), $body['data']['mrr_by_currency'] );
 	}
 
-	/**
+/**
 	 * Multi-currency stores see a per-currency breakdown rather than a
 	 * silently-aggregated single number.
 	 *
@@ -202,7 +202,7 @@ class OrderControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * On-hold and pending-cancel subs are counted separately and excluded
 	 * from MRR — they aren't currently billing.
 	 *

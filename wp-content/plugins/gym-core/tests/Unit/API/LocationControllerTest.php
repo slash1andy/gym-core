@@ -16,6 +16,7 @@ use Gym_Core\Location\Manager;
 use Gym_Core\Location\Taxonomy;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the LocationController REST endpoint handlers.
@@ -25,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  */
 class LocationControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var LocationController
@@ -73,7 +74,7 @@ class LocationControllerTest extends TestCase {
 		$this->sut     = new LocationController( $this->manager );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -88,7 +89,7 @@ class LocationControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -105,7 +106,7 @@ class LocationControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a mock WP_Term with the given field values.
 	 *
 	 * @param array<string, mixed> $fields Overrides for term properties.
@@ -127,7 +128,7 @@ class LocationControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Builds a mock WC_Product with the given return values.
 	 *
 	 * @param array<string, mixed> $values Method return values.
@@ -158,9 +159,7 @@ class LocationControllerTest extends TestCase {
 	// get_locations
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_locations should return a success response with formatted terms.
-	 */
+	#[TestDox('get_locations should return a success response with formatted terms.')]
 	public function test_get_locations_returns_formatted_location_list(): void {
 		$rockford = $this->make_term( array( 'slug' => 'rockford', 'name' => 'Rockford' ) );
 		$beloit   = $this->make_term( array( 'slug' => 'beloit', 'name' => 'Beloit', 'term_id' => 2 ) );
@@ -182,9 +181,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 'beloit', $body['data'][1]['slug'] );
 	}
 
-	/**
-	 * @testdox get_locations should return 500 when get_terms fails.
-	 */
+	#[TestDox('get_locations should return 500 when get_terms fails.')]
 	public function test_get_locations_returns_500_on_taxonomy_error(): void {
 		$wp_error = new \WP_Error( 'db_error', 'Database error.' );
 
@@ -199,9 +196,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 500 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_locations should return an empty array when no terms exist.
-	 */
+	#[TestDox('get_locations should return an empty array when no terms exist.')]
 	public function test_get_locations_returns_empty_array_when_no_terms(): void {
 		Functions\when( 'get_terms' )->justReturn( array() );
 		Functions\when( 'is_wp_error' )->justReturn( false );
@@ -217,9 +212,7 @@ class LocationControllerTest extends TestCase {
 	// get_location
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_location should return 404 for an unrecognised slug.
-	 */
+	#[TestDox('get_location should return 404 for an unrecognised slug.')]
 	public function test_get_location_returns_404_for_invalid_slug(): void {
 		$request = $this->make_request( array( 'slug' => 'chicago' ) );
 
@@ -230,9 +223,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 404 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_location should return 404 when the taxonomy term does not exist.
-	 */
+	#[TestDox('get_location should return 404 when the taxonomy term does not exist.')]
 	public function test_get_location_returns_404_when_term_absent(): void {
 		$request = $this->make_request( array( 'slug' => Taxonomy::ROCKFORD ) );
 
@@ -244,9 +235,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 'gym_location_not_found', $result->get_error_code() );
 	}
 
-	/**
-	 * @testdox get_location should return formatted location data for a valid slug.
-	 */
+	#[TestDox('get_location should return formatted location data for a valid slug.')]
 	public function test_get_location_returns_formatted_location_data(): void {
 		$term    = $this->make_term( array( 'slug' => 'rockford', 'name' => 'Rockford', 'count' => 3 ) );
 		$request = $this->make_request( array( 'slug' => Taxonomy::ROCKFORD ) );
@@ -267,9 +256,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 'https://example.com/location/rockford/', $body['data']['link'] );
 	}
 
-	/**
-	 * @testdox get_location should return empty link string when get_term_link fails.
-	 */
+	#[TestDox('get_location should return empty link string when get_term_link fails.')]
 	public function test_get_location_returns_empty_link_on_term_link_error(): void {
 		$term    = $this->make_term( array( 'slug' => Taxonomy::BELOIT, 'name' => 'Beloit' ) );
 		$request = $this->make_request( array( 'slug' => Taxonomy::BELOIT ) );
@@ -294,9 +281,7 @@ class LocationControllerTest extends TestCase {
 	// get_location_products
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_location_products should return 404 for an invalid slug.
-	 */
+	#[TestDox('get_location_products should return 404 for an invalid slug.')]
 	public function test_get_location_products_returns_404_for_invalid_slug(): void {
 		$request = $this->make_request( array( 'slug' => 'chicago' ) );
 
@@ -307,9 +292,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 404 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_location_products should return paginated products with meta.
-	 */
+	#[TestDox('get_location_products should return paginated products with meta.')]
 	public function test_get_location_products_returns_paginated_products(): void {
 		$product = $this->make_product(
 			array(
@@ -354,9 +337,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 10, $body['meta']['pagination']['per_page'] );
 	}
 
-	/**
-	 * @testdox get_location_products should include image URL when product has an image.
-	 */
+	#[TestDox('get_location_products should include image URL when product has an image.')]
 	public function test_get_location_products_includes_image_url_when_present(): void {
 		$product = $this->make_product(
 			array(
@@ -381,9 +362,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 'https://example.com/wp-content/uploads/image.jpg', $body['data'][0]['image'] );
 	}
 
-	/**
-	 * @testdox get_location_products should use empty string for image when product has none.
-	 */
+	#[TestDox('get_location_products should use empty string for image when product has none.')]
 	public function test_get_location_products_uses_empty_string_for_missing_image(): void {
 		$product = $this->make_product( array( 'get_image_id' => 0 ) );
 
@@ -407,9 +386,7 @@ class LocationControllerTest extends TestCase {
 	// get_user_location
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_user_location should return null data when no location is stored.
-	 */
+	#[TestDox('get_user_location should return null data when no location is stored.')]
 	public function test_get_user_location_returns_null_when_no_location_stored(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 7 );
 		$this->manager->allows( 'get_user_location' )->with( 7 )->andReturn( '' );
@@ -422,9 +399,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertNull( $body['data'] );
 	}
 
-	/**
-	 * @testdox get_user_location should return the slug and label when a location is stored.
-	 */
+	#[TestDox('get_user_location should return the slug and label when a location is stored.')]
 	public function test_get_user_location_returns_slug_and_label(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 12 );
 		$this->manager->allows( 'get_user_location' )->with( 12 )->andReturn( Taxonomy::ROCKFORD );
@@ -438,9 +413,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 'Rockford', $body['data']['label'] );
 	}
 
-	/**
-	 * @testdox get_user_location should return correct label for beloit.
-	 */
+	#[TestDox('get_user_location should return correct label for beloit.')]
 	public function test_get_user_location_returns_correct_label_for_beloit(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 3 );
 		$this->manager->allows( 'get_user_location' )->with( 3 )->andReturn( Taxonomy::BELOIT );
@@ -457,9 +430,7 @@ class LocationControllerTest extends TestCase {
 	// set_user_location
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox set_user_location should return 422 when the manager rejects the slug.
-	 */
+	#[TestDox('set_user_location should return 422 when the manager rejects the slug.')]
 	public function test_set_user_location_returns_422_for_invalid_slug(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 5 );
 		$this->manager->allows( 'set_user_location' )->andReturn( false );
@@ -472,9 +443,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 422 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox set_user_location should return success with the updated location.
-	 */
+	#[TestDox('set_user_location should return success with the updated location.')]
 	public function test_set_user_location_returns_success_with_location_data(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 9 );
 		$this->manager
@@ -494,9 +463,7 @@ class LocationControllerTest extends TestCase {
 		$this->assertSame( 'Rockford', $body['data']['label'] );
 	}
 
-	/**
-	 * @testdox set_user_location should call set_user_location with the current user ID.
-	 */
+	#[TestDox('set_user_location should call set_user_location with the current user ID.')]
 	public function test_set_user_location_uses_current_user_id(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 42 );
 		$this->manager
@@ -516,9 +483,7 @@ class LocationControllerTest extends TestCase {
 	// get_public_item_schema
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_public_item_schema should define the expected location properties.
-	 */
+	#[TestDox('get_public_item_schema should define the expected location properties.')]
 	public function test_get_public_item_schema_defines_location_properties(): void {
 		$schema = $this->sut->get_public_item_schema();
 

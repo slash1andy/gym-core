@@ -16,6 +16,7 @@ use PHPUnit\Framework\TestCase;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for BadgeEngine scheduling and evaluation hooks.
@@ -26,7 +27,7 @@ use Mockery;
  */
 class BadgeEngineTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var BadgeEngine
@@ -51,7 +52,7 @@ class BadgeEngineTest extends TestCase {
 		$this->sut = new BadgeEngine( $attendance, $streaks );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -63,9 +64,7 @@ class BadgeEngineTest extends TestCase {
 
 	// ---- schedule_checkin_evaluation ----
 
-	/**
-	 * @testdox Should skip scheduling for imported check-in records.
-	 */
+	#[TestDox('Should skip scheduling for imported check-in records.')]
 	public function test_schedule_skips_imported_records(): void {
 		// Define Action Scheduler functions to verify they are NOT called.
 		Functions\expect( 'as_enqueue_async_action' )->never();
@@ -77,9 +76,7 @@ class BadgeEngineTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox Should enqueue async action when Action Scheduler is available and no pending action.
-	 */
+	#[TestDox('Should enqueue async action when Action Scheduler is available and no pending action.')]
 	public function test_schedule_enqueues_async_action(): void {
 		Functions\expect( 'as_has_scheduled_action' )
 			->once()
@@ -96,9 +93,7 @@ class BadgeEngineTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
-	 * @testdox Should skip enqueue when an evaluation is already pending for the user.
-	 */
+	#[TestDox('Should skip enqueue when an evaluation is already pending for the user.')]
 	public function test_schedule_deduplicates_pending_actions(): void {
 		Functions\expect( 'as_has_scheduled_action' )
 			->once()
