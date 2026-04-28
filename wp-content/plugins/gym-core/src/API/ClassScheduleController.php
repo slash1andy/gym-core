@@ -113,6 +113,88 @@ class ClassScheduleController extends BaseController {
 				),
 			)
 		);
+
+		register_rest_route(
+			$this->namespace,
+			'/' . $this->rest_base . '/(?P<id>[\d]+)/program',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'assign_program' ),
+				'permission_callback' => array( $this, 'permissions_assign_program' ),
+				'args'                => array(
+					'id'      => array(
+						'type'              => 'integer',
+						'required'          => true,
+						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'program' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_key',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * Permission callback for program assignment.
+	 *
+	 * Class config is an admin-level concern — gym_promote_student covers
+	 * coaches who manage curriculum, manage_woocommerce covers owners.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return bool|\WP_Error
+	 */
+	public function permissions_assign_program( \WP_REST_Request $request ): bool|\WP_Error {
+		if ( current_user_can( 'manage_woocommerce' ) || current_user_can( 'gym_promote_student' ) ) {
+			return true;
+		}
+		return $this->error_response( 'rest_forbidden', __( 'You do not have permission to assign class programs.', 'gym-core' ), 403 );
+	}
+
+	/**
+	 * Replace a class's program assignment with the supplied program slug.
+	 *
+	 * Validates that the class exists, the program slug corresponds to a real
+	 * term in the gym_program taxonomy, and only then mutates. Returns the
+	 * updated class payload so the caller can echo back what changed.
+	 *
+	 * @param \WP_REST_Request $request Request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function assign_program( \WP_REST_Request $request ) {
+		$post_id = (int) $request->get_param( 'id' );
+		$slug    = (string) $request->get_param( 'program' );
+
+		$post = get_post( $post_id );
+		if ( ! $post || ClassPostType::POST_TYPE !== $post->post_type ) {
+			return $this->error_response( 'class_not_found', __( 'Class not found.', 'gym-core' ), 404 );
+		}
+
+		$term = get_term_by( 'slug', $slug, ClassPostType::PROGRAM_TAXONOMY );
+		if ( ! $term || is_wp_error( $term ) ) {
+			return $this->error_response(
+				'program_not_found',
+				sprintf(
+					/* translators: %s: program slug */
+					__( 'Program "%s" does not exist. Create the program term first or use an existing slug.', 'gym-core' ),
+					$slug
+				),
+				400
+			);
+		}
+
+		$result = wp_set_object_terms( $post_id, array( (int) $term->term_id ), ClassPostType::PROGRAM_TAXONOMY, false );
+		if ( is_wp_error( $result ) ) {
+			return $this->error_response( 'program_assign_failed', $result->get_error_message(), 500 );
+		}
+
+		clean_post_cache( $post_id );
+
+		return $this->success_response( $this->format_class( $post ) );
 	}
 
 	/**

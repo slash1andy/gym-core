@@ -56,6 +56,7 @@ class ToolRegistry {
 		'get_today_attendance',
 		'get_schedule',
 		'get_classes',
+		'assign_class_program',
 		'get_locations',
 		'get_announcements',
 		// Training / coaching.
@@ -493,6 +494,28 @@ class ToolRegistry {
 				'method'       => 'GET',
 				'auth_cap'     => 'edit_posts',
 				'write'        => false,
+			),
+			array(
+				'name'         => 'assign_class_program',
+				'description'  => 'Assign a program to a class. Replaces any existing program assignment with the supplied program slug. Use this to fix classes returned by get_classes that have program=null. The slug must already exist in the gym_program taxonomy (e.g. "adult-bjj", "kids-bjj", "kickboxing"). Write tool — queues for staff approval.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'class_id' => array(
+							'type'        => 'integer',
+							'description' => 'WordPress post ID of the class.',
+						),
+						'program'  => array(
+							'type'        => 'string',
+							'description' => 'Program slug to assign (e.g. "adult-bjj", "kids-bjj", "kickboxing"). Must match an existing gym_program term.',
+						),
+					),
+					'required'   => array( 'class_id', 'program' ),
+				),
+				'endpoint'     => '/classes/{class_id}/program',
+				'method'       => 'POST',
+				'auth_cap'     => 'gym_promote_student',
+				'write'        => true,
 			),
 			array(
 				'name'         => 'get_locations',
