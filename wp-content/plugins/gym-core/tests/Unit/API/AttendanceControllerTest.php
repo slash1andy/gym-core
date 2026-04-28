@@ -17,6 +17,7 @@ use Gym_Core\Attendance\CheckInValidator;
 use Gym_Core\Gamification\StreakTracker;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the AttendanceController REST endpoint handlers.
@@ -26,7 +27,7 @@ use PHPUnit\Framework\TestCase;
  */
 class AttendanceControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var AttendanceController
@@ -79,7 +80,7 @@ class AttendanceControllerTest extends TestCase {
 		$this->sut = new AttendanceController( $this->store, $this->validator, $this->streak_tracker );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -94,7 +95,7 @@ class AttendanceControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -111,7 +112,7 @@ class AttendanceControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a mock attendance record as returned by AttendanceStore.
 	 *
 	 * @param array<string, mixed> $fields Overrides for record properties.
@@ -131,7 +132,7 @@ class AttendanceControllerTest extends TestCase {
 		return (object) array_merge( $defaults, $fields );
 	}
 
-	/**
+/**
 	 * Stubs common functions needed for a successful check_in call.
 	 *
 	 * @return void
@@ -150,9 +151,7 @@ class AttendanceControllerTest extends TestCase {
 	// check_in
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox check_in should return 201 on successful check-in.
-	 */
+	#[TestDox('check_in should return 201 on successful check-in.')]
 	public function test_check_in_returns_201_on_success(): void {
 		// Location from class terms.
 		$location_term       = new \stdClass();
@@ -191,9 +190,7 @@ class AttendanceControllerTest extends TestCase {
 		$this->assertSame( 'qr_scan', $body['data']['method'] );
 	}
 
-	/**
-	 * @testdox check_in should return error when validator fails.
-	 */
+	#[TestDox('check_in should return error when validator fails.')]
 	public function test_check_in_returns_error_when_validation_fails(): void {
 		$location_term       = new \stdClass();
 		$location_term->slug = 'rockford';
@@ -225,9 +222,7 @@ class AttendanceControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 403 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox check_in should return 500 when store record_checkin returns false.
-	 */
+	#[TestDox('check_in should return 500 when store record_checkin returns false.')]
 	public function test_check_in_returns_500_when_store_fails(): void {
 		$location_term       = new \stdClass();
 		$location_term->slug = 'rockford';
@@ -253,9 +248,7 @@ class AttendanceControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 500 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox check_in should include streak data when streak_tracker is provided.
-	 */
+	#[TestDox('check_in should include streak data when streak_tracker is provided.')]
 	public function test_check_in_includes_streak_data(): void {
 		$location_term       = new \stdClass();
 		$location_term->slug = 'beloit';
@@ -288,9 +281,7 @@ class AttendanceControllerTest extends TestCase {
 	// get_history
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_history should return paginated attendance records.
-	 */
+	#[TestDox('get_history should return paginated attendance records.')]
 	public function test_get_history_returns_paginated_records(): void {
 		$record = $this->make_record( array( 'id' => 5, 'class_id' => 10 ) );
 
@@ -337,9 +328,7 @@ class AttendanceControllerTest extends TestCase {
 	// get_today
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_today should return formatted records filtered by location.
-	 */
+	#[TestDox('get_today should return formatted records filtered by location.')]
 	public function test_get_today_returns_records_filtered_by_location(): void {
 		$record = $this->make_record(
 			array(
@@ -378,9 +367,7 @@ class AttendanceControllerTest extends TestCase {
 	// Permission callbacks
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_check_in should return true when user has gym_check_in_member capability.
-	 */
+	#[TestDox('permissions_check_in should return true when user has gym_check_in_member capability.')]
 	public function test_permissions_check_in_returns_true_with_capability(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {
@@ -394,9 +381,7 @@ class AttendanceControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_check_in should return WP_Error when user lacks capability.
-	 */
+	#[TestDox('permissions_check_in should return WP_Error when user lacks capability.')]
 	public function test_permissions_check_in_returns_error_without_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 

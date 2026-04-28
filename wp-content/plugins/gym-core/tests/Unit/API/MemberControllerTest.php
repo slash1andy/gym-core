@@ -19,6 +19,7 @@ use Gym_Core\Gamification\StreakTracker;
 use Gym_Core\Gamification\BadgeEngine;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the MemberController REST endpoint handler.
@@ -28,7 +29,7 @@ use PHPUnit\Framework\TestCase;
  */
 class MemberControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var MemberController
@@ -102,7 +103,7 @@ class MemberControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -117,7 +118,7 @@ class MemberControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -134,7 +135,7 @@ class MemberControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Creates a mock WP_User with common properties.
 	 *
 	 * @param int    $id           User ID.
@@ -151,7 +152,7 @@ class MemberControllerTest extends TestCase {
 		return $user;
 	}
 
-	/**
+/**
 	 * Stubs all WordPress functions needed for a successful dashboard response.
 	 *
 	 * @param int      $user_id User ID to return from get_current_user_id().
@@ -174,9 +175,7 @@ class MemberControllerTest extends TestCase {
 	// Authentication
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_dashboard returns 401 when no user is logged in.
-	 */
+	#[TestDox('get_dashboard returns 401 when no user is logged in.')]
 	public function test_get_dashboard_returns_401_when_not_logged_in(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
@@ -188,9 +187,7 @@ class MemberControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 401 ), $response->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_dashboard returns 404 when user does not exist.
-	 */
+	#[TestDox('get_dashboard returns 404 when user does not exist.')]
 	public function test_get_dashboard_returns_404_when_user_not_found(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 99 );
 		Functions\when( 'get_userdata' )->justReturn( false );
@@ -207,9 +204,7 @@ class MemberControllerTest extends TestCase {
 	// Successful dashboard — response structure
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_dashboard returns success response with all expected section keys.
-	 */
+	#[TestDox('get_dashboard returns success response with all expected section keys.')]
 	public function test_get_dashboard_returns_success_with_all_section_keys(): void {
 		$user = $this->make_user();
 		$this->stub_successful_dashboard( 42, $user );
@@ -248,9 +243,7 @@ class MemberControllerTest extends TestCase {
 		}
 	}
 
-	/**
-	 * @testdox get_dashboard includes member section with user info.
-	 */
+	#[TestDox('get_dashboard includes member section with user info.')]
 	public function test_get_dashboard_includes_member_section_with_user_info(): void {
 		$user = $this->make_user( 42, 'Jane Doe', 'jane@example.com' );
 		$this->stub_successful_dashboard( 42, $user );
@@ -277,9 +270,7 @@ class MemberControllerTest extends TestCase {
 	// Memberships — no subscription plugin
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_dashboard returns empty memberships when no subscription plugin is available.
-	 */
+	#[TestDox('get_dashboard returns empty memberships when no subscription plugin is available.')]
 	public function test_get_dashboard_returns_empty_memberships_without_subscription_plugin(): void {
 		$user = $this->make_user();
 		$this->stub_successful_dashboard( 42, $user );
@@ -303,9 +294,7 @@ class MemberControllerTest extends TestCase {
 	// Gamification — with engines
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_dashboard includes gamification section when streak and badge engines are available.
-	 */
+	#[TestDox('get_dashboard includes gamification section when streak and badge engines are available.')]
 	public function test_get_dashboard_includes_gamification_when_engines_available(): void {
 		$user = $this->make_user();
 		$this->stub_successful_dashboard( 42, $user );
@@ -332,9 +321,7 @@ class MemberControllerTest extends TestCase {
 	// Gamification — null engines
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_dashboard returns null gamification when streak and badge engines are null.
-	 */
+	#[TestDox('get_dashboard returns null gamification when streak and badge engines are null.')]
 	public function test_get_dashboard_returns_null_gamification_when_engines_null(): void {
 		// Construct a controller with null gamification engines.
 		$sut = new MemberController(
@@ -370,9 +357,7 @@ class MemberControllerTest extends TestCase {
 	// Quick links
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_dashboard includes quick_links with expected URL keys.
-	 */
+	#[TestDox('get_dashboard includes quick_links with expected URL keys.')]
 	public function test_get_dashboard_includes_quick_links_with_expected_url_keys(): void {
 		$user = $this->make_user();
 		$this->stub_successful_dashboard( 42, $user );

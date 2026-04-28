@@ -18,6 +18,7 @@ use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
 use WC_Order;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the OrderLocation class.
@@ -26,7 +27,7 @@ class OrderLocationTest extends TestCase {
 
 	use MockeryPHPUnitIntegration;
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var OrderLocation
@@ -55,7 +56,7 @@ class OrderLocationTest extends TestCase {
 		$this->sut     = new OrderLocation( $this->manager );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -68,9 +69,7 @@ class OrderLocationTest extends TestCase {
 
 	// ----- save_location_to_order -----
 
-	/**
-	 * @testdox Should save the active location to order meta.
-	 */
+	#[TestDox('Should save the active location to order meta.')]
 	public function test_save_location_to_order_saves_meta_when_location_is_set(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::ROCKFORD );
 
@@ -83,9 +82,7 @@ class OrderLocationTest extends TestCase {
 		$this->sut->save_location_to_order( $order );
 	}
 
-	/**
-	 * @testdox Should not write to order meta when no location is active.
-	 */
+	#[TestDox('Should not write to order meta when no location is active.')]
 	public function test_save_location_to_order_skips_when_no_location(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( '' );
 
@@ -96,9 +93,7 @@ class OrderLocationTest extends TestCase {
 		$this->sut->save_location_to_order( $order );
 	}
 
-	/**
-	 * @testdox Should save beloit as the location when beloit is the active location.
-	 */
+	#[TestDox('Should save beloit as the location when beloit is the active location.')]
 	public function test_save_location_to_order_saves_beloit(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::BELOIT );
 
@@ -113,9 +108,7 @@ class OrderLocationTest extends TestCase {
 
 	// ----- get_order_location -----
 
-	/**
-	 * @testdox Should return the location slug stored in order meta.
-	 */
+	#[TestDox('Should return the location slug stored in order meta.')]
 	public function test_get_order_location_returns_stored_meta(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->allows( 'get_meta' )
@@ -127,9 +120,7 @@ class OrderLocationTest extends TestCase {
 		$this->assertSame( Taxonomy::ROCKFORD, $result );
 	}
 
-	/**
-	 * @testdox Should return empty string when order has no location meta.
-	 */
+	#[TestDox('Should return empty string when order has no location meta.')]
 	public function test_get_order_location_returns_empty_string_when_no_meta(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->allows( 'get_meta' )
@@ -141,9 +132,7 @@ class OrderLocationTest extends TestCase {
 		$this->assertSame( '', $result );
 	}
 
-	/**
-	 * @testdox Should return empty string when order meta is not a string.
-	 */
+	#[TestDox('Should return empty string when order meta is not a string.')]
 	public function test_get_order_location_returns_empty_when_meta_is_not_string(): void {
 		$order = Mockery::mock( WC_Order::class );
 		$order->allows( 'get_meta' )
@@ -157,16 +146,12 @@ class OrderLocationTest extends TestCase {
 
 	// ----- META_KEY constant -----
 
-	/**
-	 * @testdox META_KEY constant should be prefixed with an underscore.
-	 */
+	#[TestDox('META_KEY constant should be prefixed with an underscore.')]
 	public function test_meta_key_is_prefixed(): void {
 		$this->assertStringStartsWith( '_', OrderLocation::META_KEY );
 	}
 
-	/**
-	 * @testdox META_KEY constant should contain the gym namespace.
-	 */
+	#[TestDox('META_KEY constant should contain the gym namespace.')]
 	public function test_meta_key_contains_gym_namespace(): void {
 		$this->assertStringContainsString( 'gym', OrderLocation::META_KEY );
 	}

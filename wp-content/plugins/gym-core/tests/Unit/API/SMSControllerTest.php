@@ -15,6 +15,7 @@ use Gym_Core\API\SMSController;
 use Gym_Core\SMS\TwilioClient;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the SMSController REST endpoint handlers.
@@ -25,7 +26,7 @@ use PHPUnit\Framework\TestCase;
  */
 class SMSControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var SMSController
@@ -63,7 +64,7 @@ class SMSControllerTest extends TestCase {
 		$this->sut    = new SMSController( $this->twilio );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -78,7 +79,7 @@ class SMSControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -99,9 +100,7 @@ class SMSControllerTest extends TestCase {
 	// send_sms
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox send_sms should return 201 on successful send.
-	 */
+	#[TestDox('send_sms should return 201 on successful send.')]
 	public function test_send_sms_returns_201_on_successful_send(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 1 );
 
@@ -146,9 +145,7 @@ class SMSControllerTest extends TestCase {
 		$this->assertArrayHasKey( 'sent_at', $body['data'] );
 	}
 
-	/**
-	 * @testdox send_sms should return 400 for invalid template slug.
-	 */
+	#[TestDox('send_sms should return 400 for invalid template slug.')]
 	public function test_send_sms_returns_400_for_invalid_template(): void {
 		// MessageTemplates::render() returns null for unknown slugs (real call).
 		$request = $this->make_request(
@@ -167,9 +164,7 @@ class SMSControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 400 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox send_sms should return 400 when no message or template provided.
-	 */
+	#[TestDox('send_sms should return 400 when no message or template provided.')]
 	public function test_send_sms_returns_400_when_no_message_or_template(): void {
 		$request = $this->make_request(
 			array(
@@ -187,9 +182,7 @@ class SMSControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 400 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox send_sms should return 400 for invalid phone number.
-	 */
+	#[TestDox('send_sms should return 400 for invalid phone number.')]
 	public function test_send_sms_returns_400_for_invalid_phone(): void {
 		// TwilioClient::sanitize_phone('not-a-phone') returns '' (real call).
 		$request = $this->make_request(
@@ -208,9 +201,7 @@ class SMSControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 400 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox send_sms should return 429 when rate limited.
-	 */
+	#[TestDox('send_sms should return 429 when rate limited.')]
 	public function test_send_sms_returns_429_when_rate_limited(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 1 );
 
@@ -236,9 +227,7 @@ class SMSControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 429 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox send_sms should return 502 when Twilio send fails.
-	 */
+	#[TestDox('send_sms should return 502 when Twilio send fails.')]
 	public function test_send_sms_returns_502_when_send_fails(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 1 );
 
@@ -274,9 +263,7 @@ class SMSControllerTest extends TestCase {
 	// get_templates
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_templates should return formatted template list.
-	 */
+	#[TestDox('get_templates should return formatted template list.')]
 	public function test_get_templates_returns_formatted_template_list(): void {
 		// MessageTemplates::get_all() is called as the real static method.
 		// Brain\Monkey stubs __() to passthrough, so template names and bodies are
@@ -303,9 +290,7 @@ class SMSControllerTest extends TestCase {
 	// permissions_send_sms
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_send_sms should return true with manage_options capability.
-	 */
+	#[TestDox('permissions_send_sms should return true with manage_options capability.')]
 	public function test_permissions_send_sms_returns_true_with_manage_options(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {
@@ -319,9 +304,7 @@ class SMSControllerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_send_sms should return WP_Error without capability.
-	 */
+	#[TestDox('permissions_send_sms should return WP_Error without capability.')]
 	public function test_permissions_send_sms_returns_error_without_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 

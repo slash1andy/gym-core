@@ -15,6 +15,7 @@ use Gym_Core\API\ClassScheduleController;
 use Gym_Core\Schedule\ClassPostType;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the ClassScheduleController REST endpoint handlers.
@@ -24,7 +25,7 @@ use PHPUnit\Framework\TestCase;
  */
 class ClassScheduleControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var ClassScheduleController
@@ -53,7 +54,7 @@ class ClassScheduleControllerTest extends TestCase {
 		$this->sut = new ClassScheduleController();
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -69,7 +70,7 @@ class ClassScheduleControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -86,7 +87,7 @@ class ClassScheduleControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a mock WP_Post with the given field values.
 	 *
 	 * @param array<string, mixed> $fields Overrides for post properties.
@@ -103,7 +104,7 @@ class ClassScheduleControllerTest extends TestCase {
 		return new \WP_Post( (object) array_merge( $defaults, $fields ) );
 	}
 
-	/**
+/**
 	 * Presets the WP_Query stub to return the given posts.
 	 *
 	 * @param \WP_Post[] $posts         Posts to return.
@@ -119,7 +120,7 @@ class ClassScheduleControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Stubs the post meta calls used by format_class and get_schedule.
 	 *
 	 * @param array<string, string> $meta Key-value pairs of meta to return.
@@ -145,7 +146,7 @@ class ClassScheduleControllerTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Stubs taxonomy and user lookups used by format_class.
 	 *
 	 * @return void
@@ -181,9 +182,7 @@ class ClassScheduleControllerTest extends TestCase {
 	// get_classes
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_classes should return a success response with formatted class list and pagination meta.
-	 */
+	#[TestDox('get_classes should return a success response with formatted class list and pagination meta.')]
 	public function test_get_classes_returns_formatted_list_with_pagination(): void {
 		$post = $this->make_post();
 
@@ -221,9 +220,7 @@ class ClassScheduleControllerTest extends TestCase {
 	// get_class
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_class should return 404 when post is not found.
-	 */
+	#[TestDox('get_class should return 404 when post is not found.')]
 	public function test_get_class_returns_404_when_post_not_found(): void {
 		Functions\when( 'get_post' )->justReturn( null );
 
@@ -235,9 +232,7 @@ class ClassScheduleControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 404 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_class should return 404 when post is wrong post type.
-	 */
+	#[TestDox('get_class should return 404 when post is wrong post type.')]
 	public function test_get_class_returns_404_for_wrong_post_type(): void {
 		$post = $this->make_post( array( 'post_type' => 'post' ) );
 		Functions\when( 'get_post' )->justReturn( $post );
@@ -250,9 +245,7 @@ class ClassScheduleControllerTest extends TestCase {
 		$this->assertSame( array( 'status' => 404 ), $result->get_error_data() );
 	}
 
-	/**
-	 * @testdox get_class should return success response for a valid class post.
-	 */
+	#[TestDox('get_class should return success response for a valid class post.')]
 	public function test_get_class_returns_success_for_valid_post(): void {
 		$post = $this->make_post( array( 'ID' => 42, 'post_title' => 'Kids Karate' ) );
 
@@ -277,9 +270,7 @@ class ClassScheduleControllerTest extends TestCase {
 	// get_schedule
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_schedule should return 7 days with correct structure.
-	 */
+	#[TestDox('get_schedule should return 7 days with correct structure.')]
 	public function test_get_schedule_returns_seven_days(): void {
 		$post = $this->make_post( array( 'ID' => 15, 'post_title' => 'Morning BJJ' ) );
 

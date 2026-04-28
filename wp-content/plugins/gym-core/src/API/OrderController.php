@@ -292,7 +292,7 @@ class OrderController extends BaseController {
 
 		return $this->success_response(
 			array(
-				'subscriptions'  => $billing_data,
+				'subscriptions'   => $billing_data,
 				'recent_payments' => $payments,
 			)
 		);
@@ -561,9 +561,9 @@ class OrderController extends BaseController {
 
 		$refund = wc_create_refund(
 			array(
-				'order_id'   => $order_id,
-				'amount'     => $refund_amount,
-				'reason'     => $reason,
+				'order_id'       => $order_id,
+				'amount'         => $refund_amount,
+				'reason'         => $reason,
 				'refund_payment' => true,
 			)
 		);

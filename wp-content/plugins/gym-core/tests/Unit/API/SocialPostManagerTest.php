@@ -14,13 +14,14 @@ use Brain\Monkey\Functions;
 use Gym_Core\Social\SocialPostManager;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the SocialPostManager REST endpoint handlers.
  */
 class SocialPostManagerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var SocialPostManager
@@ -39,6 +40,7 @@ class SocialPostManagerTest extends TestCase {
 		Functions\when( '__' )->returnArg( 1 );
 		Functions\when( 'sanitize_text_field' )->returnArg( 1 );
 		Functions\when( 'wp_kses_post' )->returnArg( 1 );
+		Functions\when( 'esc_html' )->returnArg( 1 );
 		Functions\when( 'absint' )->alias(
 			static function ( mixed $val ): int {
 				return abs( (int) $val );
@@ -48,7 +50,7 @@ class SocialPostManagerTest extends TestCase {
 		$this->sut = new SocialPostManager();
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -63,7 +65,7 @@ class SocialPostManagerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -80,7 +82,7 @@ class SocialPostManagerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a mock post object.
 	 *
 	 * @param array<string, mixed> $fields Override default field values.
@@ -103,9 +105,7 @@ class SocialPostManagerTest extends TestCase {
 	// handle_draft
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox handle_draft should return 201 with post_id on success.
-	 */
+	#[TestDox('handle_draft should return 201 with post_id on success.')]
 	public function test_handle_draft_returns_201_with_post_id_on_success(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 1 );
 		Functions\when( 'wp_insert_post' )->justReturn( 100 );
@@ -133,9 +133,7 @@ class SocialPostManagerTest extends TestCase {
 		$this->assertArrayHasKey( 'edit_url', $body['data'] );
 	}
 
-	/**
-	 * @testdox handle_draft should return 500 when wp_insert_post fails.
-	 */
+	#[TestDox('handle_draft should return 500 when wp_insert_post fails.')]
 	public function test_handle_draft_returns_500_when_wp_insert_post_fails(): void {
 		$wp_error = new \WP_Error( 'db_insert_error', 'Could not insert post into the database.' );
 
@@ -165,9 +163,7 @@ class SocialPostManagerTest extends TestCase {
 	// handle_approve
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox handle_approve should return success for a valid pending social post.
-	 */
+	#[TestDox('handle_approve should return success for a valid pending social post.')]
 	public function test_handle_approve_returns_success_for_valid_pending_social_post(): void {
 		$post = $this->make_post();
 
@@ -190,9 +186,7 @@ class SocialPostManagerTest extends TestCase {
 		$this->assertSame( 'publish', $body['data']['status'] );
 	}
 
-	/**
-	 * @testdox handle_approve should return 400 for a non-pending post.
-	 */
+	#[TestDox('handle_approve should return 400 for a non-pending post.')]
 	public function test_handle_approve_returns_400_for_non_pending_post(): void {
 		$post = $this->make_post( array( 'post_status' => 'publish' ) );
 
@@ -211,9 +205,7 @@ class SocialPostManagerTest extends TestCase {
 	// handle_get_pending
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox handle_get_pending should return array of pending posts.
-	 */
+	#[TestDox('handle_get_pending should return array of pending posts.')]
 	public function test_handle_get_pending_returns_array_of_pending_posts(): void {
 		$post_a = $this->make_post( array( 'ID' => 100, 'post_title' => 'Post A' ) );
 		$post_b = $this->make_post( array( 'ID' => 101, 'post_title' => 'Post B' ) );
@@ -249,9 +241,7 @@ class SocialPostManagerTest extends TestCase {
 	// permissions_manage_announcements
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_manage_announcements should return true with gym_manage_announcements capability.
-	 */
+	#[TestDox('permissions_manage_announcements should return true with gym_manage_announcements capability.')]
 	public function test_permissions_manage_announcements_returns_true_with_capability(): void {
 		Functions\when( 'current_user_can' )->alias(
 			static function ( string $cap ): bool {
@@ -265,9 +255,7 @@ class SocialPostManagerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox permissions_manage_announcements should return WP_Error without capability.
-	 */
+	#[TestDox('permissions_manage_announcements should return WP_Error without capability.')]
 	public function test_permissions_manage_announcements_returns_error_without_capability(): void {
 		Functions\when( 'current_user_can' )->justReturn( false );
 		Functions\when( 'rest_authorization_required_code' )->justReturn( 403 );

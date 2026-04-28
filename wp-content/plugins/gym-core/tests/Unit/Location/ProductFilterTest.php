@@ -17,6 +17,7 @@ use Gym_Core\Location\Taxonomy;
 use Mockery;
 use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the ProductFilter class.
@@ -25,7 +26,7 @@ class ProductFilterTest extends TestCase {
 
 	use MockeryPHPUnitIntegration;
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var ProductFilter
@@ -52,7 +53,7 @@ class ProductFilterTest extends TestCase {
 		$this->sut     = new ProductFilter( $this->manager );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -65,9 +66,7 @@ class ProductFilterTest extends TestCase {
 
 	// ----- filter_shortcode_query -----
 
-	/**
-	 * @testdox Should return query args unchanged when no location is active.
-	 */
+	#[TestDox('Should return query args unchanged when no location is active.')]
 	public function test_filter_shortcode_query_returns_unchanged_args_when_no_location(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( '' );
 
@@ -77,9 +76,7 @@ class ProductFilterTest extends TestCase {
 		$this->assertSame( $args, $result );
 	}
 
-	/**
-	 * @testdox Should append a location tax_query when rockford is active.
-	 */
+	#[TestDox('Should append a location tax_query when rockford is active.')]
 	public function test_filter_shortcode_query_appends_tax_query_for_rockford(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::ROCKFORD );
 
@@ -96,9 +93,7 @@ class ProductFilterTest extends TestCase {
 		$this->assertSame( 'IN', $clause['operator'] );
 	}
 
-	/**
-	 * @testdox Should append a location tax_query when beloit is active.
-	 */
+	#[TestDox('Should append a location tax_query when beloit is active.')]
 	public function test_filter_shortcode_query_appends_tax_query_for_beloit(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::BELOIT );
 
@@ -108,9 +103,7 @@ class ProductFilterTest extends TestCase {
 		$this->assertSame( array( Taxonomy::BELOIT ), $clause['terms'] );
 	}
 
-	/**
-	 * @testdox Should preserve existing tax_query entries when appending a location clause.
-	 */
+	#[TestDox('Should preserve existing tax_query entries when appending a location clause.')]
 	public function test_filter_shortcode_query_preserves_existing_tax_query(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::ROCKFORD );
 
@@ -140,9 +133,7 @@ class ProductFilterTest extends TestCase {
 
 	// ----- filter_product_query -----
 
-	/**
-	 * @testdox Should not modify WP_Query when no location is active.
-	 */
+	#[TestDox('Should not modify WP_Query when no location is active.')]
 	public function test_filter_product_query_does_not_modify_query_when_no_location(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( '' );
 
@@ -154,9 +145,7 @@ class ProductFilterTest extends TestCase {
 		$this->sut->filter_product_query( $query );
 	}
 
-	/**
-	 * @testdox Should append a tax_query clause to WP_Query when location is active.
-	 */
+	#[TestDox('Should append a tax_query clause to WP_Query when location is active.')]
 	public function test_filter_product_query_appends_tax_query_when_location_is_active(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::ROCKFORD );
 
@@ -183,9 +172,7 @@ class ProductFilterTest extends TestCase {
 		$this->sut->filter_product_query( $query );
 	}
 
-	/**
-	 * @testdox Should merge with existing tax_query on WP_Query.
-	 */
+	#[TestDox('Should merge with existing tax_query on WP_Query.')]
 	public function test_filter_product_query_merges_with_existing_tax_query(): void {
 		$this->manager->allows( 'get_current_location' )->andReturn( Taxonomy::BELOIT );
 

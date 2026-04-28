@@ -343,8 +343,8 @@ class CrmController extends BaseController {
 			$values[] = $status;
 		}
 
-		$offset     = ( $page - 1 ) * $per_page;
-		$where_sql  = implode( ' AND ', $where );
+		$offset    = ( $page - 1 ) * $per_page;
+		$where_sql = implode( ' AND ', $where );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$results = $wpdb->get_results(

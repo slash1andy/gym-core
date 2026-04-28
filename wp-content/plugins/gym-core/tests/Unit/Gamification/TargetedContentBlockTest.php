@@ -20,13 +20,14 @@ use PHPUnit\Framework\TestCase;
 use Brain\Monkey;
 use Brain\Monkey\Functions;
 use Mockery;
+use PHPUnit\Framework\Attributes\Test;
 
 /**
  * Tests for TargetedContent::render_block().
  */
 class TargetedContentBlockTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var TargetedContent
@@ -83,7 +84,7 @@ class TargetedContentBlockTest extends TestCase {
 		);
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -93,9 +94,7 @@ class TargetedContentBlockTest extends TestCase {
 		parent::tearDown();
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function render_block_returns_content_when_no_rules_set(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
@@ -116,9 +115,7 @@ class TargetedContentBlockTest extends TestCase {
 		$this->assertSame( '<p>Hello</p>', $result );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function render_block_hides_content_for_logged_out_user_when_logged_in_required(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
@@ -139,9 +136,7 @@ class TargetedContentBlockTest extends TestCase {
 		$this->assertSame( '', $result );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function render_block_shows_fallback_when_rules_not_met(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 		Functions\when( 'esc_html' )->alias( function ( $text ) { return $text; } );
@@ -164,9 +159,7 @@ class TargetedContentBlockTest extends TestCase {
 		$this->assertStringContainsString( 'gym-targeted-fallback', $result );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function render_block_returns_content_for_logged_in_user(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 42 );
 
@@ -187,9 +180,7 @@ class TargetedContentBlockTest extends TestCase {
 		$this->assertSame( '<p>Welcome</p>', $result );
 	}
 
-	/**
-	 * @test
-	 */
+	#[Test]
 	public function render_block_hides_content_when_program_not_matched(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 42 );
 		Functions\when( 'sanitize_text_field' )->alias( function ( $text ) { return $text; } );

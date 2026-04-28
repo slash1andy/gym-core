@@ -255,7 +255,17 @@ final class KioskEndpoint {
 <head>
 	<meta charset="<?php bloginfo( 'charset' ); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title><?php echo esc_html( sprintf( __( 'Check in — %s', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ); ?></title>
+	<title>
+		<?php
+		echo esc_html(
+			sprintf(
+				/* translators: %s: brand name */
+				__( 'Check in — %s', 'gym-core' ),
+				\Gym_Core\Utilities\Brand::name()
+			)
+		);
+		?>
+	</title>
 		<?php wp_head(); ?>
 </head>
 <body class="gym-kiosk" data-location="<?php echo esc_attr( $location ); ?>">

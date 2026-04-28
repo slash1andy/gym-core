@@ -211,10 +211,8 @@ final class UserProfileRank {
 				)
 			);
 			echo '</span>';
-		} elseif ( 'level' === $type ) {
-			// Kickboxing: show "Level X" — name already contains level, no stripe indicator.
-			// No additional indicator needed.
-		} elseif ( $max_stripes > 0 ) {
+		} elseif ( $max_stripes > 0 && 'level' !== $type ) {
+			// Kickboxing ('level' type) shows "Level X" already; skip stripe indicator.
 			// Belt type: show filled vs empty stripe dots.
 			echo ' <span style="vertical-align:middle;margin-left:8px;" aria-label="'
 				. esc_attr(
@@ -366,7 +364,11 @@ final class UserProfileRank {
 			echo '<ul style="margin:8px 0 8px 16px;">';
 			foreach ( $coach_rolls as $roll ) {
 				$coach_user = get_userdata( (int) $roll['coach_id'] );
-				$coach_name = $coach_user ? $coach_user->display_name : sprintf( __( 'Coach #%d', 'gym-core' ), $roll['coach_id'] );
+				$coach_name = $coach_user ? $coach_user->display_name : sprintf(
+					/* translators: %d: coach user ID */
+					__( 'Coach #%d', 'gym-core' ),
+					$roll['coach_id']
+				);
 				$roll_date  = wp_date( 'M j, Y', strtotime( $roll['date'] ) );
 
 				echo '<li>';

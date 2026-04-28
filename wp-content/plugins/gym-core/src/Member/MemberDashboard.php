@@ -446,7 +446,7 @@ final class MemberDashboard {
 								printf(
 									/* translators: %d: total classes required */
 									esc_html__( 'of %d classes', 'gym-core' ),
-									$foundations_status['classes_total_required']
+									(int) $foundations_status['classes_total_required']
 								);
 								?>
 							</span>
@@ -460,7 +460,7 @@ final class MemberDashboard {
 								printf(
 									/* translators: %d: coach rolls required */
 									esc_html__( 'of %d coach rolls', 'gym-core' ),
-									$foundations_status['coach_rolls_required']
+									(int) $foundations_status['coach_rolls_required']
 								);
 								?>
 							</span>

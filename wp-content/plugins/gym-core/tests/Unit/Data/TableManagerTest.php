@@ -19,7 +19,7 @@ use Brain\Monkey\Functions;
  */
 class TableManagerTest extends TestCase {
 
-	/**
+/**
 	 * Set up Brain\Monkey before each test.
 	 */
 	protected function setUp(): void {
@@ -27,7 +27,7 @@ class TableManagerTest extends TestCase {
 		Monkey\setUp();
 	}
 
-	/**
+/**
 	 * Tear down Brain\Monkey after each test.
 	 */
 	protected function tearDown(): void {
@@ -35,7 +35,7 @@ class TableManagerTest extends TestCase {
 		parent::tearDown();
 	}
 
-	/**
+/**
 	 * Test that get_table_names returns all four expected table identifiers.
 	 */
 	public function test_get_table_names_returns_all_tables(): void {
@@ -53,7 +53,7 @@ class TableManagerTest extends TestCase {
 		$this->assertArrayHasKey( 'achievements', $tables );
 	}
 
-	/**
+/**
 	 * Test that table names use the correct prefix.
 	 */
 	public function test_table_names_use_wpdb_prefix(): void {
@@ -71,7 +71,7 @@ class TableManagerTest extends TestCase {
 		$this->assertSame( 'test_gym_achievements', $tables['achievements'] );
 	}
 
-	/**
+/**
 	 * Test that maybe_create_tables skips when version is current.
 	 */
 	public function test_maybe_create_tables_skips_when_current(): void {
@@ -90,7 +90,7 @@ class TableManagerTest extends TestCase {
 		$this->assertTrue( true );
 	}
 
-	/**
+/**
 	 * Test that drop_tables calls the correct SQL and deletes the version option.
 	 */
 	public function test_drop_tables_removes_version_option(): void {

@@ -272,7 +272,13 @@ final class StaffDashboard {
 			echo '</div>';
 		} else {
 			echo '<div class="gym-dashboard-notice">';
-			echo '<p>' . esc_html( sprintf( __( 'AI Chat is not available. Install and activate the %s AI Chat plugin.', 'gym-core' ), \Gym_Core\Utilities\Brand::name() ) ) . '</p>';
+			echo '<p>' . esc_html(
+				sprintf(
+					/* translators: %s: brand name */
+					__( 'AI Chat is not available. Install and activate the %s AI Chat plugin.', 'gym-core' ),
+					\Gym_Core\Utilities\Brand::name()
+				)
+			) . '</p>';
 			echo '</div>';
 		}
 

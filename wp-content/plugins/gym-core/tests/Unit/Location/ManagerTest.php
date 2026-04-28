@@ -14,13 +14,15 @@ use Brain\Monkey\Functions;
 use Gym_Core\Location\Manager;
 use Gym_Core\Location\Taxonomy;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Tests for the location Manager class.
  */
 class ManagerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var Manager
@@ -54,7 +56,7 @@ class ManagerTest extends TestCase {
 		$this->sut = new Manager();
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -69,9 +71,7 @@ class ManagerTest extends TestCase {
 
 	// ----- get_current_location -----
 
-	/**
-	 * @testdox Should return empty string when no cookie and no login.
-	 */
+	#[TestDox('Should return empty string when no cookie and no login.')]
 	public function test_get_current_location_returns_empty_with_no_signals(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 
@@ -82,9 +82,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( '', $result );
 	}
 
-	/**
-	 * @testdox Should return location slug from a valid cookie for a guest visitor.
-	 */
+	#[TestDox('Should return location slug from a valid cookie for a guest visitor.')]
 	public function test_get_current_location_reads_from_cookie_for_guest(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 
@@ -95,9 +93,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( Taxonomy::ROCKFORD, $result );
 	}
 
-	/**
-	 * @testdox Should return empty string when cookie contains an invalid slug.
-	 */
+	#[TestDox('Should return empty string when cookie contains an invalid slug.')]
 	public function test_get_current_location_rejects_invalid_cookie(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 
@@ -108,9 +104,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( '', $result );
 	}
 
-	/**
-	 * @testdox Should prefer user meta over cookie for a logged-in user.
-	 */
+	#[TestDox('Should prefer user meta over cookie for a logged-in user.')]
 	public function test_get_current_location_prefers_user_meta_over_cookie(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 42 );
@@ -124,9 +118,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( Taxonomy::BELOIT, $result );
 	}
 
-	/**
-	 * @testdox Should fall back to cookie when user meta is empty for a logged-in user.
-	 */
+	#[TestDox('Should fall back to cookie when user meta is empty for a logged-in user.')]
 	public function test_get_current_location_falls_back_to_cookie_for_logged_in_user(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 99 );
@@ -139,9 +131,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( Taxonomy::BELOIT, $result );
 	}
 
-	/**
-	 * @testdox Should cache the resolved location so subsequent calls are consistent.
-	 */
+	#[TestDox('Should cache the resolved location so subsequent calls are consistent.')]
 	public function test_get_current_location_is_cached_within_request(): void {
 		// is_user_logged_in is only called once even across two get_current_location() calls.
 		Functions\expect( 'is_user_logged_in' )
@@ -156,9 +146,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( $first, $second );
 	}
 
-	/**
-	 * @testdox reset_cache should cause get_current_location to re-resolve on the next call.
-	 */
+	#[TestDox('reset_cache should cause get_current_location to re-resolve on the next call.')]
 	public function test_reset_cache_clears_cached_location(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 
@@ -176,9 +164,7 @@ class ManagerTest extends TestCase {
 
 	// ----- set_location -----
 
-	/**
-	 * @testdox Should return true when setting a valid rockford slug.
-	 */
+	#[TestDox('Should return true when setting a valid rockford slug.')]
 	public function test_set_location_returns_true_for_rockford(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 		Functions\when( 'headers_sent' )->justReturn( true ); // Prevent setcookie() call.
@@ -188,9 +174,7 @@ class ManagerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox Should return true when setting a valid beloit slug.
-	 */
+	#[TestDox('Should return true when setting a valid beloit slug.')]
 	public function test_set_location_returns_true_for_beloit(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 		Functions\when( 'headers_sent' )->justReturn( true );
@@ -200,23 +184,20 @@ class ManagerTest extends TestCase {
 		$this->assertTrue( $result );
 	}
 
-	/**
-	 * @testdox Should return false for an unrecognised slug.
-	 *
-	 * @dataProvider invalid_location_provider
-	 */
+	#[TestDox('Should return false for an unrecognised slug.')]
+	#[DataProvider('invalid_location_provider')]
 	public function test_set_location_returns_false_for_invalid_slug( string $slug ): void {
 		$result = $this->sut->set_location( $slug );
 
 		$this->assertFalse( $result );
 	}
 
-	/**
+/**
 	 * Data provider for invalid location slugs.
 	 *
 	 * @return array<string, array<string>>
 	 */
-	public function invalid_location_provider(): array {
+	public static function invalid_location_provider(): array {
 		return array(
 			'empty string'  => array( '' ),
 			'unknown city'  => array( 'chicago' ),
@@ -226,9 +207,7 @@ class ManagerTest extends TestCase {
 		);
 	}
 
-	/**
-	 * @testdox Should update get_current_location immediately after a successful set.
-	 */
+	#[TestDox('Should update get_current_location immediately after a successful set.')]
 	public function test_set_location_updates_current_location(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( false );
 		Functions\when( 'headers_sent' )->justReturn( true );
@@ -238,9 +217,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( Taxonomy::BELOIT, $this->sut->get_current_location() );
 	}
 
-	/**
-	 * @testdox Should save to user meta when user is logged in.
-	 */
+	#[TestDox('Should save to user meta when user is logged in.')]
 	public function test_set_location_saves_user_meta_for_logged_in_user(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 7 );
@@ -258,36 +235,28 @@ class ManagerTest extends TestCase {
 
 	// ----- set_user_location -----
 
-	/**
-	 * @testdox Should return false when user ID is zero.
-	 */
+	#[TestDox('Should return false when user ID is zero.')]
 	public function test_set_user_location_returns_false_for_zero_user_id(): void {
 		$result = $this->sut->set_user_location( 0, Taxonomy::ROCKFORD );
 
 		$this->assertFalse( $result );
 	}
 
-	/**
-	 * @testdox Should return false when user ID is negative.
-	 */
+	#[TestDox('Should return false when user ID is negative.')]
 	public function test_set_user_location_returns_false_for_negative_user_id(): void {
 		$result = $this->sut->set_user_location( -1, Taxonomy::BELOIT );
 
 		$this->assertFalse( $result );
 	}
 
-	/**
-	 * @testdox Should return false for an invalid location slug.
-	 */
+	#[TestDox('Should return false for an invalid location slug.')]
 	public function test_set_user_location_returns_false_for_invalid_slug(): void {
 		$result = $this->sut->set_user_location( 5, 'invalid' );
 
 		$this->assertFalse( $result );
 	}
 
-	/**
-	 * @testdox Should return true and call update_user_meta for valid inputs.
-	 */
+	#[TestDox('Should return true and call update_user_meta for valid inputs.')]
 	public function test_set_user_location_returns_true_and_saves_meta(): void {
 		Functions\expect( 'update_user_meta' )
 			->once()
@@ -300,9 +269,7 @@ class ManagerTest extends TestCase {
 
 	// ----- get_user_location -----
 
-	/**
-	 * @testdox Should return the stored location for a user.
-	 */
+	#[TestDox('Should return the stored location for a user.')]
 	public function test_get_user_location_returns_stored_meta(): void {
 		Functions\when( 'get_user_meta' )->justReturn( Taxonomy::ROCKFORD );
 
@@ -311,9 +278,7 @@ class ManagerTest extends TestCase {
 		$this->assertSame( Taxonomy::ROCKFORD, $result );
 	}
 
-	/**
-	 * @testdox Should return empty string when no user meta is stored.
-	 */
+	#[TestDox('Should return empty string when no user meta is stored.')]
 	public function test_get_user_location_returns_empty_when_no_meta(): void {
 		Functions\when( 'get_user_meta' )->justReturn( '' );
 

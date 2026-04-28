@@ -17,13 +17,14 @@ use Gym_Core\Gamification\BadgeEngine;
 use Gym_Core\Gamification\StreakTracker;
 use Mockery;
 use PHPUnit\Framework\TestCase;
+use PHPUnit\Framework\Attributes\TestDox;
 
 /**
  * Tests for the GamificationController REST endpoint handlers.
  */
 class GamificationControllerTest extends TestCase {
 
-	/**
+/**
 	 * The System Under Test.
 	 *
 	 * @var GamificationController
@@ -67,7 +68,7 @@ class GamificationControllerTest extends TestCase {
 		$this->sut     = new GamificationController( $this->badges, $this->streaks );
 	}
 
-	/**
+/**
 	 * Tear down the test environment.
 	 *
 	 * @return void
@@ -82,7 +83,7 @@ class GamificationControllerTest extends TestCase {
 	// Helpers
 	// -------------------------------------------------------------------------
 
-	/**
+/**
 	 * Creates a mock WP_REST_Request with the given parameters.
 	 *
 	 * @param array<string, mixed> $params Query/body parameters.
@@ -99,7 +100,7 @@ class GamificationControllerTest extends TestCase {
 		return $request;
 	}
 
-	/**
+/**
 	 * Builds a mock earned badge object.
 	 *
 	 * @param string      $slug     Badge slug.
@@ -119,9 +120,7 @@ class GamificationControllerTest extends TestCase {
 	// get_badge_definitions
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_badge_definitions returns all badges for a public (not logged-in) request.
-	 */
+	#[TestDox('get_badge_definitions returns all badges for a public (not logged-in) request.')]
 	public function test_get_badge_definitions_returns_all_for_public_request(): void {
 		$real_definitions = BadgeDefinitions::get_all();
 
@@ -143,9 +142,7 @@ class GamificationControllerTest extends TestCase {
 		$this->assertArrayNotHasKey( 'earned_at', $body['data'][0] );
 	}
 
-	/**
-	 * @testdox get_badge_definitions includes earned status for a logged-in user.
-	 */
+	#[TestDox('get_badge_definitions includes earned status for a logged-in user.')]
 	public function test_get_badge_definitions_includes_earned_for_logged_in_user(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 42 );
 
@@ -170,9 +167,7 @@ class GamificationControllerTest extends TestCase {
 		$this->assertNull( $body['data'][1]['earned_at'] );
 	}
 
-	/**
-	 * @testdox get_badge_definitions filters results by category when provided.
-	 */
+	#[TestDox('get_badge_definitions filters results by category when provided.')]
 	public function test_get_badge_definitions_filters_by_category(): void {
 		Functions\when( 'get_current_user_id' )->justReturn( 0 );
 
@@ -193,9 +188,7 @@ class GamificationControllerTest extends TestCase {
 	// get_member_badges
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_member_badges returns formatted earned badges with metadata totals.
-	 */
+	#[TestDox('get_member_badges returns formatted earned badges with metadata totals.')]
 	public function test_get_member_badges_returns_formatted_badges_with_meta(): void {
 		$real_definitions = BadgeDefinitions::get_all();
 
@@ -234,9 +227,7 @@ class GamificationControllerTest extends TestCase {
 	// get_member_streak
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox get_member_streak returns streak data for a member.
-	 */
+	#[TestDox('get_member_streak returns streak data for a member.')]
 	public function test_get_member_streak_returns_streak_data(): void {
 		$streak_data = array(
 			'current_streak'     => 3,
@@ -264,9 +255,7 @@ class GamificationControllerTest extends TestCase {
 	// permissions_view_badges
 	// -------------------------------------------------------------------------
 
-	/**
-	 * @testdox permissions_view_badges allows access to own badge data.
-	 */
+	#[TestDox('permissions_view_badges allows access to own badge data.')]
 	public function test_permissions_view_badges_allows_own_data(): void {
 		Functions\when( 'is_user_logged_in' )->justReturn( true );
 		Functions\when( 'get_current_user_id' )->justReturn( 25 );

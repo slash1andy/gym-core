@@ -169,10 +169,12 @@ class SocialPostManager extends BaseController {
 
 		if ( is_wp_error( $post_id ) ) {
 			throw new \RuntimeException(
-				sprintf(
-					/* translators: %s: error message */
-					__( 'Failed to create social post: %s', 'gym-core' ),
-					$post_id->get_error_message()
+				esc_html(
+					sprintf(
+						/* translators: %s: error message */
+						__( 'Failed to create social post: %s', 'gym-core' ),
+						$post_id->get_error_message()
+					)
 				)
 			);
 		}
