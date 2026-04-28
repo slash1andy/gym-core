@@ -21,6 +21,12 @@ namespace HMA_AI_Chat\Tools;
  *   - name          (string)  Unique tool identifier.
  *   - description   (string)  Human-readable purpose shown to the AI model.
  *   - input_schema  (array)   JSON Schema describing accepted parameters.
+ *   - output_schema (array, optional) JSON Schema describing the tool's return
+ *                                     payload. Forwarded to the Abilities API
+ *                                     so MCP clients can introspect tool
+ *                                     contracts. Omit for tools that pass
+ *                                     through external (e.g. WC) shapes we
+ *                                     don't want to couple to.
  *   - endpoint      (string)  gym/v1 REST route (may contain {placeholder} tokens).
  *   - method        (string)  HTTP verb: GET or POST.
  *   - auth_cap      (string)  WordPress capability required to execute.
@@ -464,9 +470,9 @@ class ToolRegistry {
 				'write'        => false,
 			),
 			array(
-				'name'         => 'get_classes',
-				'description'  => 'List all active classes across the gym, optionally filtered by location, program, or instructor. Each class includes its assigned program (null when unassigned), location, instructor, capacity, and weekly time slot. Use this for audit-style queries that span all classes regardless of date — e.g. "which classes are missing a program" or "list every class an instructor teaches". Use get_schedule instead when you only need the day-by-day view for a single week.',
-				'input_schema' => array(
+				'name'          => 'get_classes',
+				'description'   => 'List all active classes across the gym, optionally filtered by location, program, or instructor. Each class includes its assigned program (null when unassigned), location, instructor, capacity, and weekly time slot. Use this for audit-style queries that span all classes regardless of date — e.g. "which classes are missing a program" or "list every class an instructor teaches". Use get_schedule instead when you only need the day-by-day view for a single week.',
+				'input_schema'  => array(
 					'type'       => 'object',
 					'properties' => array(
 						'location'   => array(
@@ -492,10 +498,40 @@ class ToolRegistry {
 					),
 					'required'   => array(),
 				),
-				'endpoint'     => '/classes',
-				'method'       => 'GET',
-				'auth_cap'     => 'edit_posts',
-				'write'        => false,
+				'output_schema' => array(
+					'type'  => 'array',
+					'items' => array(
+						'type'       => 'object',
+						'properties' => array(
+							'id'          => array( 'type' => 'integer' ),
+							'name'        => array( 'type' => 'string' ),
+							'description' => array( 'type' => 'string' ),
+							'program'     => array(
+								'type'        => array( 'string', 'null' ),
+								'description' => 'Program name. Null when no program is assigned — these are the rows to fix via assign_class_program.',
+							),
+							'instructor'  => array(
+								'type'       => array( 'object', 'null' ),
+								'properties' => array(
+									'id'   => array( 'type' => 'integer' ),
+									'name' => array( 'type' => 'string' ),
+								),
+							),
+							'day_of_week' => array( 'type' => 'string' ),
+							'start_time'  => array( 'type' => 'string' ),
+							'end_time'    => array( 'type' => 'string' ),
+							'capacity'    => array( 'type' => 'integer', 'minimum' => 0 ),
+							'recurrence'  => array( 'type' => 'string' ),
+							'status'      => array( 'type' => 'string' ),
+							'location'    => array( 'type' => array( 'string', 'null' ) ),
+						),
+						'required'   => array( 'id', 'name', 'program' ),
+					),
+				),
+				'endpoint'      => '/classes',
+				'method'        => 'GET',
+				'auth_cap'      => 'edit_posts',
+				'write'         => false,
 			),
 			array(
 				'name'         => 'assign_class_program',
@@ -868,28 +904,30 @@ class ToolRegistry {
 				'write'        => false,
 			),
 			array(
-				'name'         => 'get_subscriptions_summary',
-				'description'  => 'Site-wide subscription totals: active count, on-hold/pending-cancel count, and an as-of timestamp. Use this for "how many active members" or "subscription overview" questions instead of paging through get_subscriptions.',
-				'input_schema' => array(
+				'name'          => 'get_subscriptions_summary',
+				'description'   => 'Site-wide subscription totals: active count, on-hold/pending-cancel count, and an as-of timestamp. Use this for "how many active members" or "subscription overview" questions instead of paging through get_subscriptions.',
+				'input_schema'  => array(
 					'type'       => 'object',
 					'properties' => new \stdClass(),
 				),
-				'endpoint'     => '/subscriptions/summary',
-				'method'       => 'GET',
-				'auth_cap'     => 'manage_woocommerce',
-				'write'        => false,
+				'output_schema' => self::subscription_summary_output_schema(),
+				'endpoint'      => '/subscriptions/summary',
+				'method'        => 'GET',
+				'auth_cap'      => 'manage_woocommerce',
+				'write'         => false,
 			),
 			array(
-				'name'         => 'get_mrr',
-				'description'  => 'Monthly Recurring Revenue (MRR) and ARR derived from active WooCommerce subscriptions. Returns the per-month equivalent of every active subscription summed in the primary currency, with a per-currency breakdown when subscriptions span currencies. Source of truth for "what is our MRR" — never compute MRR from gross revenue.',
-				'input_schema' => array(
+				'name'          => 'get_mrr',
+				'description'   => 'Monthly Recurring Revenue (MRR) and ARR derived from active WooCommerce subscriptions. Returns the per-month equivalent of every active subscription summed in the primary currency, with a per-currency breakdown when subscriptions span currencies. Source of truth for "what is our MRR" — never compute MRR from gross revenue.',
+				'input_schema'  => array(
 					'type'       => 'object',
 					'properties' => new \stdClass(),
 				),
-				'endpoint'     => '/subscriptions/summary',
-				'method'       => 'GET',
-				'auth_cap'     => 'manage_woocommerce',
-				'write'        => false,
+				'output_schema' => self::subscription_summary_output_schema(),
+				'endpoint'      => '/subscriptions/summary',
+				'method'        => 'GET',
+				'auth_cap'      => 'manage_woocommerce',
+				'write'         => false,
 			),
 			array(
 				'name'         => 'get_failed_payments',
@@ -1317,9 +1355,9 @@ class ToolRegistry {
 			// Order & billing tools (new — WooCommerce orders, churn, refunds)
 			// -----------------------------------------------------------------
 			array(
-				'name'         => 'get_member_orders',
-				'description'  => 'Get order history for a member including dates, totals, and line items.',
-				'input_schema' => array(
+				'name'          => 'get_member_orders',
+				'description'   => 'Get order history for a member including dates, totals, and line items.',
+				'input_schema'  => array(
 					'type'       => 'object',
 					'properties' => array(
 						'user_id'  => array(
@@ -1337,10 +1375,34 @@ class ToolRegistry {
 					),
 					'required'   => array( 'user_id' ),
 				),
-				'endpoint'     => '/orders/member/{user_id}',
-				'method'       => 'GET',
-				'auth_cap'     => 'manage_woocommerce',
-				'write'        => false,
+				'output_schema' => array(
+					'type'  => 'array',
+					'items' => array(
+						'type'       => 'object',
+						'properties' => array(
+							'id'         => array( 'type' => 'integer' ),
+							'date'       => array( 'type' => array( 'string', 'null' ), 'format' => 'date' ),
+							'status'     => array(
+								'type'        => 'string',
+								'description' => 'WooCommerce order status (e.g. "completed", "processing", "failed", "refunded").',
+							),
+							'total'      => array(
+								'type'        => 'string',
+								'description' => 'Order total as a string (WC currency-formatted, two decimals).',
+							),
+							'currency'   => array( 'type' => 'string', 'pattern' => '^[A-Z]{3}$' ),
+							'line_items' => array(
+								'type'  => 'array',
+								'items' => array( 'type' => 'string' ),
+							),
+						),
+						'required'   => array( 'id', 'status', 'total', 'currency' ),
+					),
+				),
+				'endpoint'      => '/orders/member/{user_id}',
+				'method'        => 'GET',
+				'auth_cap'      => 'manage_woocommerce',
+				'write'         => false,
 			),
 			array(
 				'name'         => 'get_member_billing',
@@ -1361,9 +1423,9 @@ class ToolRegistry {
 				'write'        => false,
 			),
 			array(
-				'name'         => 'get_member_subscription_status',
-				'description'  => 'Get subscription status for a member. Coaches see status only (active/lapsed/on-hold). Finance and admin also see amounts and payment details.',
-				'input_schema' => array(
+				'name'          => 'get_member_subscription_status',
+				'description'   => 'Get subscription status for a member. Coaches see status only (active/lapsed/on-hold). Finance and admin also see amounts and payment details.',
+				'input_schema'  => array(
 					'type'       => 'object',
 					'properties' => array(
 						'user_id' => array(
@@ -1373,10 +1435,47 @@ class ToolRegistry {
 					),
 					'required'   => array( 'user_id' ),
 				),
-				'endpoint'     => '/subscriptions/member/{user_id}',
-				'method'       => 'GET',
-				'auth_cap'     => 'gym_view_attendance',
-				'write'        => false,
+				// Tiered shape: amounts (recurring_total, currency, payment_method,
+				// next_payment) are present only when the caller has manage_woocommerce.
+				// Coaches with gym_view_attendance see the base shape only.
+				'output_schema' => array(
+					'type'  => 'array',
+					'items' => array(
+						'type'       => 'object',
+						'properties' => array(
+							'subscription_id' => array( 'type' => 'integer' ),
+							'plan_name'       => array( 'type' => 'string' ),
+							'status'          => array(
+								'type' => 'string',
+								'enum' => array( 'active', 'on-hold', 'pending-cancel', 'cancelled' ),
+							),
+							'start_date'      => array( 'type' => array( 'string', 'null' ), 'format' => 'date' ),
+							'recurring_total' => array(
+								'type'        => 'string',
+								'description' => 'Recurring total per billing cycle. Only present when caller has manage_woocommerce.',
+							),
+							'currency'        => array(
+								'type'        => 'string',
+								'pattern'     => '^[A-Z]{3}$',
+								'description' => 'Only present when caller has manage_woocommerce.',
+							),
+							'payment_method'  => array(
+								'type'        => 'string',
+								'description' => 'Only present when caller has manage_woocommerce.',
+							),
+							'next_payment'    => array(
+								'type'        => array( 'string', 'null' ),
+								'format'      => 'date',
+								'description' => 'Only present when caller has manage_woocommerce.',
+							),
+						),
+						'required'   => array( 'subscription_id', 'plan_name', 'status' ),
+					),
+				),
+				'endpoint'      => '/subscriptions/member/{user_id}',
+				'method'        => 'GET',
+				'auth_cap'      => 'gym_view_attendance',
+				'write'         => false,
 			),
 			array(
 				'name'         => 'get_churn_metrics',
@@ -1474,6 +1573,65 @@ class ToolRegistry {
 				'auth_cap'     => 'gym_view_attendance',
 				'write'        => false,
 			),
+		);
+	}
+
+	// -------------------------------------------------------------------------
+	// Output schema helpers
+	// -------------------------------------------------------------------------
+
+	/**
+	 * JSON Schema for the gym/v1/subscriptions/summary payload.
+	 *
+	 * Shared by get_subscriptions_summary and get_mrr — both hit the same
+	 * endpoint, so the schema must stay in lock-step. Defining it once here
+	 * prevents the two tools from drifting apart.
+	 *
+	 * @since 0.5.2
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function subscription_summary_output_schema(): array {
+		return array(
+			'type'       => 'object',
+			'properties' => array(
+				'active_count'    => array(
+					'type'        => 'integer',
+					'minimum'     => 0,
+					'description' => 'Count of subscriptions currently in active status.',
+				),
+				'on_hold_count'   => array(
+					'type'        => 'integer',
+					'minimum'     => 0,
+					'description' => 'Count of on-hold and pending-cancel subscriptions (not billing, not in MRR).',
+				),
+				'mrr'             => array(
+					'type'        => 'number',
+					'minimum'     => 0,
+					'description' => 'Monthly Recurring Revenue in the primary currency.',
+				),
+				'arr'             => array(
+					'type'        => 'number',
+					'minimum'     => 0,
+					'description' => 'Annualised Recurring Revenue (mrr * 12) in the primary currency.',
+				),
+				'currency'        => array(
+					'type'        => 'string',
+					'pattern'     => '^[A-Z]{3}$',
+					'description' => 'ISO 4217 currency code of the primary (largest) MRR bucket.',
+				),
+				'mrr_by_currency' => array(
+					'type'                 => 'object',
+					'additionalProperties' => array( 'type' => 'number' ),
+					'description'          => 'Per-currency MRR breakdown when subscriptions span currencies.',
+				),
+				'as_of'           => array(
+					'type'        => 'string',
+					'format'      => 'date-time',
+					'description' => 'ISO 8601 timestamp when the figures were computed.',
+				),
+			),
+			'required'   => array( 'active_count', 'mrr', 'currency', 'as_of' ),
 		);
 	}
 }
