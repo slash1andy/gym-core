@@ -11,6 +11,7 @@ declare( strict_types=1 );
 namespace Gym_Core\API;
 
 use Gym_Core\Schedule\ClassPostType;
+use Gym_Core\Schedule\ScheduleCachePrimer;
 
 /**
  * Handles REST endpoints for class schedule data.
@@ -253,6 +254,7 @@ class ClassScheduleController extends BaseController {
 		);
 
 		$query = new \WP_Query( $args );
+		ScheduleCachePrimer::prime( $query );
 		$items = array_map( array( $this, 'format_class' ), $query->posts );
 
 		return $this->success_response(
@@ -325,6 +327,7 @@ class ClassScheduleController extends BaseController {
 		}
 
 		$query = new \WP_Query( $args );
+		ScheduleCachePrimer::prime( $query );
 
 		$days     = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
 		$schedule = array();

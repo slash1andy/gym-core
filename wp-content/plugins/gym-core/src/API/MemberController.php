@@ -20,6 +20,7 @@ use Gym_Core\Attendance\FoundationsClearance;
 use Gym_Core\Gamification\StreakTracker;
 use Gym_Core\Gamification\BadgeEngine;
 use Gym_Core\Schedule\ClassPostType;
+use Gym_Core\Schedule\ScheduleCachePrimer;
 
 /**
  * Handles the aggregated member dashboard endpoint.
@@ -382,26 +383,7 @@ class MemberController extends BaseController {
 			$days     = array( 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday' );
 			$schedule = array();
 
-			// Prime caches in bulk to avoid N+1 queries in the nested loop.
-			if ( ! empty( $query->posts ) ) {
-				$post_ids = wp_list_pluck( $query->posts, 'ID' );
-				update_meta_cache( 'post', $post_ids );
-				update_object_term_cache( $post_ids, ClassPostType::POST_TYPE );
-
-				// Collect and cache all instructor user data in one query.
-				$instructor_ids = array_unique(
-					array_filter(
-						array_map(
-							static fn( $post ) => (int) get_post_meta( $post->ID, '_gym_class_instructor', true ),
-							$query->posts
-						)
-					)
-				);
-
-				if ( ! empty( $instructor_ids ) ) {
-					cache_users( $instructor_ids );
-				}
-			}
+			ScheduleCachePrimer::prime( $query );
 
 			foreach ( $days as $i => $day_name ) {
 				$date = gmdate( 'Y-m-d', strtotime( $monday . " +{$i} days" ) );

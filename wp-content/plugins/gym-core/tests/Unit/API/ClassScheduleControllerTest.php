@@ -51,6 +51,20 @@ class ClassScheduleControllerTest extends TestCase {
 		);
 		Functions\when( 'wp_kses_post' )->returnArg( 1 );
 
+		// ScheduleCachePrimer is invoked from get_classes/get_schedule; stub the
+		// underlying WP cache APIs so tests don't need to know about priming.
+		Functions\when( 'wp_list_pluck' )->alias(
+			static function ( array $items, string $field ): array {
+				return array_map(
+					static fn( $item ) => is_object( $item ) ? ( $item->$field ?? null ) : ( $item[ $field ] ?? null ),
+					$items
+				);
+			}
+		);
+		Functions\when( 'update_meta_cache' )->justReturn( true );
+		Functions\when( 'update_object_term_cache' )->justReturn( true );
+		Functions\when( 'cache_users' )->justReturn( null );
+
 		$this->sut = new ClassScheduleController();
 	}
 

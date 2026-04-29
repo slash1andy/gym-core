@@ -198,6 +198,7 @@ class ClassRosterController extends BaseController {
 
 		$user_ids = array_map( static fn( array $r ) => $r['user_id'], $roster );
 		cache_users( $user_ids );
+		$last_attended_map = $this->attendance->get_last_attended_for_users( $user_ids );
 
 		$enriched = array();
 
@@ -221,17 +222,13 @@ class ClassRosterController extends BaseController {
 				$is_foundations = $this->is_foundations_student( $user_id, $program );
 			}
 
-			// Last attended this class.
-			$last_attended = $this->attendance->get_user_history( $user_id, 1, 0 );
-			$last_date     = ! empty( $last_attended ) ? ( $last_attended[0]['checked_in_at'] ?? null ) : null;
-
 			$enriched[] = array(
 				'user_id'          => $user_id,
 				'display_name'     => $user->display_name,
 				'rank'             => $rank_label,
 				'is_foundations'   => $is_foundations,
 				'attendance_count' => $entry['attendance_count'],
-				'last_attended'    => $last_date,
+				'last_attended'    => $last_attended_map[ $user_id ] ?? null,
 			);
 		}
 

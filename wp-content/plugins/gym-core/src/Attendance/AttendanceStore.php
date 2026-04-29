@@ -22,6 +22,13 @@ use Gym_Core\Data\TableManager;
 class AttendanceStore {
 
 	/**
+	 * Object-cache group for per-user attendance counts. Member dashboards
+	 * read get_total_count() multiple times per request; check-ins
+	 * invalidate the entry inline.
+	 */
+	public const COUNT_CACHE_GROUP = 'gym_core_attendance';
+
+	/**
 	 * Records a check-in for a member.
 	 *
 	 * @since 1.2.0
@@ -55,6 +62,8 @@ class AttendanceStore {
 		}
 
 		$record_id = (int) $wpdb->insert_id;
+
+		self::invalidate_total_count_cache( $user_id );
 
 		/**
 		 * Fires after a member checks in to a class.
@@ -98,6 +107,48 @@ class AttendanceStore {
 		);
 
 		return $count > 0;
+	}
+
+	/**
+	 * Returns the most recent check-in timestamp for each of the given users.
+	 *
+	 * One grouped query — replaces a per-user `get_user_history()` fan-out in
+	 * roster-enrichment loops.
+	 *
+	 * @since 2.4.0
+	 *
+	 * @param int[] $user_ids List of user IDs to look up.
+	 * @return array<int, string> Map of user_id => last `checked_in_at` (mysql datetime).
+	 *                            Users with no recorded attendance are omitted.
+	 */
+	public function get_last_attended_for_users( array $user_ids ): array {
+		$user_ids = array_values( array_unique( array_filter( array_map( 'intval', $user_ids ) ) ) );
+		if ( empty( $user_ids ) ) {
+			return array();
+		}
+
+		global $wpdb;
+		$tables = TableManager::get_table_names();
+
+		$placeholders = implode( ',', array_fill( 0, count( $user_ids ), '%d' ) );
+		$sql          = $wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders built from %d count above; values prepared.
+			"SELECT user_id, MAX(checked_in_at) AS last_at
+			FROM {$tables['attendance']}
+			WHERE user_id IN ({$placeholders})
+			GROUP BY user_id",
+			$user_ids
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $sql ) ?: array();
+
+		$map = array();
+		foreach ( $rows as $row ) {
+			$map[ (int) $row->user_id ] = (string) $row->last_at;
+		}
+
+		return $map;
 	}
 
 	/**
@@ -146,6 +197,10 @@ class AttendanceStore {
 	/**
 	 * Returns the total attendance count for a user.
 	 *
+	 * The unbounded ($from === '') variant is cached in the object cache —
+	 * it's read multiple times per dashboard request and is invalidated
+	 * whenever a check-in is recorded for the same user.
+	 *
 	 * @since 1.2.0
 	 *
 	 * @param int    $user_id User ID.
@@ -153,6 +208,14 @@ class AttendanceStore {
 	 * @return int Total check-in count.
 	 */
 	public function get_total_count( int $user_id, string $from = '' ): int {
+		if ( '' === $from ) {
+			$cache_key = self::total_count_cache_key( $user_id );
+			$cached    = wp_cache_get( $cache_key, self::COUNT_CACHE_GROUP );
+			if ( false !== $cached ) {
+				return (int) $cached;
+			}
+		}
+
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 
@@ -168,12 +231,36 @@ class AttendanceStore {
 		}
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		return (int) $wpdb->get_var(
+		$total = (int) $wpdb->get_var(
 			$wpdb->prepare(
 				"SELECT COUNT(*) FROM {$tables['attendance']} WHERE user_id = %d",
 				$user_id
 			)
 		);
+
+		wp_cache_set( self::total_count_cache_key( $user_id ), $total, self::COUNT_CACHE_GROUP );
+
+		return $total;
+	}
+
+	/**
+	 * Cache-key builder for the per-user total attendance count.
+	 *
+	 * @param int $user_id User ID.
+	 * @return string Cache key.
+	 */
+	private static function total_count_cache_key( int $user_id ): string {
+		return 'total_count_' . $user_id;
+	}
+
+	/**
+	 * Invalidates the cached total attendance count for a user.
+	 *
+	 * @param int $user_id User ID.
+	 * @return void
+	 */
+	public static function invalidate_total_count_cache( int $user_id ): void {
+		wp_cache_delete( self::total_count_cache_key( $user_id ), self::COUNT_CACHE_GROUP );
 	}
 
 	/**
