@@ -28,6 +28,13 @@ use Gym_Core\Schedule\ClassPostType;
 class BriefingGenerator {
 
 	/**
+	 * Defensive upper bound for unbounded WP_Query result sets in this generator.
+	 *
+	 * @var int
+	 */
+	private const MAX_QUERY_RESULTS = 500;
+
+	/**
 	 * Default number of weeks to look back for attendance forecasting.
 	 *
 	 * @var int
@@ -140,7 +147,7 @@ class BriefingGenerator {
 		$args = array(
 			'post_type'      => ClassPostType::POST_TYPE,
 			'post_status'    => 'publish',
-			'posts_per_page' => -1,
+			'posts_per_page' => self::MAX_QUERY_RESULTS,
 			'fields'         => 'ids',
 			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				array(

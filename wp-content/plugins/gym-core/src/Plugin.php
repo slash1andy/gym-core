@@ -423,6 +423,12 @@ final class Plugin {
 	 * @return void
 	 */
 	private function register_notification_modules(): void {
+		// Skip the TwilioClient construction (and its option reads) entirely
+		// when SMS is disabled — PromotionNotifier has no work to do without it.
+		if ( 'yes' !== get_option( 'gym_core_sms_enabled' ) ) {
+			return;
+		}
+
 		$twilio_client      = new SMS\TwilioClient();
 		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client );
 		$promotion_notifier->register_hooks();

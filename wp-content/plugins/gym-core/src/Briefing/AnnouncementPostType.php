@@ -27,6 +27,13 @@ class AnnouncementPostType {
 	public const POST_TYPE = 'gym_announcement';
 
 	/**
+	 * Defensive upper bound for unbounded announcement queries.
+	 *
+	 * @var int
+	 */
+	private const MAX_QUERY_RESULTS = 500;
+
+	/**
 	 * Registers hooks for CPT registration and admin customizations.
 	 *
 	 * @since 2.1.0
@@ -371,7 +378,7 @@ class AnnouncementPostType {
 		$args = array(
 			'post_type'      => self::POST_TYPE,
 			'post_status'    => 'publish',
-			'posts_per_page' => -1,
+			'posts_per_page' => self::MAX_QUERY_RESULTS,
 			'orderby'        => 'date',
 			'order'          => 'DESC',
 		);
