@@ -58,6 +58,11 @@ src/
 - `hma_ai_chat_action_approved` — fires when an action is approved
 - `hma_ai_chat_action_rejected` — fires when an action is rejected
 - `hma_ai_chat_execution_complete` — fires when Paperclip run completes
+- `hma_ai_chat_mcp_public_ability` — return `false` to suppress a tool from MCP clients via the [WordPress/mcp-adapter](https://github.com/WordPress/mcp-adapter) integration. Default exposes every Gandalf tool; write tools still queue for staff approval through the existing PendingAction flow.
+
+### MCP Integration
+
+Gandalf abilities are tagged with `meta['mcp']['public'] = true` so the [`mcp-adapter`](https://github.com/WordPress/mcp-adapter) plugin (when installed alongside this one) exposes them to external MCP clients (Claude Code, Cursor, ChatGPT desktop). All tools route through the same `ToolExecutor` pipeline whether invoked from the in-plugin chat or via MCP — capability gates and write-tool approval are enforced identically. See [docs/mcp-adapter-spike.md](docs/mcp-adapter-spike.md) for the operator runbook.
 
 ### Agent Personas
 | Slug | Display name | Capability | Icon |
