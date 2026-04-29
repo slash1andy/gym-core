@@ -329,8 +329,10 @@ class MemberController extends BaseController {
 				$payment_summary = $payment_method;
 				$token_id        = $subscription->get_meta( '_payment_tokens' );
 				if ( $token_id && class_exists( 'WC_Payment_Tokens' ) ) {
-					$tokens = $this->payment_tokens_cache[ $user_id ]
-						?? ( $this->payment_tokens_cache[ $user_id ] = \WC_Payment_Tokens::get_customer_tokens( $user_id ) );
+					if ( ! isset( $this->payment_tokens_cache[ $user_id ] ) ) {
+						$this->payment_tokens_cache[ $user_id ] = \WC_Payment_Tokens::get_customer_tokens( $user_id );
+					}
+					$tokens = $this->payment_tokens_cache[ $user_id ];
 					foreach ( $tokens as $token ) {
 						if ( $token->get_id() === (int) $token_id ) {
 							$payment_summary = $token->get_display_name();

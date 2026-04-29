@@ -104,7 +104,7 @@ class TwilioClient {
 		$attempt     = 0;
 		$status_code = 0;
 		do {
-			$attempt++;
+			++$attempt;
 			$response = wp_remote_post( $url, $request_args );
 
 			if ( is_wp_error( $response ) ) {
