@@ -350,14 +350,12 @@ class CrmController extends BaseController {
 		$offset    = ( $page - 1 ) * $per_page;
 		$where_sql = implode( ' AND ', $where );
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
 		$results = $wpdb->get_results(
-			empty( $values )
-				? "SELECT * FROM {$table} WHERE {$where_sql} ORDER BY ID DESC LIMIT {$per_page} OFFSET {$offset}" // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-				: $wpdb->prepare(
-					"SELECT * FROM {$table} WHERE {$where_sql} ORDER BY ID DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
-					array_merge( $values, array( $per_page, $offset ) )
-				),
+			$wpdb->prepare(
+				"SELECT * FROM {$table} WHERE {$where_sql} ORDER BY ID DESC LIMIT %d OFFSET %d", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				array_merge( $values, array( $per_page, $offset ) )
+			),
 			ARRAY_A
 		) ?: array();
 
