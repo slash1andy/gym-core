@@ -11,6 +11,12 @@
 
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
+// Load Patchwork explicitly so its stream-wrapper is registered before any
+// stub file declares functions that tests will redefine via Brain\Monkey.
+// Without this, Patchwork throws DefinedTooEarly when a test calls
+// Functions\expect() on a function that was already parsed.
+require_once dirname( __DIR__ ) . '/vendor/antecedent/patchwork/Patchwork.php';
+
 // Allow Mockery to mock final classes (e.g. BadgeEngine, StreakTracker, FoundationsClearance).
 // Restrict to src/ only — bypass-finals must not patch PHPUnit internals, since PHP 8.2+ readonly
 // classes cannot extend non-readonly parents, and stripping readonly globally breaks PHPUnit 11.
@@ -40,6 +46,17 @@ define( 'MINUTE_IN_SECONDS', 60 );
 define( 'COOKIEPATH',   '/' );
 define( 'COOKIE_DOMAIN', '' );
 
+// WordPress $wpdb fetch-mode constants used by Sales/ProspectFilter and others.
+if ( ! defined( 'ARRAY_A' ) ) {
+	define( 'ARRAY_A', 'ARRAY_A' );
+}
+if ( ! defined( 'ARRAY_N' ) ) {
+	define( 'ARRAY_N', 'ARRAY_N' );
+}
+if ( ! defined( 'OBJECT' ) ) {
+	define( 'OBJECT', 'OBJECT' );
+}
+
 // Stub WP_Error for unit tests.
 require_once __DIR__ . '/stubs/WP_Error.php';
 
@@ -52,3 +69,8 @@ if ( ! interface_exists( 'Automattic\WooCommerce\Blocks\Integrations\Integration
 // Stub WordPress and WooCommerce classes used by the API module so that
 // controllers can be autoloaded and tested without a full WP/WC install.
 require_once __DIR__ . '/stubs/wordpress-classes.php';
+
+// Real (no-op) global declarations for WooCommerce Subscriptions helpers so
+// function_exists() inside the SUT returns true. Tests override return values
+// via Brain\Monkey's Functions\expect()/when().
+require_once __DIR__ . '/stubs/wc-subscriptions-functions.php';

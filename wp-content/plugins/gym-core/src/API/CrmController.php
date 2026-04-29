@@ -189,6 +189,10 @@ class CrmController extends BaseController {
 		$contacts = $this->query_contacts( $search, $status, $page, $per_page + 10 );
 
 		if ( $prospects_only ) {
+			// ProspectFilter expects an 'email' key; Jetpack CRM rows store it as 'zbsc_email'.
+			foreach ( $contacts as $i => $contact ) {
+				$contacts[ $i ]['email'] = (string) ( $contact['zbsc_email'] ?? '' );
+			}
 			$contacts = ProspectFilter::filter_prospects( $contacts );
 		}
 
