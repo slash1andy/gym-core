@@ -314,7 +314,7 @@ class MemberController extends BaseController {
 				// Try to get a card summary (e.g., "Visa ending in 4242").
 				$payment_summary = $payment_method;
 				$token_id        = $subscription->get_meta( '_payment_tokens' );
-				if ( $token_id && function_exists( 'WC_Payment_Tokens' ) ) {
+				if ( $token_id && class_exists( 'WC_Payment_Tokens' ) ) {
 					$tokens = \WC_Payment_Tokens::get_customer_tokens( $user_id );
 					foreach ( $tokens as $token ) {
 						if ( $token->get_id() === (int) $token_id ) {
