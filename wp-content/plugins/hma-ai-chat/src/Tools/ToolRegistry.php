@@ -118,61 +118,71 @@ class ToolRegistry {
 	/**
 	 * Persona-to-tool-names mapping.
 	 *
-	 * Sales and coaching have restricted tool sets.
-	 * Finance and admin share the full ADMIN_TOOLS set — differentiated by
-	 * system prompt only (Pippin has a finance-oriented persona).
+	 * Computed at runtime instead of declared as a const because some
+	 * persona lists need to extend ADMIN_TOOLS with persona-specific extras
+	 * (e.g. admin gets generate_image, finance does not). Const expressions
+	 * can't merge arrays before PHP 8.1, and the plugin's documented PHP
+	 * floor is 8.0.
 	 *
-	 * @var array<string, list<string>>
+	 * @return array<string, list<string>>
 	 */
-	private const PERSONA_TOOLS = array(
-		'sales'    => array(
-			'get_pricing',
-			'calculate_pricing',
-			'lookup_customer',
-			'create_lead',
-			'create_kiosk_order',
-			'get_schedule',
-			'get_locations',
-			'draft_sms',
-			'get_trial_info',
-			'get_announcements',
-			'get_today_attendance',
-			// CRM (new) — prospect-filtered via tool defaults.
-			'search_crm_contacts',
-			'get_crm_contact',
-			'get_crm_contact_notes',
-			'add_crm_contact_note',
-			'get_crm_pipeline',
-			// SMS history (new).
-			'get_sms_history',
-			// Class rosters (new).
-			'get_class_roster',
-		),
-		'coaching' => array(
-			'get_member_rank',
-			'get_rank_history',
-			'get_attendance',
-			'get_badges',
-			'get_streak',
-			'get_schedule',
-			'recommend_promotion',
-			'get_briefing',
-			'get_foundations_status',
-			'record_coach_roll',
-			'enroll_foundations',
-			'clear_foundations',
-			'get_active_foundations',
-			'get_today_attendance',
-			'get_promotion_eligible',
-			'get_announcements',
-			// Class rosters (new).
-			'get_class_roster',
-			// Subscription status — status only, no amounts (new).
-			'get_member_subscription_status',
-		),
-		'finance'  => self::ADMIN_TOOLS,
-		'admin'    => self::ADMIN_TOOLS,
-	);
+	private static function persona_tools(): array {
+		return array(
+			'sales'    => array(
+				'get_pricing',
+				'calculate_pricing',
+				'lookup_customer',
+				'create_lead',
+				'create_kiosk_order',
+				'get_schedule',
+				'get_locations',
+				'draft_sms',
+				'get_trial_info',
+				'get_announcements',
+				'get_today_attendance',
+				// CRM (new) — prospect-filtered via tool defaults.
+				'search_crm_contacts',
+				'get_crm_contact',
+				'get_crm_contact_notes',
+				'add_crm_contact_note',
+				'get_crm_pipeline',
+				// SMS history (new).
+				'get_sms_history',
+				// Class rosters (new).
+				'get_class_roster',
+				// Image generation for outreach assets.
+				'generate_image',
+			),
+			'coaching' => array(
+				'get_member_rank',
+				'get_rank_history',
+				'get_attendance',
+				'get_badges',
+				'get_streak',
+				'get_schedule',
+				'recommend_promotion',
+				'get_briefing',
+				'get_foundations_status',
+				'record_coach_roll',
+				'enroll_foundations',
+				'clear_foundations',
+				'get_active_foundations',
+				'get_today_attendance',
+				'get_promotion_eligible',
+				'get_announcements',
+				// Class rosters (new).
+				'get_class_roster',
+				// Subscription status — status only, no amounts (new).
+				'get_member_subscription_status',
+			),
+			// Pippin (finance) gets every admin data tool except image
+			// generation — image gen is content-creation, not financial
+			// reporting, and Pippin's prompt is purely numbers-grounded.
+			'finance'  => self::ADMIN_TOOLS,
+			// Gandalf (admin) is the catch-all — full data + content tools.
+			'admin'    => array_merge( self::ADMIN_TOOLS, array( 'generate_image' ) ),
+		);
+	}
 
 	/**
 	 * Get registry singleton.
@@ -202,7 +212,7 @@ class ToolRegistry {
 	public function get_tools_for_persona( string $persona ): array {
 		$this->ensure_loaded();
 
-		$tool_names = self::PERSONA_TOOLS[ $persona ] ?? array();
+		$tool_names = self::persona_tools()[ $persona ] ?? array();
 		$result     = array();
 
 		foreach ( $tool_names as $name ) {
@@ -242,7 +252,7 @@ class ToolRegistry {
 	 * @return bool
 	 */
 	public function persona_has_tool( string $persona, string $tool_name ): bool {
-		$tool_names = self::PERSONA_TOOLS[ $persona ] ?? array();
+		$tool_names = self::persona_tools()[ $persona ] ?? array();
 		return in_array( $tool_name, $tool_names, true );
 	}
 
@@ -1079,6 +1089,51 @@ class ToolRegistry {
 				'method'       => 'POST',
 				'auth_cap'     => 'gym_manage_announcements',
 				'write'        => true,
+			),
+			array(
+				'name'          => 'generate_image',
+				'description'   => 'Generate an image with the AI provider and save it to the WP Media Library. Use for social-post artwork, member-spotlight headers, and similar marketing assets — not for user-supplied photographs. Encode size or style preferences in the prompt itself; the underlying API has no separate fluent setters for those. Write tool — queues for staff approval before generation runs (image generation is the priciest call we expose; rate-limited per user per day).',
+				'input_schema'  => array(
+					'type'       => 'object',
+					'properties' => array(
+						'prompt' => array(
+							'type'        => 'string',
+							'description' => 'Natural-language description of the image. Be specific about subject, composition, and mood.',
+						),
+						'style'  => array(
+							'type'        => 'string',
+							'description' => 'Optional style hint, e.g. "photorealistic", "watercolor", "flat illustration". Appended to the system instruction.',
+						),
+						'size'   => array(
+							'type'        => 'string',
+							'description' => 'Optional size or aspect-ratio hint, e.g. "square", "1024x1024", "landscape banner". Appended to the system instruction.',
+						),
+					),
+					'required'   => array( 'prompt' ),
+				),
+				'output_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'attachment_id' => array(
+							'type'        => 'integer',
+							'description' => 'WP Media Library attachment ID of the generated image.',
+						),
+						'url'           => array(
+							'type'        => 'string',
+							'format'      => 'uri',
+							'description' => 'Public URL of the saved image.',
+						),
+						'prompt_used'   => array(
+							'type'        => 'string',
+							'description' => 'Prompt the image was generated from (also stored as alt text on the attachment).',
+						),
+					),
+					'required'   => array( 'attachment_id', 'url' ),
+				),
+				'endpoint'      => '/media/generate-image',
+				'method'        => 'POST',
+				'auth_cap'      => 'gym_manage_announcements',
+				'write'         => true,
 			),
 			array(
 				'name'         => 'get_briefing_today',

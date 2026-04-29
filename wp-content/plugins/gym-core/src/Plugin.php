@@ -304,6 +304,10 @@ final class Plugin {
 				$order_controller = new API\OrderController();
 				$order_controller->register_hooks();
 
+				// Media controller (AI image generation for Gandalf write tools).
+				$media_controller = new API\MediaController();
+				$media_controller->register_hooks();
+
 				// Class roster controller.
 				$class_roster_controller = new API\ClassRosterController( $this->attendance_store, $this->rank_store );
 				$class_roster_controller->register_hooks();
