@@ -169,7 +169,7 @@ class AnnouncementPostType {
 	 * @return void
 	 */
 	public function render_details_meta_box( \WP_Post $post ): void {
-		wp_nonce_field( 'gym_announcement_meta', 'gym_announcement_meta_nonce' );
+		wp_nonce_field( 'gym_core_announcement_meta', 'gym_announcement_meta_nonce' );
 
 		$type            = get_post_meta( $post->ID, '_gym_announcement_type', true ) ?: 'global';
 		$target_location = get_post_meta( $post->ID, '_gym_announcement_target_location', true );
@@ -238,7 +238,7 @@ class AnnouncementPostType {
 	 */
 	public function save_meta( int $post_id, \WP_Post $post ): void {
 		if ( ! isset( $_POST['gym_announcement_meta_nonce'] ) ||
-			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gym_announcement_meta_nonce'] ) ), 'gym_announcement_meta' ) ) {
+			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gym_announcement_meta_nonce'] ) ), 'gym_core_announcement_meta' ) ) {
 			return;
 		}
 

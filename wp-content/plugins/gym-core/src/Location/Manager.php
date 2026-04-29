@@ -200,7 +200,7 @@ class Manager {
 	 * @return void
 	 */
 	public function handle_ajax_set_location(): void {
-		check_ajax_referer( 'gym_location_nonce', 'nonce' );
+		check_ajax_referer( 'gym_core_location_nonce', 'nonce' );
 
 		$slug = isset( $_POST['location'] )
 			? sanitize_key( wp_unslash( $_POST['location'] ) )

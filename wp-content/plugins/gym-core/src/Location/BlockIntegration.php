@@ -106,7 +106,7 @@ class BlockIntegration implements IntegrationInterface {
 			'currentLocation' => $this->manager->get_current_location(),
 			'locations'       => Taxonomy::get_location_labels(),
 			'ajaxUrl'         => admin_url( 'admin-ajax.php' ),
-			'nonce'           => wp_create_nonce( 'gym_location_nonce' ),
+			'nonce'           => wp_create_nonce( 'gym_core_location_nonce' ),
 		);
 	}
 }

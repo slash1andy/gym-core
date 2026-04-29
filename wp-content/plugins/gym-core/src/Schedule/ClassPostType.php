@@ -217,7 +217,7 @@ final class ClassPostType {
 	 * @return void
 	 */
 	public function render_details_meta_box( \WP_Post $post ): void {
-		wp_nonce_field( 'gym_class_meta', 'gym_class_meta_nonce' );
+		wp_nonce_field( 'gym_core_class_meta', 'gym_class_meta_nonce' );
 
 		$instructor = (int) get_post_meta( $post->ID, '_gym_class_instructor', true );
 		$capacity   = (int) get_post_meta( $post->ID, '_gym_class_capacity', true ) ?: 30;
@@ -308,7 +308,7 @@ final class ClassPostType {
 	 */
 	public function save_meta( int $post_id, \WP_Post $post ): void {
 		if ( ! isset( $_POST['gym_class_meta_nonce'] ) ||
-			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gym_class_meta_nonce'] ) ), 'gym_class_meta' ) ) {
+			! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['gym_class_meta_nonce'] ) ), 'gym_core_class_meta' ) ) {
 			return;
 		}
 

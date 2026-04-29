@@ -463,8 +463,8 @@ final class UserProfileRank {
 	 * @return string JavaScript code.
 	 */
 	private function get_inline_js( int $user_id ): string {
-		$nonce_roll  = wp_create_nonce( 'gym_record_coach_roll_' . $user_id );
-		$nonce_clear = wp_create_nonce( 'gym_clear_foundations_' . $user_id );
+		$nonce_roll  = wp_create_nonce( 'gym_core_record_coach_roll_' . $user_id );
+		$nonce_clear = wp_create_nonce( 'gym_core_clear_foundations_' . $user_id );
 		$ajax_url    = admin_url( 'admin-ajax.php' );
 
 		// TODO: Move this inline JS to an external file (e.g., assets/js/admin-user-profile-rank.js) — see Code-22.
@@ -561,7 +561,7 @@ JS;
 			wp_send_json_error( array( 'message' => __( 'Invalid user ID.', 'gym-core' ) ) );
 		}
 
-		check_ajax_referer( 'gym_record_coach_roll_' . $user_id );
+		check_ajax_referer( 'gym_core_record_coach_roll_' . $user_id );
 
 		if ( ! current_user_can( 'gym_check_in_member' ) && ! current_user_can( 'gym_promote_student' ) ) {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission to record coach rolls.', 'gym-core' ) ) );
@@ -596,7 +596,7 @@ JS;
 			wp_send_json_error( array( 'message' => __( 'Invalid user ID.', 'gym-core' ) ) );
 		}
 
-		check_ajax_referer( 'gym_clear_foundations_' . $user_id );
+		check_ajax_referer( 'gym_core_clear_foundations_' . $user_id );
 
 		if ( ! current_user_can( 'gym_promote_student' ) ) {
 			wp_send_json_error( array( 'message' => __( 'You do not have permission to clear Foundations students.', 'gym-core' ) ) );
