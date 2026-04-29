@@ -99,6 +99,28 @@ class AbilitiesRegistrar {
 		// Convert snake_case tool name to kebab-case for ability naming.
 		$ability_name = self::NAMESPACE_PREFIX . '/' . str_replace( '_', '-', $tool_name );
 
+		/**
+		 * Filters whether a Gandalf ability is exposed to MCP clients via mcp-adapter.
+		 *
+		 * The mcp-adapter plugin (WordPress/mcp-adapter) only exposes abilities
+		 * with `meta['mcp']['public'] = true`. By default every Gandalf tool is
+		 * public — write tools queue for staff approval through the existing
+		 * PendingAction flow, so MCP callers cannot bypass approval gates. Site
+		 * operators can suppress specific tools by returning false here.
+		 *
+		 * @param bool   $public      Whether to expose the ability to MCP clients.
+		 * @param string $tool_name   Original tool name (e.g. 'get_mrr').
+		 * @param array  $tool        Tool definition array from ToolRegistry.
+		 *
+		 * @since 0.5.2
+		 */
+		$mcp_public = (bool) apply_filters(
+			'hma_ai_chat_mcp_public_ability',
+			true,
+			$tool_name,
+			$tool
+		);
+
 		$args = array(
 			'label'               => self::tool_name_to_label( $tool_name ),
 			'description'         => $tool['description'] ?? '',
@@ -112,6 +134,14 @@ class AbilitiesRegistrar {
 					'readonly'    => empty( $tool['write'] ),
 					'destructive' => false,
 					'idempotent'  => empty( $tool['write'] ),
+				),
+				// mcp-adapter (WordPress/mcp-adapter) reads these keys to
+				// decide which abilities to expose to MCP clients. Without
+				// 'public' => true the ability is registered with WP but
+				// invisible to MCP discovery.
+				'mcp'          => array(
+					'public' => $mcp_public,
+					'type'   => 'tool',
 				),
 			),
 		);
