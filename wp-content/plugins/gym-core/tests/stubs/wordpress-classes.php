@@ -317,7 +317,8 @@ if ( ! class_exists( 'WP_Term' ) ) {
 if ( ! class_exists( 'WC_Subscription' ) ) {
 	/**
 	 * Stub for WC_Subscription — used by OrderController for site-wide
-	 * subscription totals and MRR computation.
+	 * subscription totals and MRR computation, and by MemberController for
+	 * the member dashboard billing section.
 	 *
 	 * Tests use Mockery to override the getter return values.
 	 */
@@ -356,6 +357,45 @@ if ( ! class_exists( 'WC_Subscription' ) ) {
 		 */
 		public function get_currency(): string {
 			return 'USD';
+		}
+
+		/**
+		 * Returns the subscription status (e.g. 'active', 'on-hold').
+		 *
+		 * @return string
+		 */
+		public function get_status(): string {
+			return '';
+		}
+
+		/**
+		 * Returns a named subscription date (e.g. 'next_payment'). The real
+		 * implementation returns a DateTime-ish object or empty string.
+		 *
+		 * @param string $date_type Date key.
+		 * @return mixed
+		 */
+		public function get_date( string $date_type ): mixed {
+			return '';
+		}
+
+		/**
+		 * Returns the human-readable payment method title.
+		 *
+		 * @return string
+		 */
+		public function get_payment_method_title(): string {
+			return '';
+		}
+
+		/**
+		 * Returns a meta value by key.
+		 *
+		 * @param string $key Meta key.
+		 * @return mixed
+		 */
+		public function get_meta( string $key ): mixed {
+			return '';
 		}
 	}
 }
@@ -429,6 +469,84 @@ if ( ! class_exists( 'WC_Product' ) ) {
 		 */
 		public function get_image_id(): int|string {
 			return 0;
+		}
+	}
+}
+
+// -------------------------------------------------------------------------
+// WooCommerce payment-token classes
+// -------------------------------------------------------------------------
+
+if ( ! class_exists( 'WC_Payment_Token' ) ) {
+	/**
+	 * Stub for WC_Payment_Token — returned by WC_Payment_Tokens::get_customer_tokens().
+	 *
+	 * Tests construct instances directly with a token id and display name.
+	 */
+	class WC_Payment_Token { // phpcs:ignore
+		/** @var int */
+		private int $id;
+		/** @var string */
+		private string $display_name;
+
+		/**
+		 * Constructor.
+		 *
+		 * @param int    $id           Token id.
+		 * @param string $display_name Human-readable summary (e.g. "Visa ending in 4242").
+		 */
+		public function __construct( int $id = 0, string $display_name = '' ) {
+			$this->id           = $id;
+			$this->display_name = $display_name;
+		}
+
+		/**
+		 * Returns the token id.
+		 *
+		 * @return int
+		 */
+		public function get_id(): int {
+			return $this->id;
+		}
+
+		/**
+		 * Returns the human-readable token summary.
+		 *
+		 * @return string
+		 */
+		public function get_display_name(): string {
+			return $this->display_name;
+		}
+	}
+}
+
+if ( ! class_exists( 'WC_Payment_Tokens' ) ) {
+	/**
+	 * Stub for WC_Payment_Tokens — used by MemberController billing section.
+	 *
+	 * Tests preset tokens via the static $__customer_tokens map, keyed by user id.
+	 */
+	class WC_Payment_Tokens { // phpcs:ignore
+		/** @var array<int, WC_Payment_Token[]> */
+		public static array $__customer_tokens = array();
+
+		/**
+		 * Returns the saved tokens for a customer.
+		 *
+		 * @param int $user_id Customer user id.
+		 * @return WC_Payment_Token[]
+		 */
+		public static function get_customer_tokens( int $user_id ): array {
+			return self::$__customer_tokens[ $user_id ] ?? array();
+		}
+
+		/**
+		 * Resets the test preset. Call in tearDown().
+		 *
+		 * @return void
+		 */
+		public static function __test_reset(): void {
+			self::$__customer_tokens = array();
 		}
 	}
 }
