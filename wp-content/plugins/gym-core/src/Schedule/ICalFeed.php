@@ -51,6 +51,13 @@ final class ICalFeed {
 	private const CACHE_TTL = HOUR_IN_SECONDS;
 
 	/**
+	 * Defensive upper bound for the iCal class query.
+	 *
+	 * @var int
+	 */
+	private const MAX_QUERY_RESULTS = 200;
+
+	/**
 	 * Location addresses keyed by taxonomy slug.
 	 *
 	 * @var array<string, string>
@@ -212,7 +219,7 @@ final class ICalFeed {
 	private function generate_ical( string $location = '' ): string {
 		$args = array(
 			'post_type'      => ClassPostType::POST_TYPE,
-			'posts_per_page' => -1,
+			'posts_per_page' => self::MAX_QUERY_RESULTS,
 			'post_status'    => 'publish',
 			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 				array(

@@ -66,6 +66,12 @@ final class InboundHandler {
 			return $served;
 		}
 
+		// Defense in depth: only intercept the Twilio webhook route, even if
+		// some other handler returns application/xml.
+		if ( '/gym/v1/sms/webhook' !== $request->get_route() ) {
+			return $served;
+		}
+
 		$content_type = $result->get_headers()['Content-Type'] ?? '';
 
 		if ( 'application/xml' !== $content_type ) {
@@ -122,6 +128,8 @@ final class InboundHandler {
 
 		// Use a configurable webhook URL, falling back to rest_url().
 		// Reconstructing from $_SERVER is unreliable behind proxies/CDNs.
+		// Production environments should set the `gym_core_twilio_webhook_url`
+		// option explicitly so the X-Forwarded-Proto fallback below never runs.
 		$url = get_option( 'gym_core_twilio_webhook_url', '' );
 
 		if ( empty( $url ) ) {

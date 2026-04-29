@@ -30,11 +30,25 @@ use Gym_Core\Schedule\ClassPostType;
 class MemberController extends BaseController {
 
 	/**
+	 * Defensive upper bound for unbounded WP_Query result sets in this controller.
+	 *
+	 * @var int
+	 */
+	private const MAX_QUERY_RESULTS = 500;
+
+	/**
 	 * Route base.
 	 *
 	 * @var string
 	 */
 	protected $rest_base = 'members';
+
+	/**
+	 * Per-request memo of WC_Payment_Tokens lookups, keyed by user ID.
+	 *
+	 * @var array<int, array<int, \WC_Payment_Token>>
+	 */
+	private array $payment_tokens_cache = array();
 
 	/**
 	 * Rank data store.
@@ -315,7 +329,10 @@ class MemberController extends BaseController {
 				$payment_summary = $payment_method;
 				$token_id        = $subscription->get_meta( '_payment_tokens' );
 				if ( $token_id && class_exists( 'WC_Payment_Tokens' ) ) {
-					$tokens = \WC_Payment_Tokens::get_customer_tokens( $user_id );
+					if ( ! isset( $this->payment_tokens_cache[ $user_id ] ) ) {
+						$this->payment_tokens_cache[ $user_id ] = \WC_Payment_Tokens::get_customer_tokens( $user_id );
+					}
+					$tokens = $this->payment_tokens_cache[ $user_id ];
 					foreach ( $tokens as $token ) {
 						if ( $token->get_id() === (int) $token_id ) {
 							$payment_summary = $token->get_display_name();
@@ -361,7 +378,7 @@ class MemberController extends BaseController {
 
 			$args = array(
 				'post_type'      => ClassPostType::POST_TYPE,
-				'posts_per_page' => -1,
+				'posts_per_page' => self::MAX_QUERY_RESULTS,
 				'post_status'    => 'publish',
 				'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 					array(
@@ -383,10 +400,18 @@ class MemberController extends BaseController {
 			$schedule = array();
 
 			// Prime caches in bulk to avoid N+1 queries in the nested loop.
+			$program_map = array();
 			if ( ! empty( $query->posts ) ) {
 				$post_ids = wp_list_pluck( $query->posts, 'ID' );
 				update_meta_cache( 'post', $post_ids );
 				update_object_term_cache( $post_ids, ClassPostType::POST_TYPE );
+
+				// Pre-build a post_id => program_slug map so the nested day x class
+				// loop below doesn't call get_the_terms() 7 times per class.
+				foreach ( $query->posts as $post ) {
+					$terms                      = get_the_terms( $post->ID, ClassPostType::PROGRAM_TAXONOMY );
+					$program_map[ $post->ID ] = ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->slug : null;
+				}
 
 				// Collect and cache all instructor user data in one query.
 				$instructor_ids = array_unique(
@@ -419,8 +444,7 @@ class MemberController extends BaseController {
 						continue;
 					}
 
-					$program_terms = get_the_terms( $post->ID, ClassPostType::PROGRAM_TAXONOMY );
-					$program       = ( $program_terms && ! is_wp_error( $program_terms ) ) ? $program_terms[0]->slug : null;
+					$program = $program_map[ $post->ID ] ?? null;
 
 					$instructor_id = (int) get_post_meta( $post->ID, '_gym_class_instructor', true );
 					$instructor    = $instructor_id ? get_userdata( $instructor_id ) : null;

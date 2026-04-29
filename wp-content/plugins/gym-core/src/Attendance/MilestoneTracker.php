@@ -36,6 +36,13 @@ final class MilestoneTracker {
 	private const META_KEY = '_gym_milestones_reached';
 
 	/**
+	 * Action Scheduler hook name for async milestone evaluation.
+	 *
+	 * @var string
+	 */
+	private const ASYNC_MILESTONE_HOOK = 'gym_core_evaluate_milestones';
+
+	/**
 	 * Attendance store instance.
 	 *
 	 * @var AttendanceStore
@@ -62,11 +69,16 @@ final class MilestoneTracker {
 	 */
 	public function register_hooks(): void {
 		add_action( 'gym_core_attendance_recorded', array( $this, 'check_milestones' ), 20, 5 );
+		add_action( self::ASYNC_MILESTONE_HOOK, array( $this, 'evaluate_milestones' ), 10, 1 );
 		add_filter( 'gym_core_attendance_settings', array( $this, 'add_settings_field' ) );
 	}
 
 	/**
-	 * Checks whether the member has hit a new milestone after check-in.
+	 * Schedules async milestone evaluation after a check-in event.
+	 *
+	 * Mirrors BadgeEngine::schedule_checkin_evaluation so milestone scans
+	 * (which run a count query + meta read per user) don't block the
+	 * check-in request.
 	 *
 	 * @since 2.4.0
 	 *
@@ -83,6 +95,26 @@ final class MilestoneTracker {
 			return;
 		}
 
+		if ( function_exists( 'as_enqueue_async_action' ) ) {
+			// Deduplicate: skip if an evaluation is already pending for this user.
+			if ( ! as_has_scheduled_action( self::ASYNC_MILESTONE_HOOK, array( $user_id ), 'gym-core' ) ) {
+				as_enqueue_async_action( self::ASYNC_MILESTONE_HOOK, array( $user_id ), 'gym-core' );
+			}
+		} else {
+			// Fallback to synchronous if Action Scheduler is unavailable.
+			$this->evaluate_milestones( $user_id );
+		}
+	}
+
+	/**
+	 * Evaluates milestones for a user (runs asynchronously via Action Scheduler).
+	 *
+	 * @since 2.4.0
+	 *
+	 * @param int $user_id Member user ID.
+	 * @return void
+	 */
+	public function evaluate_milestones( int $user_id ): void {
 		$total_count = $this->attendance->get_total_count( $user_id );
 		$milestones  = $this->get_milestones();
 		$reached     = $this->get_reached_milestones( $user_id );
