@@ -16,6 +16,7 @@ namespace Gym_Core\Integrations;
 
 use Gym_Core\SMS\TwilioClient;
 use Gym_Core\SMS\MessageTemplates;
+use Gym_Core\SMS\SmsOptOut;
 
 /**
  * Registers the Send SMS action with AutomateWoo.
@@ -159,6 +160,13 @@ if ( class_exists( '\AutomateWoo\Action' ) ) :
 
 			if ( '' === trim( $body ) ) {
 				$workflow->log_action_note( $this, __( 'SMS skipped: message body is empty (no template or custom message set).', 'gym-core' ) );
+				return;
+			}
+
+			// TCPA opt-out gate — must not send to opted-out numbers.
+			$opt_out = new SmsOptOut();
+			if ( $opt_out->is_opted_out( $phone ) ) {
+				$workflow->log_action_note( $this, __( 'SMS skipped: recipient has opted out of SMS.', 'gym-core' ) );
 				return;
 			}
 

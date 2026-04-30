@@ -14,6 +14,7 @@ declare( strict_types=1 );
 namespace Gym_Core\Notifications;
 
 use Gym_Core\SMS\TwilioClient;
+use Gym_Core\SMS\SmsOptOut;
 use Gym_Core\Rank\RankDefinitions;
 
 /**
@@ -29,12 +30,21 @@ final class PromotionNotifier {
 	private TwilioClient $sms;
 
 	/**
+	 * TCPA opt-out store.
+	 *
+	 * @var SmsOptOut
+	 */
+	private SmsOptOut $opt_out;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param TwilioClient $sms Twilio SMS client.
+	 * @param TwilioClient $sms     Twilio SMS client.
+	 * @param SmsOptOut    $opt_out TCPA opt-out store.
 	 */
-	public function __construct( TwilioClient $sms ) {
-		$this->sms = $sms;
+	public function __construct( TwilioClient $sms, SmsOptOut $opt_out ) {
+		$this->sms     = $sms;
+		$this->opt_out = $opt_out;
 	}
 
 	/**
@@ -210,6 +220,11 @@ final class PromotionNotifier {
 		$phone = TwilioClient::sanitize_phone( $phone );
 
 		if ( empty( $phone ) ) {
+			return;
+		}
+
+		// TCPA opt-out gate — must not send to opted-out numbers.
+		if ( $this->opt_out->is_opted_out( $phone ) ) {
 			return;
 		}
 

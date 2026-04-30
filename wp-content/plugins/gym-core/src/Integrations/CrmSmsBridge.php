@@ -16,6 +16,7 @@ namespace Gym_Core\Integrations;
 
 use Gym_Core\SMS\TwilioClient;
 use Gym_Core\SMS\MessageTemplates;
+use Gym_Core\SMS\SmsOptOut;
 
 /**
  * CRM SMS bridge — logs SMS activity and enables contact-based sending.
@@ -28,6 +29,13 @@ final class CrmSmsBridge {
 	 * @var TwilioClient
 	 */
 	private TwilioClient $twilio;
+
+	/**
+	 * TCPA opt-out store.
+	 *
+	 * @var SmsOptOut
+	 */
+	private SmsOptOut $opt_out;
 
 	/**
 	 * CRM activity type for outbound SMS.
@@ -46,10 +54,12 @@ final class CrmSmsBridge {
 	/**
 	 * Constructor.
 	 *
-	 * @param TwilioClient $twilio Twilio API client.
+	 * @param TwilioClient $twilio  Twilio API client.
+	 * @param SmsOptOut    $opt_out TCPA opt-out store.
 	 */
-	public function __construct( TwilioClient $twilio ) {
-		$this->twilio = $twilio;
+	public function __construct( TwilioClient $twilio, SmsOptOut $opt_out ) {
+		$this->twilio  = $twilio;
+		$this->opt_out = $opt_out;
 	}
 
 	/**
@@ -188,6 +198,15 @@ final class CrmSmsBridge {
 					__( 'Unknown SMS template: %s', 'gym-core' ),
 					$template_slug
 				),
+			);
+		}
+
+		// TCPA opt-out gate — must not send to opted-out numbers.
+		if ( $this->opt_out->is_opted_out( $phone ) ) {
+			return array(
+				'success' => false,
+				'sid'     => null,
+				'error'   => __( 'Contact has opted out of SMS.', 'gym-core' ),
 			);
 		}
 

@@ -289,7 +289,8 @@ final class Plugin {
 				// SMS controller.
 				if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
 					$twilio_client  = new SMS\TwilioClient();
-					$sms_controller = new API\SMSController( $twilio_client );
+					$sms_opt_out    = new SMS\SmsOptOut();
+					$sms_controller = new API\SMSController( $twilio_client, $sms_opt_out );
 					$sms_controller->register_hooks();
 
 					$inbound_handler = new SMS\InboundHandler( $twilio_client );
@@ -429,8 +430,13 @@ final class Plugin {
 			return;
 		}
 
+		// SmsOptOut hooks must be registered whenever SMS is enabled so that
+		// STOP/START inbound messages are persisted for the outbound gate.
+		$sms_opt_out = new SMS\SmsOptOut();
+		$sms_opt_out->register_hooks();
+
 		$twilio_client      = new SMS\TwilioClient();
-		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client );
+		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client, $sms_opt_out );
 		$promotion_notifier->register_hooks();
 	}
 
