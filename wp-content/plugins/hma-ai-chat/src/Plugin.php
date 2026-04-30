@@ -128,6 +128,7 @@ class Plugin {
 			return;
 		}
 
+		// Migration block added in 0.5.1 (method itself exists since 0.4.1 — see @since tag).
 		// 0.5.0 → 0.5.1: drop the stored "Joyous" finance-agent override left
 		// behind by the rename to Pippin. Without this, the agent picker keeps
 		// showing the old name on installs that customised the agent label
@@ -145,7 +146,15 @@ class Plugin {
 	 * @since 0.1.0
 	 * @internal
 	 */
-	public function register_hooks() {
+	public function register_hooks(): void {
+		// Guard against double-execution on admin REST requests, where both
+		// admin_init and rest_api_init fire in the same request.
+		static $registered = false;
+		if ( $registered ) {
+			return;
+		}
+		$registered = true;
+
 		// Initialize agent registry.
 		$agent_registry = Agents\AgentRegistry::instance();
 		$agent_registry->register_all_agents();
@@ -171,7 +180,7 @@ class Plugin {
 	public function register_rest_routes() {
 		$message_endpoint   = new API\MessageEndpoint();
 		$heartbeat_endpoint = new API\HeartbeatEndpoint();
-		$action_endpoint    = new API\ActionEndpoint();
+		$action_endpoint    = new API\ActionEndpoint( new Data\PendingActionStore() );
 
 		$message_endpoint->register_route();
 		$heartbeat_endpoint->register_route();
