@@ -22,6 +22,14 @@ add_action( 'after_setup_theme', function () {
 add_action( 'wp_enqueue_scripts', function () {
 	wp_enqueue_style( 'haanpaa-style', get_stylesheet_uri(), [], wp_get_theme()->get( 'Version' ) );
 	wp_enqueue_style( 'haanpaa-globals', get_template_directory_uri() . '/assets/globals.css', [], wp_get_theme()->get( 'Version' ) );
+
+	// Fraunces — display serif used in the hero headline and trust bar.
+	wp_enqueue_style(
+		'haanpaa-fraunces',
+		'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,500;1,9..144,600;1,9..144,700&display=swap',
+		[],
+		null
+	);
 } );
 
 add_action( 'admin_notices', function () {
