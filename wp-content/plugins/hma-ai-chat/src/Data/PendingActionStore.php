@@ -700,4 +700,38 @@ class PendingActionStore {
 
 		return $result;
 	}
+
+	/**
+	 * Returns a pending action by its run ID.
+	 *
+	 * Selects the most-recently created row matching the given run ID so that
+	 * callers never need to bypass the store with raw $wpdb queries.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param string $run_id The run ID to look up.
+	 * @return array{id: int, status: string, action_data: mixed}|null Row array (action_data decoded) or null if not found.
+	 */
+	public function get_action_by_run_id( string $run_id ): ?array {
+		global $wpdb;
+
+		$table = $wpdb->prefix . 'hma_ai_pending_actions';
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$row = $wpdb->get_row(
+			$wpdb->prepare(
+				"SELECT id, status, action_data FROM {$table} WHERE run_id = %s ORDER BY created_at DESC LIMIT 1",
+				$run_id
+			),
+			ARRAY_A
+		);
+
+		if ( ! $row ) {
+			return null;
+		}
+
+		$row['action_data'] = json_decode( $row['action_data'], true );
+
+		return $row;
+	}
 }
