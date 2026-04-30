@@ -22,6 +22,19 @@ use Gym_Core\Data\TableManager;
 class RankStore {
 
 	/**
+	 * Object-cache group for per-(user, program) rank rows. Member dashboards
+	 * call get_rank() multiple times per request; this short-circuits the
+	 * round-trip to the gym_ranks table.
+	 */
+	public const RANK_CACHE_GROUP = 'gym_core_ranks';
+
+	/**
+	 * Sentinel cached when get_rank() returns null, so we can distinguish a
+	 * "no rank" cache hit from a cache miss without re-querying.
+	 */
+	private const RANK_CACHE_MISS = 'gym_core_no_rank';
+
+	/**
 	 * Returns the current rank for a user in a given program.
 	 *
 	 * @since 1.2.0
@@ -31,6 +44,13 @@ class RankStore {
 	 * @return object|null Row object with belt, stripes, promoted_at, promoted_by, or null.
 	 */
 	public function get_rank( int $user_id, string $program ): ?object {
+		$cache_key = self::rank_cache_key( $user_id, $program );
+		$cached    = wp_cache_get( $cache_key, self::RANK_CACHE_GROUP );
+
+		if ( false !== $cached ) {
+			return self::RANK_CACHE_MISS === $cached ? null : $cached;
+		}
+
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 
@@ -43,7 +63,32 @@ class RankStore {
 			)
 		);
 
-		return $result ?: null;
+		$result = $result ?: null;
+		wp_cache_set( $cache_key, null === $result ? self::RANK_CACHE_MISS : $result, self::RANK_CACHE_GROUP );
+
+		return $result;
+	}
+
+	/**
+	 * Cache-key builder for the per-(user, program) rank row.
+	 *
+	 * @param int    $user_id User ID.
+	 * @param string $program Program slug.
+	 * @return string Cache key.
+	 */
+	private static function rank_cache_key( int $user_id, string $program ): string {
+		return 'rank_' . $user_id . '_' . $program;
+	}
+
+	/**
+	 * Invalidates the cached rank row for a (user, program) pair.
+	 *
+	 * @param int    $user_id User ID.
+	 * @param string $program Program slug.
+	 * @return void
+	 */
+	public static function invalidate_rank_cache( int $user_id, string $program ): void {
+		wp_cache_delete( self::rank_cache_key( $user_id, $program ), self::RANK_CACHE_GROUP );
 	}
 
 	/**
@@ -140,6 +185,8 @@ class RankStore {
 		}
 
 		$wpdb->query( 'COMMIT' ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
+
+		self::invalidate_rank_cache( $user_id, $program );
 
 		/**
 		 * Fires when a member's belt rank changes.

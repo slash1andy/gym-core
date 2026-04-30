@@ -36,6 +36,37 @@ class CrmController extends BaseController {
 	protected $rest_base = 'crm';
 
 	/**
+	 * Object-cache key for the pipeline aggregation. AI agents poll this
+	 * endpoint repeatedly; the underlying COUNT() over `zbs_contacts` is
+	 * unbounded and uncached at the DB layer.
+	 */
+	private const PIPELINE_CACHE_KEY   = 'pipeline_summary';
+	private const PIPELINE_CACHE_GROUP = 'gym_core_crm';
+	private const PIPELINE_CACHE_TTL   = 60;
+
+	/**
+	 * Registers REST routes and pipeline-cache invalidation hooks.
+	 *
+	 * @return void
+	 */
+	public function register_hooks(): void {
+		parent::register_hooks();
+		add_action( 'gym_core_crm_pipeline_created', array( __CLASS__, 'invalidate_pipeline_cache' ) );
+		add_action( 'gym_core_crm_pipeline_updated', array( __CLASS__, 'invalidate_pipeline_cache' ) );
+	}
+
+	/**
+	 * Flushes the cached pipeline summary. Called via internal pipeline hooks
+	 * so gym-core-driven status changes show up immediately; external Jetpack
+	 * CRM mutations are tolerated within the cache TTL.
+	 *
+	 * @return void
+	 */
+	public static function invalidate_pipeline_cache(): void {
+		wp_cache_delete( self::PIPELINE_CACHE_KEY, self::PIPELINE_CACHE_GROUP );
+	}
+
+	/**
 	 * Registers REST routes.
 	 *
 	 * @return void
@@ -295,6 +326,11 @@ class CrmController extends BaseController {
 			return $this->error_response( 'crm_unavailable', __( 'Jetpack CRM is not active.', 'gym-core' ), 503 );
 		}
 
+		$pipeline = wp_cache_get( self::PIPELINE_CACHE_KEY, self::PIPELINE_CACHE_GROUP );
+		if ( false !== $pipeline ) {
+			return $this->success_response( $pipeline );
+		}
+
 		global $wpdb;
 		$table = $wpdb->prefix . 'zbs_contacts';
 
@@ -310,6 +346,8 @@ class CrmController extends BaseController {
 				'count' => (int) $row->count,
 			);
 		}
+
+		wp_cache_set( self::PIPELINE_CACHE_KEY, $pipeline, self::PIPELINE_CACHE_GROUP, self::PIPELINE_CACHE_TTL );
 
 		return $this->success_response( $pipeline );
 	}
