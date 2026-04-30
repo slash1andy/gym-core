@@ -82,6 +82,15 @@ final class Plugin {
 	private ?Gamification\BadgeEngine $badge_engine = null;
 
 	/**
+	 * Twilio SMS client — shared instance so credentials are read only once
+	 * and the same object is injected into both the SMS API controller and
+	 * the PromotionNotifier.
+	 *
+	 * @var SMS\TwilioClient|null
+	 */
+	private ?SMS\TwilioClient $twilio_client = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -288,11 +297,10 @@ final class Plugin {
 
 				// SMS controller.
 				if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
-					$twilio_client  = new SMS\TwilioClient();
-					$sms_controller = new API\SMSController( $twilio_client );
+					$sms_controller = new API\SMSController( $this->get_twilio_client() );
 					$sms_controller->register_hooks();
 
-					$inbound_handler = new SMS\InboundHandler( $twilio_client );
+					$inbound_handler = new SMS\InboundHandler( $this->get_twilio_client() );
 					$inbound_handler->register_hooks();
 				}
 
@@ -372,6 +380,28 @@ final class Plugin {
 	}
 
 	/**
+	 * Returns the shared TwilioClient instance, creating it on first call.
+	 *
+	 * Using a single client per request ensures the Twilio credentials are read
+	 * from the database only once, regardless of how many modules consume the
+	 * client (SMS API controller, inbound handler, PromotionNotifier, etc.).
+	 *
+	 * Callers are responsible for checking the `gym_core_sms_enabled` option
+	 * before invoking this method — the getter always returns an instance.
+	 *
+	 * @since 4.1.0
+	 *
+	 * @return SMS\TwilioClient
+	 */
+	private function get_twilio_client(): SMS\TwilioClient {
+		if ( null === $this->twilio_client ) {
+			$this->twilio_client = new SMS\TwilioClient();
+		}
+
+		return $this->twilio_client;
+	}
+
+	/**
 	 * Registers the attendance and promotion eligibility modules.
 	 *
 	 * Makes store instances available for dependency injection into
@@ -429,8 +459,7 @@ final class Plugin {
 			return;
 		}
 
-		$twilio_client      = new SMS\TwilioClient();
-		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client );
+		$promotion_notifier = new Notifications\PromotionNotifier( $this->get_twilio_client() );
 		$promotion_notifier->register_hooks();
 	}
 
