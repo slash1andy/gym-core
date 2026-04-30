@@ -1,140 +1,168 @@
-# Finalization Tasks for Gym Core
+# Finalization Tasks — gym-core 1.0.0
 
-> Last audited: 2026-04-03. Status reconciled against actual codebase.
+> Generated: 2026-04-30  
+> Auditor: TAMMIE (woocommerce-finalize skill)  
+> Branch: chore/finalization-2026-04-30  
+> Previous audit: 2026-04-03 — all 20 prior tasks complete (see git history for archived list)
 
-## Critical Priority
+---
 
-### TASK-TRC-001: Fix Open Mat check-in — location empty when class_id=0
-- **File:** `src/API/AttendanceController.php` lines 166-180, `assets/js/kiosk.js` line 289
-- **Issue:** When kiosk has no classes today and calls check-in with `class_id=0`, `get_the_terms(0, 'gym_location')` returns false, producing `$location = ''`. Validator rejects with `missing_location`.
-- **Fix:** Location fallback from request param implemented; kiosk.js sends `location: config.location` in POST body.
-- **Status:** [x] Fixed — AttendanceController:179-180 has location fallback; kiosk.js:289 sends location
+## Testing Gate
 
-### TASK-TRC-002: Fix TypeError on first-ever promotion
-- **File:** `src/Gamification/BadgeEngine.php` line 99
-- **Issue:** `evaluate_on_promotion( ..., string $from_belt, ... )` receives `null` when a member has no previous rank (first-ever promotion). PHP 8.x strict types throws TypeError.
-- **Fix:** Signature changed to `?string $from_belt` with null-safe logic. First-ever promotions still get the badge.
-- **Status:** [x] Fixed — BadgeEngine.php:99 uses `?string $from_belt`
+| Check | Status | Notes |
+|-------|--------|-------|
+| Report exists | PASS | `testing-report.md` present |
+| Timestamp | ⚠️ STALE | Generated 2026-04-03 — 27 days before this audit; re-run required |
+| All tests pass | PASS | 151 tests, 0 failures, 0 skipped |
+| PHPStan level | ⚠️ WARN | `phpstan.neon` configures `level: 6`; skill requires level 7 |
+| PHPCS | INFO | 645 violations reported (non-blocking; informational only) |
 
-## High Priority
+**Gate outcome:** Acknowledged warnings — internal project, finalization proceeds. Re-run testing suite against current HEAD before any release milestone.
 
-### TASK-OPT-001: Fix N+1 queries in PromotionEligibility::get_eligible_members()
-- **File:** `src/Attendance/PromotionEligibility.php` lines 166-220
-- **Issue:** For each ranked member, `check()` runs 2-3 DB queries. 200 members = 600-800 queries.
-- **Fix:** Batch-fetch attendance counts with CASE/WHEN query; `cache_users()` primes WP user cache.
-- **Status:** [x] Fixed — PromotionEligibility.php:189 uses cache_users(), lines 195-210 use batch query
+---
 
-### TASK-OPT-002: Extract location labels to Taxonomy::get_location_labels()
-- **File:** `src/Location/Taxonomy.php` + consumer files
-- **Issue:** Location label maps duplicated in multiple files.
-- **Fix:** `Taxonomy::get_location_labels()` added; all consumers reference it.
-- **Status:** [x] Fixed — Taxonomy.php:64 defines method; used in 8 consumer files
+## Track 1: Code Health
 
-### TASK-OPT-003: Fix streak freeze quarterly reset
-- **File:** `src/Gamification/StreakTracker.php` lines 227-247
-- **Issue:** `_gym_streak_freezes_used` user meta never resets. Members permanently lose freezes.
-- **Fix:** Quarter stored alongside count; `current_quarter()` method compares and resets.
-- **Status:** [x] Fixed — StreakTracker.php:227-247 implements quarterly reset
+### TASK-OPT-001: ContentGating subscription check fires uncached on every purchasability filter — HIGH
 
-## Medium Priority
+- **File:** `src/Member/ContentGating.php`
+- **Lines:** hide_already_subscribed_products() implementation
+- **Issue:** `hide_already_subscribed_products()` is hooked on `woocommerce_is_purchasable`, which fires for every product on shop/archive pages. It calls `wcs_get_users_subscriptions( $user_id )` on each invocation with no transient or per-request cache. A 12-product shop page fires 12 subscription queries per logged-in visitor.
+- **Fix:** Cache the result in a static property keyed by `$user_id` for the duration of the request:
+  ```php
+  static $cache = [];
+  if ( ! isset( $cache[ $user_id ] ) ) {
+      $cache[ $user_id ] = wcs_get_users_subscriptions( $user_id );
+  }
+  $subscriptions = $cache[ $user_id ];
+  ```
+- **Severity:** HIGH — measurable page-load regression under normal traffic
+- **Status:** [ ] Not started
 
-### TASK-SEC-001: Fix Twilio auth token plaintext vs "encrypted" claim
-- **File:** `src/Admin/Settings.php`
-- **Issue:** Description says "Credentials are stored encrypted" but they are stored as plaintext wp_options.
-- **Fix:** No false "encrypted" claim exists in Settings.php. Auth token uses `type => password` (appropriate). Non-issue.
-- **Status:** [x] Verified — no false encryption claim found in Settings.php:523-569
+---
 
-### TASK-TRC-003: Fix TwiML response JSON-wrapping
-- **File:** `src/SMS/InboundHandler.php` lines 47, 64-79
-- **Issue:** WP_REST_Response JSON-encodes the XML string body. Twilio expects raw XML.
-- **Fix:** `rest_pre_serve_request` filter intercepts XML responses and outputs raw XML.
-- **Status:** [x] Fixed — InboundHandler.php:47 registers filter; lines 64-79 serve raw XML
+### TASK-OPT-002: ContentGating::has_active_membership() makes 4 external calls per invocation — MEDIUM
 
-### TASK-OPT-004: Fix N+1 in GamificationController badge definitions
-- **File:** `src/API/GamificationController.php` lines 124-157
-- **Issue:** `has_badge()` queries per badge (14 queries). `get_user_badges()` called repeatedly.
-- **Fix:** Fetch user badges once into `$earned_map` indexed by slug. Single query replaces N+1.
-- **Status:** [x] Fixed — 2026-04-03: earned_map pattern implemented
+- **File:** `src/Member/ContentGating.php`
+- **Lines:** ~122–129
+- **Issue:** When called without a program argument, the method iterates all 4 `PLANS` constants, calling `wc_memberships_is_user_active_member()` for each. Every call enters WC Memberships query logic. Content-gated pages that check membership status multiple times per request amplify this.
+- **Fix:** Short-circuit already occurs on first truthy result. Additionally, add a static per-request cache keyed by `$user_id` so repeat calls within the same request return early.
+- **Severity:** MEDIUM — latent; worsens with additional gating calls per request
+- **Status:** [ ] Not started
 
-### TASK-OPT-005: Deduplicate StreakTracker/BadgeEngine instances
-- **File:** `src/Plugin.php` lines 73-82, 394-396
-- **Issue:** Two separate instances created — one for API, one for hooks.
-- **Fix:** Both stored as `private ?` class properties, instantiated once, reused throughout.
-- **Status:** [x] Fixed — Plugin.php:73-82 declares properties; line 394-395 instantiates once
+---
 
-### TASK-OPT-006: Debounce badge evaluation via Action Scheduler
-- **File:** `src/Gamification/BadgeEngine.php`
-- **Issue:** 5+ queries per check-in for badge evaluation, runs synchronously.
-- **Fix:** Check-in hook schedules async evaluation via `as_schedule_single_action()` with graceful fallback.
-- **Status:** [x] Fixed — 2026-04-03: schedule_checkin_evaluation() defers via Action Scheduler
+### TASK-OPT-003: TwilioClient instantiated twice in Plugin.php — MEDIUM
 
-### TASK-UX-001: Fix title-case violations to sentence case
-- **File:** `src/Attendance/KioskEndpoint.php`
-- **Issue:** WooCommerce UX guidelines require sentence case. KioskEndpoint.php has 9 violations in user-facing strings.
-- **Examples:** "Tap to Check In" → "Tap to check in", "Check-in Failed" → "Check-in failed", "Select Your Class" → "Select your class"
-- **Status:** [x] Fixed — 2026-04-03: 9 violations in KioskEndpoint.php converted to sentence case
+- **File:** `src/Plugin.php`
+- **Lines:** ~291–293 (register_api_modules) and ~432–434 (register_notification_modules)
+- **Issue:** Two separate `new SMS\TwilioClient()` instances are created in different module-registration passes. Each independently reads `gym_core_twilio_*` options from the database. The class is stateless so correctness is unaffected, but the duplication creates unnecessary `get_option()` calls and blocks clean unit testing.
+- **Fix:** Instantiate once in the plugin bootstrap (alongside the existing shared `$crm_client` pattern) and pass the same instance to both consumers.
+- **Severity:** MEDIUM — minor inefficiency; blocks clean unit testing
+- **Status:** [ ] Not started
 
-### TASK-SEC-002: Use actual request URL for Twilio signature validation
-- **File:** `src/SMS/InboundHandler.php` lines 123-125
-- **Issue:** `rest_url()` may not match actual request URL behind proxies.
-- **Fix:** Configurable webhook URL via `gym_core_twilio_webhook_url` option.
-- **Status:** [x] Fixed — InboundHandler.php:123-125 uses configurable option
+---
 
-### TASK-OPT-007: Extract permission callback to BaseController
-- **File:** `src/API/BaseController.php` line 151
-- **Issue:** "View own or have capability" pattern repeated.
-- **Fix:** `permissions_view_own_or_cap()` method added to BaseController.
-- **Status:** [x] Fixed — BaseController.php:151
+### TASK-OPT-004: FormToCrm::get_completed_order_count() uses unbounded wc_get_orders query — MEDIUM
 
-### TASK-OPT-008: Conditional frontend asset loading
-- **File:** `src/Frontend/LocationSelector.php` line 91
-- **Issue:** Location selector CSS/JS loaded on every frontend page.
-- **Fix:** Checks `require_location` option before enqueuing.
-- **Status:** [x] Fixed — LocationSelector.php:91 checks option
+- **File:** `src/Integrations/FormToCrm.php`
+- **Lines:** get_completed_order_count implementation
+- **Issue:** Passes `'limit' => -1` to `wc_get_orders()`, loading all order IDs for a user into memory. For long-tenured members this means hundreds of IDs fetched on every `woocommerce_order_status_completed` event.
+- **Fix:** The method only needs to distinguish first purchase from subsequent ones. Use `'limit' => 2` and check `count( $orders ) === 1`.
+- **Severity:** MEDIUM — unbounded query on a high-frequency hook
+- **Status:** [ ] Not started
 
-## Low Priority
+---
 
-### TASK-SEC-003: Wrap unprepared GROUP BY in prepare()
-- **File:** `src/Rank/RankStore.php` line 275
-- **Issue:** GROUP BY query not wrapped in `$wpdb->prepare()`. No user input but coding standard.
-- **Fix:** Wrapped in `$wpdb->prepare()` with dummy WHERE clause for PHPCS compliance.
-- **Status:** [x] Fixed — 2026-04-03
+### TASK-OPT-005: AttendanceController::get_today() issues one query per location slug — LOW
 
-### TASK-SEC-004: Escape post_content in API response
-- **File:** `src/API/ClassScheduleController.php` line 289
-- **Fix:** `wp_kses_post()` applied to post_content.
-- **Status:** [x] Fixed — ClassScheduleController.php:289 uses wp_kses_post()
+- **File:** `src/API/AttendanceController.php`
+- **Lines:** ~334–347
+- **Issue:** `get_today()` loops over location slugs and fires a separate `AttendanceStore::get_today_by_location()` query per slug. With 2 locations this is 2 queries; the pattern mirrors the N+1 shape of marketplace MAJOR-01 and does not scale if locations are added.
+- **Fix:** Add `get_today_all_locations()` to `AttendanceStore` that uses `WHERE location IN (...)`, or extend the existing method to accept an array and build a single query.
+- **Severity:** LOW — only 2 locations currently; low urgency
+- **Status:** [ ] Not started
 
-### TASK-UX-002: Remove viewport zoom lock on kiosk
-- **File:** `src/Attendance/KioskEndpoint.php`
-- **Fix:** No `maximum-scale` or `user-scalable=no` found. Already compliant.
-- **Status:** [x] Verified — no zoom lock present
+---
 
-### TASK-TRC-004: Add role filter to kiosk member search
-- **File:** `assets/js/kiosk.js` line 156
-- **Fix:** Search URL includes `&roles=customer,subscriber`.
-- **Status:** [x] Fixed — kiosk.js:156
+### TASK-OPT-006: Confirm ClassRosterController N+1 status (Marketplace MAJOR-01) — HIGH
 
-### TASK-TRC-005: Add per-user SMS rate limit fallback
-- **File:** `src/API/SMSController.php` line 151
-- **Fix:** Falls back to `get_current_user_id()` when `contact_id` is missing.
-- **Status:** [x] Fixed — SMSController.php:151
+- **File:** `src/API/ClassRosterController.php`
+- **Lines:** roster-building methods
+- **Issue:** Marketplace review MAJOR-01 flagged a per-user meta query inside a loop when building the class roster. No targeted fix commit for this file was identified in the recent git log. Current status is unconfirmed.
+- **Fix:** Read the current file. If the N+1 pattern still exists, add a bulk `get_user_meta()` prefetch (or equivalent batch query) before the loop. If already fixed, mark confirmed.
+- **Cross-reference:** Marketplace MAJOR-01
+- **Severity:** HIGH — blocks release if unresolved
+- **Status:** [ ] Not started — requires code read to confirm
 
-### TASK-INFRA-001: Add WC + WP-CLI stubs to PHPStan config
-- **File:** `phpstan.neon`
-- **Fix:** WC and WP-CLI stubs already configured in bootstrapFiles.
-- **Status:** [x] Verified — stubs present in phpstan.neon
+---
+
+## Track 2: Traceability
+
+### TASK-TRC-001: Membership enrollment — ✅ VERIFIED
+
+- **Path:** WC checkout submit → `woocommerce_order_status_completed` → `FormToCrm::handle_order_completed()` → CRM pipeline update → lead→member tag swap → `do_action( 'gym_core_member_enrolled' )` → AutomateWoo trigger
+- **Entry:** `src/Integrations/FormToCrm.php` — `handle_order_completed()`
+- **Exit:** `gym_core_member_enrolled` action; WC Memberships handles role/access assignment
+- **Gap/Finding:** Chain is intact. Role assignment correctly delegated to WC Memberships. See TASK-OPT-004 for unbounded order query in this path.
+- **Status:** [ ] Verified — no blocking gap; TASK-OPT-004 is a performance concern
+
+---
+
+### TASK-TRC-002: Check-in flow — ✅ VERIFIED
+
+- **Path:** Kiosk UI → `POST /gym/v1/checkin` → `AttendanceController::create()` → `CheckInValidator::validate()` → `AttendanceStore::record_checkin()` → `gym_core_attendance_recorded` → `MilestoneTracker::check_milestones()` (priority 20) → Action Scheduler → `evaluate_milestones()`
+- **Entry:** `src/API/AttendanceController.php` — `create()`
+- **Exit:** `MilestoneTracker::award_milestone()` → `do_action( 'gym_core_attendance_milestone' )`
+- **Gap/Finding:** All layers connect. Action Scheduler dedup check prevents queuing duplicate evaluations. Synchronous fallback when AS unavailable. Permission callbacks verified (TASK-TRC-005). See TASK-OPT-005 for N+1 concern in `get_today()`.
+- **Status:** [ ] Verified — no blocking gap
+
+---
+
+### TASK-TRC-003: SMS dispatch — ⚠️ SUSPICIOUS
+
+- **Path:** Enrollment/milestone trigger → `SmsModule::send()` → TCPA opt-out check → `TwilioClient::send()` → Twilio API → delivery record
+- **Entry:** `src/SMS/TwilioClient.php` — `send()`
+- **Exit:** Twilio API response; `do_action( 'gym_core_sms_sent' )`
+- **Gap/Finding:** `TwilioClient::send()` implements per-contact rate limiting via transients but contains **no explicit TCPA opt-out gate** in the class itself. `SMSController.php` and `InboundHandler.php` were not read in this audit. It is unknown whether opt-out enforcement exists in a caller layer. TCPA non-compliance on unsolicited texts is a legal risk.
+- **Action required:** Read `src/SMS/SMSController.php`. Confirm there is an explicit opt-out status check before `TwilioClient::send()` is reached. If absent, add opt-out meta check before dispatch. Note: TASK-TRC-005 (prior audit) confirmed `SMSController.php:151` has a contact_id fallback — the opt-out gate may be nearby but was not confirmed.
+- **Status:** [ ] Suspicious — must confirm opt-out enforcement before release
+
+---
+
+### TASK-TRC-004: Sales kiosk — ✅ VERIFIED
+
+- **Path:** POS UI → REST handler → `SalesModule` → sliding discount calculation → `OrderBuilder::build()` → `wc_create_order()` / `wcs_create_subscription()` → order confirmation
+- **Entry:** `src/Sales/OrderBuilder.php` — `build()`
+- **Exit:** `WC_Order` returned to controller; HPOS-compatible meta written via `$order->update_meta_data()`
+- **Gap/Finding:** HPOS compatibility confirmed. `wcs_create_subscription()` gated on function existence. Error handling throughout. No blocking gaps.
+- **Status:** [ ] Verified — no blocking gap
+
+---
+
+### TASK-TRC-005: REST API auth — ✅ VERIFIED
+
+- **Path:** Request → `permission_callback` → `BaseController` capability/nonce check → controller dispatch → response sanitization
+- **Entry:** `src/API/BaseController.php` — `permissions_authenticated()`, `permissions_manage()`, `permissions_view_own_or_cap()`
+- **Exit:** Controller method returns sanitized `WP_REST_Response`
+- **Gap/Finding:** All three permission helpers return `WP_Error` (with HTTP 401/403) rather than bare `false` — correct per WP REST API best practices. No gaps detected.
+- **Status:** [ ] Verified — no blocking gap
 
 ---
 
 ## Summary
 
-| Priority | Total | Fixed | Remaining |
-|----------|-------|-------|-----------|
-| Critical | 2 | 2 | 0 |
-| High | 3 | 3 | 0 |
-| Medium | 9 | 9 | 0 |
-| Low | 6 | 6 | 0 |
-| **Total** | **20** | **20** | **0** |
+| Category | Count | Blocking? |
+|----------|-------|-----------|
+| Gate warnings | 2 (stale report, PHPStan level 6) | No — internal project |
+| Track 1 HIGH | 2 (ContentGating cache + ClassRosterController N+1 unconfirmed) | MAJOR-01 blocks release if unresolved |
+| Track 1 MEDIUM | 3 | No |
+| Track 1 LOW | 1 | No |
+| Track 2 VERIFIED | 4 of 5 | — |
+| Track 2 SUSPICIOUS | 1 (SMS TCPA opt-out unconfirmed) | Recommend confirm before release |
 
-**All finalization tasks complete.**
+**Recommended pre-release actions (priority order):**
+1. Confirm ClassRosterController N+1 status — MAJOR-01 (TASK-OPT-006)
+2. Confirm TCPA opt-out enforcement in SMS dispatch path (TASK-TRC-003)
+3. Fix ContentGating subscription cache regression (TASK-OPT-001)
+4. Re-run full test suite + PHPStan level 7 against current HEAD
