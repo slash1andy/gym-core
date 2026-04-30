@@ -92,6 +92,67 @@ class RankStore {
 	}
 
 	/**
+	 * Returns the current rank for each of the given users in a program.
+	 *
+	 * One query — replaces a per-user get_rank() fan-out in roster-enrichment
+	 * loops. Each returned row is also stored in the per-(user, program) object
+	 * cache so subsequent single-user lookups are free.
+	 *
+	 * @since 2.4.0
+	 *
+	 * @param int[]  $user_ids List of user IDs to look up.
+	 * @param string $program  Program slug (e.g., 'adult-bjj').
+	 * @return array<int, object> Map of user_id => rank row object (belt, stripes, promoted_at, promoted_by).
+	 *                            Users without a rank in this program are omitted.
+	 */
+	public function get_ranks_for_users( array $user_ids, string $program ): array {
+		$user_ids = array_values( array_unique( array_filter( array_map( 'intval', $user_ids ) ) ) );
+		if ( empty( $user_ids ) || '' === $program ) {
+			return array();
+		}
+
+		global $wpdb;
+		$tables = TableManager::get_table_names();
+
+		$placeholders = implode( ',', array_fill( 0, count( $user_ids ), '%d' ) );
+		$args         = array_merge( $user_ids, array( $program ) );
+		$sql          = $wpdb->prepare(
+			// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders built from %d count above; values prepared.
+			"SELECT user_id, belt, stripes, promoted_at, promoted_by
+			FROM {$tables['ranks']}
+			WHERE user_id IN ({$placeholders}) AND program = %s",
+			$args
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $sql ) ?: array();
+
+		$map = array();
+		foreach ( $rows as $row ) {
+			$uid        = (int) $row->user_id;
+			$map[ $uid ] = $row;
+			// Prime the single-user cache so get_rank() calls are free this request.
+			$cache_key = self::rank_cache_key( $uid, $program );
+			if ( false === wp_cache_get( $cache_key, self::RANK_CACHE_GROUP ) ) {
+				wp_cache_set( $cache_key, $row, self::RANK_CACHE_GROUP );
+			}
+		}
+
+		// Cache the "no rank" sentinel for users that had no row, so get_rank()
+		// calls for those users skip the DB too.
+		foreach ( $user_ids as $uid ) {
+			if ( ! isset( $map[ $uid ] ) ) {
+				$cache_key = self::rank_cache_key( $uid, $program );
+				if ( false === wp_cache_get( $cache_key, self::RANK_CACHE_GROUP ) ) {
+					wp_cache_set( $cache_key, self::RANK_CACHE_MISS, self::RANK_CACHE_GROUP );
+				}
+			}
+		}
+
+		return $map;
+	}
+
+	/**
 	 * Returns all current ranks for a user across all programs.
 	 *
 	 * @since 1.2.0
