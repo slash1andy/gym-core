@@ -331,7 +331,7 @@ class AttendanceController extends BaseController {
 		} elseif ( $location ) {
 			$records = $this->store->get_today_by_location( $location );
 		} else {
-			// All locations — query gym_location taxonomy dynamically.
+			// All locations — single batched query instead of one query per location.
 			$location_slugs = get_terms(
 				array(
 					'taxonomy'   => 'gym_location',
@@ -340,12 +340,9 @@ class AttendanceController extends BaseController {
 				)
 			);
 
-			$records = array();
-			if ( ! is_wp_error( $location_slugs ) && is_array( $location_slugs ) ) {
-				foreach ( $location_slugs as $slug ) {
-					$records = array_merge( $records, $this->store->get_today_by_location( $slug ) );
-				}
-			}
+			$slugs   = ( ! is_wp_error( $location_slugs ) && is_array( $location_slugs ) ) ? $location_slugs : array();
+			$grouped = $this->store->get_today_all_locations( $slugs );
+			$records = array_merge( ...array_values( $grouped ) );
 		}
 
 		$formatted = array_map(
