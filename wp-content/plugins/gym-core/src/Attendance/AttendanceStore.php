@@ -312,6 +312,59 @@ class AttendanceStore {
 	}
 
 	/**
+	 * Returns today's attendance for multiple locations in a single query.
+	 *
+	 * Replaces the N-queries-per-location fan-out in AttendanceController::get_today()
+	 * when no specific location is requested. Uses a single WHERE location IN (...)
+	 * query and groups the results by location slug.
+	 *
+	 * @since 2.4.1
+	 *
+	 * @param string[] $locations Location slugs to query.
+	 * @return array<string, array<int, object>> Results keyed by location slug.
+	 *                                           Locations with no check-ins today
+	 *                                           are included as empty arrays.
+	 */
+	public function get_today_all_locations( array $locations ): array {
+		// Normalize and deduplicate; filter out empty strings.
+		$locations = array_values( array_unique( array_filter( $locations ) ) );
+
+		// Pre-fill keyed output so locations with zero check-ins always appear.
+		$grouped = array_fill_keys( $locations, array() );
+
+		if ( empty( $locations ) ) {
+			return $grouped;
+		}
+
+		global $wpdb;
+		$tables = TableManager::get_table_names();
+		$today  = gmdate( 'Y-m-d' );
+
+		$placeholders = implode( ', ', array_fill( 0, count( $locations ), '%s' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT a.*, u.display_name
+				FROM {$tables['attendance']} a
+				INNER JOIN {$wpdb->users} u ON a.user_id = u.ID
+				WHERE a.location IN ({$placeholders}) AND DATE(a.checked_in_at) = %s
+				ORDER BY a.checked_in_at DESC",
+				array_merge( $locations, array( $today ) )
+			)
+		) ?: array();
+
+		foreach ( $rows as $row ) {
+			$slug = (string) $row->location;
+			if ( array_key_exists( $slug, $grouped ) ) {
+				$grouped[ $slug ][] = $row;
+			}
+		}
+
+		return $grouped;
+	}
+
+	/**
 	 * Returns today's attendance for a specific class.
 	 *
 	 * @since 1.2.0
