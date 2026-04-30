@@ -180,7 +180,7 @@ class Plugin {
 	public function register_rest_routes() {
 		$message_endpoint   = new API\MessageEndpoint();
 		$heartbeat_endpoint = new API\HeartbeatEndpoint();
-		$action_endpoint    = new API\ActionEndpoint();
+		$action_endpoint    = new API\ActionEndpoint( new Data\PendingActionStore() );
 
 		$message_endpoint->register_route();
 		$heartbeat_endpoint->register_route();

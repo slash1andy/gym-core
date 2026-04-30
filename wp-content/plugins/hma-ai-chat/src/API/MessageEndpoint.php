@@ -81,7 +81,7 @@ class MessageEndpoint {
 		set_transient( $rate_key, $count + 1, MINUTE_IN_SECONDS );
 
 		$agent_slug = sanitize_text_field( $request->get_param( 'agent' ) );
-		$message    = wp_kses_post( $request->get_param( 'message' ) );
+		$message    = (string) $request->get_param( 'message' ); // Sanitization handled by args schema sanitize_callback above.
 		$conversation_id = absint( $request->get_param( 'conversation_id' ) ?? 0 );
 
 		// Validate required fields.
@@ -328,6 +328,7 @@ class MessageEndpoint {
 				'sanitize_callback' => 'sanitize_text_field',
 				'validate_callback' => 'rest_validate_request_arg',
 			),
+			// wp_kses_post runs before the route callback fires; no re-sanitization needed in the handler.
 			'message'         => array(
 				'type'              => 'string',
 				'required'          => true,

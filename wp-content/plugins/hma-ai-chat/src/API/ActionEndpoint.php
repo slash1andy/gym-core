@@ -29,6 +29,26 @@ class ActionEndpoint {
 	const CAPABILITY = 'manage_options';
 
 	/**
+	 * Shared pending-action store instance, injected at construction time.
+	 *
+	 * @since 0.5.2
+	 *
+	 * @var \HMA_AI_Chat\Data\PendingActionStore
+	 */
+	private \HMA_AI_Chat\Data\PendingActionStore $pending_store;
+
+	/**
+	 * Constructor.
+	 *
+	 * @since 0.5.2
+	 *
+	 * @param \HMA_AI_Chat\Data\PendingActionStore $pending_store Shared store instance.
+	 */
+	public function __construct( \HMA_AI_Chat\Data\PendingActionStore $pending_store ) {
+		$this->pending_store = $pending_store;
+	}
+
+	/**
 	 * Register all action-related REST routes.
 	 *
 	 * Must be called during rest_api_init.
@@ -272,7 +292,7 @@ class ActionEndpoint {
 	 * @return WP_REST_Response
 	 */
 	public function get_pending_actions( WP_REST_Request $request ) {
-		$store   = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store   = $this->pending_store;
 		$actions = $store->get_pending_actions();
 
 		return rest_ensure_response( $actions );
@@ -290,7 +310,7 @@ class ActionEndpoint {
 	 */
 	public function approve_action( WP_REST_Request $request ) {
 		$action_id = absint( $request->get_param( 'id' ) );
-		$store     = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store     = $this->pending_store;
 
 		// Verify the action exists and is pending.
 		$action = $store->get_action( $action_id );
@@ -360,7 +380,7 @@ class ActionEndpoint {
 	 */
 	private function dispatch_approved( array $action ): array {
 		$executor = \HMA_AI_Chat\Plugin::instance()->get_tool_executor();
-		$store    = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store    = $this->pending_store;
 
 		if ( null === $executor ) {
 			$store->record_execution_error( (int) $action['id'], __( 'Tool executor unavailable.', 'hma-ai-chat' ) );
@@ -403,7 +423,7 @@ class ActionEndpoint {
 	public function approve_with_changes( WP_REST_Request $request ) {
 		$action_id    = absint( $request->get_param( 'id' ) );
 		$instructions = sanitize_textarea_field( $request->get_param( 'instructions' ) );
-		$store        = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store        = $this->pending_store;
 
 		if ( empty( $instructions ) ) {
 			return new WP_Error(
@@ -465,7 +485,7 @@ class ActionEndpoint {
 	public function reject_action( WP_REST_Request $request ) {
 		$action_id = absint( $request->get_param( 'id' ) );
 		$reason    = sanitize_textarea_field( $request->get_param( 'reason' ) ?? '' );
-		$store     = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store     = $this->pending_store;
 
 		// Verify the action exists and is pending.
 		$action = $store->get_action( $action_id );
@@ -518,7 +538,7 @@ class ActionEndpoint {
 	 */
 	public function get_action_status( WP_REST_Request $request ) {
 		$action_id = absint( $request->get_param( 'id' ) );
-		$store     = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store     = $this->pending_store;
 
 		$action = $store->get_action( $action_id );
 		if ( ! $action ) {
@@ -564,7 +584,7 @@ class ActionEndpoint {
 		$action_ids = $request->get_param( 'action_ids' );
 		$operation  = $request->get_param( 'operation' );
 		$reason     = $request->get_param( 'reason' ) ?? '';
-		$store      = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store      = $this->pending_store;
 		$user_id    = get_current_user_id();
 
 		if ( empty( $action_ids ) ) {
@@ -641,7 +661,7 @@ class ActionEndpoint {
 	 * @return WP_REST_Response
 	 */
 	public function get_audit_log( WP_REST_Request $request ) {
-		$store  = new \HMA_AI_Chat\Data\PendingActionStore();
+		$store  = $this->pending_store;
 		$result = $store->get_all_actions(
 			array(
 				'status'   => $request->get_param( 'status' ) ?? '',
