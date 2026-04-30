@@ -24,6 +24,13 @@ use Gym_Core\Schedule\ScheduleCachePrimer;
 class ClassScheduleController extends BaseController {
 
 	/**
+	 * Defensive upper bound for unbounded WP_Query result sets in this controller.
+	 *
+	 * @var int
+	 */
+	private const MAX_QUERY_RESULTS = 500;
+
+	/**
 	 * Route base.
 	 *
 	 * @var string
@@ -301,7 +308,7 @@ class ClassScheduleController extends BaseController {
 
 		$args = array(
 			'post_type'      => ClassPostType::POST_TYPE,
-			'posts_per_page' => -1,
+			'posts_per_page' => self::MAX_QUERY_RESULTS,
 			'post_status'    => 'publish',
 			'tax_query'      => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_tax_query
 				array(

@@ -28,6 +28,27 @@ class TwilioClient {
 	private const API_BASE = 'https://api.twilio.com/2010-04-01';
 
 	/**
+	 * Per-request HTTP timeout in seconds.
+	 *
+	 * @var int
+	 */
+	private const HTTP_TIMEOUT = 10;
+
+	/**
+	 * Status codes that warrant a single retry with backoff.
+	 *
+	 * @var array<int, int>
+	 */
+	private const RETRY_STATUS_CODES = array( 429, 503 );
+
+	/**
+	 * Backoff before the second attempt, in microseconds.
+	 *
+	 * @var int
+	 */
+	private const RETRY_BACKOFF_USEC = 500000;
+
+	/**
 	 * Sends an SMS message via Twilio.
 	 *
 	 * @since 1.3.0
@@ -67,30 +88,44 @@ class TwilioClient {
 			$account_sid
 		);
 
-		$response = wp_remote_post(
-			$url,
-			array(
-				'headers' => array(
-					'Authorization' => 'Basic ' . base64_encode( $account_sid . ':' . $auth_token ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
-				),
-				'body'    => array(
-					'To'   => $to,
-					'From' => $from_number,
-					'Body' => $body,
-				),
-				'timeout' => 15,
-			)
+		$request_args = array(
+			'headers' => array(
+				'Authorization' => 'Basic ' . base64_encode( $account_sid . ':' . $auth_token ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
+			),
+			'body'    => array(
+				'To'   => $to,
+				'From' => $from_number,
+				'Body' => $body,
+			),
+			'timeout' => self::HTTP_TIMEOUT,
 		);
 
-		if ( is_wp_error( $response ) ) {
-			return array(
-				'success' => false,
-				'sid'     => null,
-				'error'   => $response->get_error_message(),
-			);
-		}
+		// Up to 2 attempts; retry only on transient Twilio statuses.
+		$attempt     = 0;
+		$status_code = 0;
+		do {
+			++$attempt;
+			$response = wp_remote_post( $url, $request_args );
 
-		$status_code   = wp_remote_retrieve_response_code( $response );
+			if ( is_wp_error( $response ) ) {
+				return array(
+					'success' => false,
+					'sid'     => null,
+					'error'   => $response->get_error_message(),
+				);
+			}
+
+			$status_code = wp_remote_retrieve_response_code( $response );
+
+			if ( ! in_array( $status_code, self::RETRY_STATUS_CODES, true ) ) {
+				break;
+			}
+
+			if ( $attempt < 2 ) {
+				usleep( self::RETRY_BACKOFF_USEC );
+			}
+		} while ( $attempt < 2 );
+
 		$response_body = json_decode( wp_remote_retrieve_body( $response ), true );
 
 		if ( $status_code >= 200 && $status_code < 300 ) {

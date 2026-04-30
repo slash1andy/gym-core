@@ -5,7 +5,7 @@
  * @package Gym_Core\Admin
  */
 
-declare(strict_types=1);
+declare( strict_types=1 );
 
 namespace Gym_Core\Admin;
 

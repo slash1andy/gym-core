@@ -199,7 +199,7 @@ final class PromotionDashboard {
 		$this->render_filters( $programs, $current_program, $current_location, $current_status );
 
 		echo '<form method="post">';
-		wp_nonce_field( 'bulk-promotions', '_wpnonce_bulk' );
+		wp_nonce_field( 'gym_core_bulk_promotions', '_wpnonce_bulk' );
 		$table->display();
 		echo '</form>';
 
@@ -299,7 +299,7 @@ final class PromotionDashboard {
 		}
 
 		// Verify nonce.
-		if ( ! isset( $_POST['_wpnonce_bulk'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce_bulk'] ) ), 'bulk-promotions' ) ) {
+		if ( ! isset( $_POST['_wpnonce_bulk'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce_bulk'] ) ), 'gym_core_bulk_promotions' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'gym-core' ) );
 		}
 
@@ -352,7 +352,7 @@ final class PromotionDashboard {
 	 */
 	private function render_bulk_confirmation(): void {
 		// Verify nonce.
-		if ( ! isset( $_POST['_wpnonce_bulk'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce_bulk'] ) ), 'bulk-promotions' ) ) {
+		if ( ! isset( $_POST['_wpnonce_bulk'] ) || ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['_wpnonce_bulk'] ) ), 'gym_core_bulk_promotions' ) ) {
 			wp_die( esc_html__( 'Security check failed.', 'gym-core' ) );
 		}
 
@@ -445,7 +445,7 @@ final class PromotionDashboard {
 
 		// Confirmation form.
 		echo '<form method="post" style="margin-top: 16px;">';
-		wp_nonce_field( 'bulk-promotions', '_wpnonce_bulk' );
+		wp_nonce_field( 'gym_core_bulk_promotions', '_wpnonce_bulk' );
 		echo '<input type="hidden" name="gym_bulk_action" value="' . esc_attr( $confirm_action ) . '" />';
 		echo '<input type="hidden" name="bulk_program" value="' . esc_attr( $program ) . '" />';
 		foreach ( $user_ids as $uid ) {

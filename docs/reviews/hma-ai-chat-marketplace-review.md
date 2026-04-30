@@ -12,9 +12,11 @@ Gandalf's staff-in-the-loop architecture is structurally sound: every write tool
 
 **But the AI-safety edges have real gaps.** Three MAJOR security findings concentrate on the approval-flow re-validation path (a manipulated "approve-with-changes" can quietly swap a refund's `order_id`), the IP allowlist being opt-out (empty = accept-any), and the just-landed `ActionNotifier` shipping PII-ish action summaries over SMS and to Slack. The two frontend MAJORs are a missing apiFetch nonce middleware (latent 403s for non-admin `edit_posts` users) and no `aria-live` on the chat message stream. The perf MAJORs are the synchronous SMS fan-out in the notifier I just wrote, N+1 `get_userdata()` in audit log rendering, and no retry/rollback in the ClaudeClient → MessageEndpoint path.
 
-**Severity counts:** blocker=0, major=8, minor=13, nit=8
+**Severity counts:** blocker=0, major=8 (8 resolved), minor=13 (2 resolved / 11 open), nit=8 (0 resolved / 8 open)
 
-**Recommendation:** **Address before any production use.** The approval-flow re-validation gap (MAJOR-01) and the IP-allowlist-opens-empty default (MAJOR-03) are AI-safety risks that matter even in a single-gym deployment. The rest of the stack is already at or near "clean internal plugin" quality.
+**Recommendation:** **All MAJORs remediated as of 2026-04-29; remaining MINORs/NITs are opportunistic.** See per-finding STATUS annotations below for the resolving commit SHA. Original recommendation retained below for review history.
+
+> **Original recommendation (2026-04 baseline):** Address before any production use. The approval-flow re-validation gap (MAJOR-01) and the IP-allowlist-opens-empty default (MAJOR-03) are AI-safety risks that matter even in a single-gym deployment. The rest of the stack is already at or near "clean internal plugin" quality.
 
 ## Findings
 
@@ -24,16 +26,19 @@ Gandalf's staff-in-the-loop architecture is structurally sound: every write tool
 - **File:** `src/API/ActionEndpoint.php:344-393`, `src/Data/PendingActionStore.php:162-209`, `src/API/HeartbeatEndpoint.php:241-276`
 - **Issue:** `approve_with_changes` checks only the `pending` status; staff instructions go into `action_data.staff_changes` verbatim and are shipped back to Paperclip. When Paperclip posts `revised_action_complete`, `complete_revised_action` merges `revisedData` (shallow-sanitized) into the same row and marks it `completed`. **Nothing pins `action_type`, `tool_name`, `endpoint`, or target IDs (`order_id`, `user_id`, `contact_id`, `phone`) to the originals.** A manipulated agent re-execution can submit revised data for a *different* target — a revised `issue_refund` against a different order, or a revised `draft_sms` to a different phone number — and it will be written to the "completed" audit row that staff see as approved. `handle_check_approval_status` also doesn't verify the polling `runId` matches the stored `run_id`, so one run can complete another's action.
 - **Fix:** In `complete_revised_action`, diff `$revised_data` against a whitelist of mutable keys from the original `action_data` and reject changes to `tool_name`, `endpoint`, `method`, target IDs, and `agent_user_id`. Also verify `runId` matches the stored `run_id` before accepting completion.
+- **STATUS:** RESOLVED in `0360768` — `fix(hma-ai-chat): MAJOR-01 — re-pin action identity on revised completion`
 
 #### MAJOR-02: `ActionNotifier` SMS body leaks action summary (potential PII) off-platform
 - **File:** `src/Notifications/ActionNotifier.php:44-75, 128-158`
 - **Issue:** `dispatch()` puts `action_data['description']` into the SMS body. `description` is set by Paperclip or `ToolExecutor::create_pending_action` and often carries staff-facing context (member names, phone fragments, refund reasons) via agent phrasing. SMS is not end-to-end encrypted; Twilio is a third-party processor. The same `$summary` goes to Slack, which has workspace retention. No opt-out, no metadata-only mode. This is my own code from the M6.3 commit.
 - **Fix:** Restrict SMS body to non-PII metadata: `Gandalf: <agent> queued <action_type> #<id> — review in admin`. Drop `$summary` from SMS entirely. Gate Slack summary behind a new `hma_ai_chat_notify_include_summary` option (default false). Add a filter `hma_ai_chat_notifier_summary` for site-specific sanitization.
+- **STATUS:** RESOLVED in `cc4e190` — `fix(hma-ai-chat): MAJOR-03/02/06 — IP allowlist enforcement + async PII-scrubbed SMS`
 
 #### MAJOR-03: IP allowlist is opt-out — empty allowlist silently accepts any IP
 - **File:** `src/Security/WebhookValidator.php:132-142`
 - **Issue:** `validate_ip()` returns true when the allowlist is empty. The webhook auth is a bearer shared-secret (no per-request body HMAC), so the IP fence is the only secondary barrier. Fresh installs, or any admin clearing the textarea, drop to signature-only auth. Admin UI describes empty state as "allow all (not recommended)" but current state isn't surfaced on a dashboard.
 - **Fix:** Add an "Enforce IP allowlist" toggle that fails closed when the allowlist is empty. Surface a warning admin notice on the settings page when empty-with-enforcement-off. Ship with Paperclip's production egress IPs pre-seeded.
+- **STATUS:** RESOLVED in `cc4e190` — `fix(hma-ai-chat): MAJOR-03/02/06 — IP allowlist enforcement + async PII-scrubbed SMS`
 
 ### MAJOR — Standards + Frontend (2)
 
@@ -42,11 +47,13 @@ Gandalf's staff-in-the-loop architecture is structurally sound: every write tool
 - **Issue:** `ChatPage::enqueue_assets()` localizes `hmaAiChat.nonce = wp_create_nonce( 'wp_rest' )` but `chat-app.js` never calls `wp.apiFetch.use( wp.apiFetch.createNonceMiddleware( config.nonce ) )` and `wpApiSettings` is not localized either. `apiFetch` has no `X-WP-Nonce` source; REST calls rely entirely on the admin session cookie. Works for admin users today. Any non-admin `edit_posts` user (Editor/Author) loading the panel — or an admin whose cookie goes stale — gets `rest_cookie_invalid_nonce` 403s on every message/action/heartbeat.
 - **Fix:** Add `wp.apiFetch.use( wp.apiFetch.createNonceMiddleware( config.nonce ) );` immediately after `config` assignment in `chat-app.js`, before any `wp.apiFetch` call. No server change needed.
 - **Provenance:** Originally surfaced by the first (killed) plugin-reviewer attempt, verified by the standards slice in this pass.
+- **STATUS:** RESOLVED in `c147860` — `fix(hma-ai-chat): MAJOR-04/05 — wire apiFetch nonce middleware + aria-live on chat stream`
 
 #### MAJOR-05: No `aria-live` / `role="log"` on assistant message stream
 - **File:** `assets/js/chat-app.js:60` (`#hma-messages` container), `chat-app.js:228-232` (message render)
 - **Issue:** Chat messages container has no live-region semantics. Screen-reader users hear the Send click and then nothing until they navigate back into the message region. Single most impactful a11y gap in an otherwise well-labelled UI.
 - **Fix:** Add `role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false"` to `#hma-messages` in `renderChatPanel()`. Keep the typing indicator outside the live region (or use `aria-busy`) to avoid noisy dot-announcements.
+- **STATUS:** RESOLVED in `c147860` — `fix(hma-ai-chat): MAJOR-04/05 — wire apiFetch nonce middleware + aria-live on chat stream`
 
 ### MAJOR — Performance + Architecture (3)
 
@@ -54,48 +61,51 @@ Gandalf's staff-in-the-loop architecture is structurally sound: every write tool
 - **File:** `src/Notifications/ActionNotifier.php:148-158`
 - **Issue:** `send_sms()` loops through every admin number and calls `TwilioClient::send()` inline. TwilioClient is a synchronous `wp_remote_post` with a **15-second timeout**. With 3-5 admin numbers and a Twilio outage, 45-75s is added to whatever request fired `hma_ai_chat_pending_action_created` — which fires inline from `PendingActionStore::store_pending_action`, reachable from MessageEndpoint (via ToolExecutor), HeartbeatEndpoint (Paperclip), and bulk-action endpoints. TwilioClient's own docblock claims "Sending is queued via Action Scheduler" — but the code path we call is the synchronous one. This is my own code from the M6.3 commit.
 - **Fix:** Defer SMS dispatch via `as_enqueue_async_action( 'hma_ai_chat_send_sms', [...] )` or `wp_schedule_single_event( time(), … )`. The Slack send already uses a 5s timeout — apply the same tight budget AND async dispatch for SMS.
+- **STATUS:** RESOLVED in `cc4e190` — `fix(hma-ai-chat): MAJOR-03/02/06 — IP allowlist enforcement + async PII-scrubbed SMS`
 
 #### MAJOR-07: N+1 `get_userdata()` in audit log rendering (admin page and REST)
 - **File:** `src/Admin/AuditLogPage.php:146`, `src/API/ActionEndpoint.php:576`
 - **Issue:** Both paths call `get_userdata()` inside a `foreach` over the 20-row page. WP's per-request user object cache helps on warm cache; first load can fan out to 40+ per-row queries. `get_all_actions` orders by `created_at DESC` and filters by `status`/`agent`; no index confirmed on `(status, created_at)`.
 - **Fix:** Collect distinct `approved_by` IDs first, call `_prime_user_caches( $user_ids )` once, then the per-row lookups become cache hits. Same in `ActionEndpoint::get_audit_log`. Add a `(status, created_at)` index to `hma_ai_pending_actions` via the Activator.
+- **STATUS:** RESOLVED in `31e42bf` — `fix(hma-ai-chat): MAJOR-07 — prime user caches in audit log + (status, created_at) index`
 
 #### MAJOR-08: ClaudeClient has no retry/backoff; MessageEndpoint saves the user turn before the Claude call
 - **File:** `src/API/ClaudeClient.php:82-110`, `src/API/MessageEndpoint.php:117-181`
 - **Issue:** Chat hot path does a synchronous `wp_remote_post` to Anthropic with a 60s timeout. On 429 or 5xx, the client wraps into `WP_Error(502)` and returns. The user's message was already `save_message()`'d at line 133 before the call, so a failure leaves an orphan user-turn row in history. Next request re-walks history, re-sends the orphan, double-billing tokens. No backoff or `retry-after` honoring.
 - **Fix:** (1) 1–2 retries on 429/503 with jittered backoff, respecting `retry-after`. (2) Either roll back the user-message save on Claude failure, or mark it `failed: true` so the UI can retry without a duplicate insert.
+- **STATUS:** RESOLVED in `c3a7ebf` — `fix(hma-ai-chat): MAJOR-08 — Claude retries with backoff + roll back orphan user-turn on failure`
 
 ### MINOR (13)
 
 #### Security + AI-safety (5)
-- **MINOR-09:** Webhook auth is a bearer shared-secret, not HMAC-over-body. Captured requests can be replayed until rotation. Add `X-HMA-Signature: t=<ts>,v1=<hmac>` with 5-minute timestamp window as the stronger mode; keep bearer as fallback.
-- **MINOR-10:** Slack webhook URL not domain-scoped. `sanitize_webhook_url` allows any HTTPS host; a compromised admin session becomes a data-exfiltration primitive. Require `hooks.slack.com` by default; filter `hma_ai_chat_allowed_slack_hosts` for Mattermost.
-- **MINOR-11:** `handle_check_approval_status` query is race-prone (`WHERE run_id=%s ORDER BY created_at DESC LIMIT 1`). Two actions sharing a run_id = earlier one silently stranded. Require `actionId` in the status request; query by primary key.
-- **MINOR-12:** `ToolExecutor::execute_approved_write` defined but never wired to `hma_ai_chat_action_approved`. Either Paperclip drives execution and this is dead code, or the wiring was dropped in a refactor and approved writes never run server-side. Functional gap with a security tail: a latent method that bypasses MAJOR-01's re-validation is a footgun if naively wired up later.
-- **MINOR-13:** `ActionNotifier` has no rate limiting. 50 pending actions = 50 SMS per admin number in one HTTP cycle. Add transient-backed per-channel limits (1 SMS per admin per 60s; 10 Slack posts per 5min) with coalesced "N more queued" summary on overflow.
+- **MINOR-09:** Webhook auth is a bearer shared-secret, not HMAC-over-body. Captured requests can be replayed until rotation. Add `X-HMA-Signature: t=<ts>,v1=<hmac>` with 5-minute timestamp window as the stronger mode; keep bearer as fallback. **STATUS:** OPEN
+- **MINOR-10:** Slack webhook URL not domain-scoped. `sanitize_webhook_url` allows any HTTPS host; a compromised admin session becomes a data-exfiltration primitive. Require `hooks.slack.com` by default; filter `hma_ai_chat_allowed_slack_hosts` for Mattermost. **STATUS:** OPEN
+- **MINOR-11:** `handle_check_approval_status` query is race-prone (`WHERE run_id=%s ORDER BY created_at DESC LIMIT 1`). Two actions sharing a run_id = earlier one silently stranded. Require `actionId` in the status request; query by primary key. **STATUS:** OPEN
+- **MINOR-12:** `ToolExecutor::execute_approved_write` defined but never wired to `hma_ai_chat_action_approved`. Either Paperclip drives execution and this is dead code, or the wiring was dropped in a refactor and approved writes never run server-side. Functional gap with a security tail: a latent method that bypasses MAJOR-01's re-validation is a footgun if naively wired up later. **STATUS:** RESOLVED in `da23f97` — `fix(hma-ai-chat): execute approved actions immediately, not just mark them approved`
+- **MINOR-13:** `ActionNotifier` has no rate limiting. 50 pending actions = 50 SMS per admin number in one HTTP cycle. Add transient-backed per-channel limits (1 SMS per admin per 60s; 10 Slack posts per 5min) with coalesced "N more queued" summary on overflow. **STATUS:** OPEN
 
 #### Standards + Frontend (4)
-- **MINOR-14:** `uninstall.php` missing `declare(strict_types=1)` — only file of 24 without it. Add it; uninstall is where you want strict typing most.
-- **MINOR-15:** Action notices (approval toasts) lack `role="status"`. They auto-dismiss in 3s; screen-reader users miss the outcome. Add `role="status"` (or `role="alert"` for errors) in `showActionNotice()`.
-- **MINOR-16:** Asset enqueue couples to gym-core hook suffixes by string (`gym_page_hma-ai-chat`, `toplevel_page_gym-core`). If gym-core renames its menu slug, chat assets silently stop loading. Either own the hook suffix (register the chat submenu from this plugin) or add a code comment pointing to gym-core's owning file.
-- **MINOR-17:** ~45 lines of CSS inlined inside `AuditLogPage::render_page()` (lines 191-236). Move to `assets/css/audit-log.css` and enqueue on the audit-page hook suffix.
+- **MINOR-14:** `uninstall.php` missing `declare(strict_types=1)` — only file of 24 without it. Add it; uninstall is where you want strict typing most. **STATUS:** OPEN
+- **MINOR-15:** Action notices (approval toasts) lack `role="status"`. They auto-dismiss in 3s; screen-reader users miss the outcome. Add `role="status"` (or `role="alert"` for errors) in `showActionNotice()`. **STATUS:** OPEN
+- **MINOR-16:** Asset enqueue couples to gym-core hook suffixes by string (`gym_page_hma-ai-chat`, `toplevel_page_gym-core`). If gym-core renames its menu slug, chat assets silently stop loading. Either own the hook suffix (register the chat submenu from this plugin) or add a code comment pointing to gym-core's owning file. **STATUS:** OPEN
+- **MINOR-17:** ~45 lines of CSS inlined inside `AuditLogPage::render_page()` (lines 191-236). Move to `assets/css/audit-log.css` and enqueue on the audit-page hook suffix. **STATUS:** OPEN
 
 #### Performance + Architecture (4)
-- **MINOR-18:** `ActionEndpoint` (7 callbacks) creates a new `PendingActionStore` per request. Same pattern in `MessageEndpoint`. Stores are stateless so not a bug, but cache singletons on `Plugin` (like `$tool_executor`) or introduce a small service container.
-- **MINOR-19:** `GymContextProvider::get_context_for_persona` runs 4–8 internal REST dispatches per chat message. `CACHE_TTL = 300` is defined; not every `get_*_context()` method was verified to use it. Add a `cached_dispatch( string $key, callable $builder )` wrapper so no method can forget.
-- **MINOR-20:** Claude failure leaves an orphan user-turn row (companion finding to MAJOR-08). Insert after a successful reply, or mark `pending`/`committed` so history walks ignore unreplied turns.
-- **MINOR-21:** `MessageEndpoint` lacks a request-level timeout budget. Rate limit (30/min per user) mitigates exhaustion but doesn't bound worst-case single-request time. Scale the outbound timeout to `ini_get('max_execution_time')`; queue + streaming for v0.5.
+- **MINOR-18:** `ActionEndpoint` (7 callbacks) creates a new `PendingActionStore` per request. Same pattern in `MessageEndpoint`. Stores are stateless so not a bug, but cache singletons on `Plugin` (like `$tool_executor`) or introduce a small service container. **STATUS:** OPEN
+- **MINOR-19:** `GymContextProvider::get_context_for_persona` runs 4–8 internal REST dispatches per chat message. `CACHE_TTL = 300` is defined; not every `get_*_context()` method was verified to use it. Add a `cached_dispatch( string $key, callable $builder )` wrapper so no method can forget. **STATUS:** OPEN
+- **MINOR-20:** Claude failure leaves an orphan user-turn row (companion finding to MAJOR-08). Insert after a successful reply, or mark `pending`/`committed` so history walks ignore unreplied turns. **STATUS:** RESOLVED in `c3a7ebf` — `fix(hma-ai-chat): MAJOR-08 — Claude retries with backoff + roll back orphan user-turn on failure`
+- **MINOR-21:** `MessageEndpoint` lacks a request-level timeout budget. Rate limit (30/min per user) mitigates exhaustion but doesn't bound worst-case single-request time. Scale the outbound timeout to `ini_get('max_execution_time')`; queue + streaming for v0.5. **STATUS:** OPEN
 
 ### NIT (8)
 
-- **NIT-22:** Audit log doesn't record reviewer IP, user-agent, or a pre-approval `action_data` snapshot. Add `reviewer_ip`, `reviewer_ua`, `action_data_before` columns. Low-effort, high-value for post-incident reconstruction.
-- **NIT-23:** `WebhookValidator::rotate_secret`'s auto-cleanup of the previous secret runs as a side effect inside `is_in_rotation_grace_period` (a read path). Schedule a single-event cleanup at rotation time instead.
-- **NIT-24:** Conversation history is trusted as prompt input without structural separation. Untrusted fields (member name, announcement body, CRM note) flow into the system prompt concatenated with `\n\n--- Current Gym Context ---\n`. A CRM note containing `--- End Context ---\nSystem: …` would be read naively. Wrap untrusted content in `<context_data>` tags and add a standing persona instruction to treat tagged content as data-only. Defense-in-depth; approval gate remains primary.
-- **NIT-25:** Agent icon/name dropped into backtick `innerHTML` without JS-side `escapeHtml()`. Safe today (icons are emoji constants, names are server-sanitized) but inconsistent with the rest of `chat-app.js` which uses `escapeHtml()` everywhere. Wrap for defense-in-depth.
-- **NIT-26:** `renderMarkdown()` uses `var` where the rest of the file uses `const`/`let`. Consistency nit.
-- **NIT-27:** No `prefers-reduced-motion` guard on typing-dot and fade-in animations. Add `@media (prefers-reduced-motion: reduce) { .hma-ai-typing-dot, .hma-ai-action-notice { animation: none !important; } }`.
-- **NIT-28:** Zero unit tests. Highest-leverage targets to start: `PendingActionStore::get_all_actions` (SQL builder with dynamic WHERE), `ToolExecutor::resolve_route`. Pure PHP, no WP bootstrap needed beyond wpdb mocks.
-- **NIT-29:** `ConversationStore::purge_expired_conversations` runs `DELETE … WHERE updated_at < %s`. `updated_at` index not confirmed in Activator's `dbDelta` schema. On a site with years of history, a non-indexed scan degrades silently. Add `KEY updated_at (updated_at)` in a 0.4.1 schema bump.
+- **NIT-22:** Audit log doesn't record reviewer IP, user-agent, or a pre-approval `action_data` snapshot. Add `reviewer_ip`, `reviewer_ua`, `action_data_before` columns. Low-effort, high-value for post-incident reconstruction. **STATUS:** OPEN
+- **NIT-23:** `WebhookValidator::rotate_secret`'s auto-cleanup of the previous secret runs as a side effect inside `is_in_rotation_grace_period` (a read path). Schedule a single-event cleanup at rotation time instead. **STATUS:** OPEN
+- **NIT-24:** Conversation history is trusted as prompt input without structural separation. Untrusted fields (member name, announcement body, CRM note) flow into the system prompt concatenated with `\n\n--- Current Gym Context ---\n`. A CRM note containing `--- End Context ---\nSystem: …` would be read naively. Wrap untrusted content in `<context_data>` tags and add a standing persona instruction to treat tagged content as data-only. Defense-in-depth; approval gate remains primary. **STATUS:** OPEN
+- **NIT-25:** Agent icon/name dropped into backtick `innerHTML` without JS-side `escapeHtml()`. Safe today (icons are emoji constants, names are server-sanitized) but inconsistent with the rest of `chat-app.js` which uses `escapeHtml()` everywhere. Wrap for defense-in-depth. **STATUS:** OPEN
+- **NIT-26:** `renderMarkdown()` uses `var` where the rest of the file uses `const`/`let`. Consistency nit. **STATUS:** OPEN
+- **NIT-27:** No `prefers-reduced-motion` guard on typing-dot and fade-in animations. Add `@media (prefers-reduced-motion: reduce) { .hma-ai-typing-dot, .hma-ai-action-notice { animation: none !important; } }`. **STATUS:** OPEN
+- **NIT-28:** Zero unit tests. Highest-leverage targets to start: `PendingActionStore::get_all_actions` (SQL builder with dynamic WHERE), `ToolExecutor::resolve_route`. Pure PHP, no WP bootstrap needed beyond wpdb mocks. **STATUS:** OPEN
+- **NIT-29:** `ConversationStore::purge_expired_conversations` runs `DELETE … WHERE updated_at < %s`. `updated_at` index not confirmed in Activator's `dbDelta` schema. On a site with years of history, a non-indexed scan degrades silently. Add `KEY updated_at (updated_at)` in a 0.4.1 schema bump. **STATUS:** OPEN
 
 ## Verified Clean (from slice audits)
 
@@ -153,6 +163,8 @@ Self-critique where the synthesis is weakest or might be overcalling severity.
 - **Findings I have highest confidence in:** MAJOR-01 (approve-with-changes re-pinning), MAJOR-03 (IP allowlist opt-out), MAJOR-04 (nonce middleware), MAJOR-06 (sync SMS), MINOR-12 (dead `execute_approved_write`). These have explicit file:line pointers and short, concrete fixes.
 
 ## Recommendation
+
+**STATUS (2026-04-29):** All 8 MAJORs resolved — see inline annotations. Two of thirteen MINORs (MINOR-12, MINOR-20) also resolved; remaining MINORs and all NITs are open and opportunistic. Original priority list retained below for review history.
 
 **Address before any production use.** The two structural AI-safety gaps (MAJOR-01 and MAJOR-03) and the one latent frontend failure mode (MAJOR-04) are the critical pre-production remediations.
 

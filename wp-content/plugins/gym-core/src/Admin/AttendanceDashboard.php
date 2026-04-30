@@ -157,9 +157,9 @@ final class AttendanceDashboard {
 			'gymDashboard',
 			array(
 				'ajaxUrl'       => admin_url( 'admin-ajax.php' ),
-				'checkinNonce'  => wp_create_nonce( 'gym_quick_checkin' ),
-				'searchNonce'   => wp_create_nonce( 'gym_member_search' ),
-				'locationNonce' => wp_create_nonce( 'gym_set_location' ),
+				'checkinNonce'  => wp_create_nonce( 'gym_core_quick_checkin' ),
+				'searchNonce'   => wp_create_nonce( 'gym_core_member_search' ),
+				'locationNonce' => wp_create_nonce( 'gym_core_set_location' ),
 			)
 		);
 
@@ -301,7 +301,7 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	public function ajax_quick_checkin(): void {
-		check_ajax_referer( 'gym_quick_checkin' );
+		check_ajax_referer( 'gym_core_quick_checkin' );
 
 		if ( ! current_user_can( 'gym_check_in_member' ) ) {
 			wp_send_json_error( array( 'message' => __( 'Permission denied.', 'gym-core' ) ), 403 );
@@ -346,7 +346,7 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	public function ajax_member_search(): void {
-		check_ajax_referer( 'gym_member_search' );
+		check_ajax_referer( 'gym_core_member_search' );
 
 		if ( ! current_user_can( 'gym_check_in_member' ) ) {
 			wp_send_json_error( array(), 403 );

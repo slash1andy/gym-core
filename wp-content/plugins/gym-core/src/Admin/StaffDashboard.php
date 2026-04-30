@@ -28,6 +28,13 @@ final class StaffDashboard {
 	private const MENU_SLUG = 'gym-core';
 
 	/**
+	 * Defensive upper bound for unbounded WP_Query result sets in this dashboard.
+	 *
+	 * @var int
+	 */
+	private const MAX_QUERY_RESULTS = 500;
+
+	/**
 	 * Attendance store.
 	 *
 	 * @var AttendanceStore
@@ -520,7 +527,7 @@ final class StaffDashboard {
 			array(
 				'post_type'      => 'gym_class',
 				'post_status'    => 'publish',
-				'posts_per_page' => -1,
+				'posts_per_page' => self::MAX_QUERY_RESULTS,
 				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
 					array(
 						'key'   => '_gym_class_instructor',

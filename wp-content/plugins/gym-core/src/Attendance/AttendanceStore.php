@@ -175,23 +175,31 @@ class AttendanceStore {
 		global $wpdb;
 		$tables = TableManager::get_table_names();
 
-		$where = $wpdb->prepare( 'WHERE user_id = %d', $user_id );
+		$sql_parts = array(
+			'SELECT * FROM ' . $tables['attendance'],
+			'WHERE user_id = %d',
+		);
+		$args      = array( $user_id );
 
 		if ( '' !== $from ) {
-			$where .= $wpdb->prepare( ' AND checked_in_at >= %s', $from . ' 00:00:00' );
+			$sql_parts[] = 'AND checked_in_at >= %s';
+			$args[]      = $from . ' 00:00:00';
 		}
 		if ( '' !== $to ) {
-			$where .= $wpdb->prepare( ' AND checked_in_at <= %s', $to . ' 23:59:59' );
+			$sql_parts[] = 'AND checked_in_at <= %s';
+			$args[]      = $to . ' 23:59:59';
 		}
 
-		$sql = "SELECT * FROM {$tables['attendance']} {$where} ORDER BY checked_in_at DESC";
+		$sql_parts[] = 'ORDER BY checked_in_at DESC';
 
 		if ( $limit > 0 ) {
-			$sql .= $wpdb->prepare( ' LIMIT %d OFFSET %d', $limit, $offset );
+			$sql_parts[] = 'LIMIT %d OFFSET %d';
+			$args[]      = $limit;
+			$args[]      = $offset;
 		}
 
-		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
-		return $wpdb->get_results( $sql ) ?: array();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return $wpdb->get_results( $wpdb->prepare( implode( ' ', $sql_parts ), $args ) ) ?: array();
 	}
 
 	/**

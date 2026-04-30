@@ -117,7 +117,7 @@ class LocationSelector {
 			'gymLocation',
 			array(
 				'ajaxUrl'   => admin_url( 'admin-ajax.php' ),
-				'nonce'     => wp_create_nonce( 'gym_location_nonce' ),
+				'nonce'     => wp_create_nonce( 'gym_core_location_nonce' ),
 				'current'   => $this->manager->get_current_location(),
 				'locations' => $this->get_location_coordinates(),
 				'i18n'      => array(

@@ -85,7 +85,10 @@ final class ProspectFilter {
 	 * Filters an array of CRM contacts, returning only prospects.
 	 *
 	 * Each contact must have an 'email' key. Contacts whose email maps to a
-	 * WordPress user with an active subscription are excluded.
+	 * WordPress user with an active subscription are excluded. Lookups are
+	 * batched: a single SELECT resolves all emails to user IDs, and a single
+	 * wcs_get_subscriptions() call primes the gym_prospect_$user_id transients
+	 * so each is_prospect() invocation is a transient hit.
 	 *
 	 * @since 2.3.0
 	 *
@@ -93,25 +96,147 @@ final class ProspectFilter {
 	 * @return array<int, array<string, mixed>> Filtered prospect-only contacts.
 	 */
 	public static function filter_prospects( array $contacts ): array {
+		if ( array() === $contacts ) {
+			return array();
+		}
+
+		$emails = array();
+		foreach ( $contacts as $contact ) {
+			$email = strtolower( trim( (string) ( $contact['email'] ?? '' ) ) );
+			if ( '' !== $email ) {
+				$emails[ $email ] = true;
+			}
+		}
+		$emails = array_keys( $emails );
+
+		$email_to_user_id = array() === $emails
+			? array()
+			: self::resolve_emails_to_user_ids( $emails );
+
+		if ( array() !== $email_to_user_id ) {
+			self::prime_active_subscription_users( array_values( $email_to_user_id ) );
+		}
+
 		return array_values(
 			array_filter(
 				$contacts,
-				static function ( array $contact ): bool {
+				static function ( array $contact ) use ( $email_to_user_id ): bool {
 					$email = strtolower( trim( (string) ( $contact['email'] ?? '' ) ) );
 
 					if ( '' === $email ) {
 						return true; // No email — treat as prospect.
 					}
 
-					$user = get_user_by( 'email', $email );
+					$user_id = $email_to_user_id[ $email ] ?? 0;
 
-					if ( ! $user ) {
+					if ( 0 === $user_id ) {
 						return true; // No WP account — always a prospect.
 					}
 
-					return self::is_prospect( $user->ID );
+					return self::is_prospect( $user_id );
 				}
 			)
 		);
+	}
+
+	/**
+	 * Resolves a list of emails to WordPress user IDs in a single query.
+	 *
+	 * @param array<int, string> $emails Lowercased, trimmed, non-empty emails.
+	 * @return array<string, int> Map of email => user ID. Emails with no
+	 *                             matching user are absent from the map.
+	 */
+	private static function resolve_emails_to_user_ids( array $emails ): array {
+		if ( array() === $emails ) {
+			return array();
+		}
+
+		global $wpdb;
+
+		$placeholders = implode( ',', array_fill( 0, count( $emails ), '%s' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT ID, user_email FROM {$wpdb->users} WHERE user_email IN ({$placeholders})", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$emails
+			),
+			ARRAY_A
+		);
+
+		if ( ! is_array( $rows ) ) {
+			return array();
+		}
+
+		$wanted = array_flip( $emails );
+		$map    = array();
+		foreach ( $rows as $row ) {
+			$email = strtolower( (string) ( $row['user_email'] ?? '' ) );
+			if ( '' === $email || ! isset( $wanted[ $email ] ) ) {
+				continue;
+			}
+			$map[ $email ] = (int) ( $row['ID'] ?? 0 );
+		}
+
+		return $map;
+	}
+
+	/**
+	 * Primes the gym_prospect_* transient for the given user IDs.
+	 *
+	 * Issues a single wcs_get_subscriptions() call for currently-active
+	 * subscriptions, then sets the per-user transient to '0' (member) or '1'
+	 * (prospect) so subsequent is_prospect() lookups never reach the per-user
+	 * wcs_get_users_subscriptions() path. The system-wide fetch is bounded by
+	 * the gym's active-member count.
+	 *
+	 * @param array<int, int> $user_ids User IDs that need a prospect determination.
+	 */
+	private static function prime_active_subscription_users( array $user_ids ): void {
+		if ( array() === $user_ids || ! function_exists( 'wcs_get_subscriptions' ) ) {
+			return;
+		}
+
+		$needs_prime = array();
+		foreach ( $user_ids as $user_id ) {
+			if ( $user_id <= 0 ) {
+				continue;
+			}
+			if ( false === get_transient( 'gym_prospect_' . $user_id ) ) {
+				$needs_prime[ $user_id ] = true;
+			}
+		}
+
+		if ( array() === $needs_prime ) {
+			return;
+		}
+
+		$subscriptions = wcs_get_subscriptions(
+			array(
+				'subscription_status'    => self::ACTIVE_STATUSES,
+				'subscriptions_per_page' => -1,
+			)
+		);
+
+		$members = array();
+		if ( is_array( $subscriptions ) ) {
+			foreach ( $subscriptions as $subscription ) {
+				if ( ! is_object( $subscription ) || ! method_exists( $subscription, 'get_user_id' ) ) {
+					continue;
+				}
+				$uid = (int) $subscription->get_user_id();
+				if ( $uid > 0 ) {
+					$members[ $uid ] = true;
+				}
+			}
+		}
+
+		foreach ( array_keys( $needs_prime ) as $user_id ) {
+			set_transient(
+				'gym_prospect_' . $user_id,
+				isset( $members[ $user_id ] ) ? '0' : '1',
+				self::CACHE_TTL
+			);
+		}
 	}
 }

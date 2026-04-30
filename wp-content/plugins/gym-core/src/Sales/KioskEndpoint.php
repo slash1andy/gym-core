@@ -404,6 +404,9 @@ final class KioskEndpoint {
 		}
 
 		$cookie_location = isset( $_COOKIE['gym_location'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['gym_location'] ) ) : '';
+		if ( '' !== $cookie_location && ! Taxonomy::is_valid( $cookie_location ) ) {
+			$cookie_location = '';
+		}
 		if ( '' === $cookie_location ) {
 			$locations       = Taxonomy::get_location_labels();
 			$cookie_location = ! empty( $locations ) ? array_key_first( $locations ) : '';

@@ -1,0 +1,104 @@
+/* ============================================================
+   Haanpaa pattern styles — scoped utility classes used inside
+   block patterns. Layered on top of the haanpaa block theme's
+   theme.json tokens.
+   ============================================================ */
+
+.hp-eyebrow {
+  font-family: var(--wp--preset--font-family--inter, 'Inter', sans-serif);
+  font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+  font-weight: 600; color: var(--wp--preset--color--ink-soft, #4A4A48);
+}
+.hp-eyebrow-mono {
+  font-family: 'Menlo', monospace;
+  font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.hp-meta { font-family: 'Menlo', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--wp--preset--color--ink-mute, #9A9A98); }
+
+/* Photo placeholders (until editor uploads images) */
+.hp-photo {
+  position: relative; overflow: hidden; aspect-ratio: 4 / 5;
+  background: linear-gradient(135deg, #2A2825 0%, #131110 100%);
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.42); font-family: 'Menlo', monospace;
+  font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+}
+.hp-photo::after {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(60% 80% at 30% 20%, rgba(255,255,255,0.08) 0%, transparent 60%),
+    radial-gradient(50% 70% at 80% 90%, rgba(26,45,196,0.18) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* Programs accordion */
+.hp-acc-row { border-bottom: 1px solid rgba(10,10,10,0.18); }
+.hp-acc-head {
+  display: grid; grid-template-columns: 80px 2fr 1.4fr 0.6fr 60px;
+  gap: 24px; align-items: center; padding: 36px 0;
+  background: transparent; border: 0; cursor: pointer; text-align: left;
+  width: 100%; font: inherit; color: inherit;
+}
+.hp-acc-body { padding: 0 0 48px 104px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 48px; }
+.hp-acc-body[hidden] { display: none; }
+
+/* Schedule grid */
+.hp-sch-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(10,10,10,0.15); overflow-x: auto; }
+.hp-sch-tab { background: transparent; border: 0; cursor: pointer; padding: 20px 28px; flex-shrink: 0;
+  border-bottom: 2px solid transparent; margin-bottom: -1px; font: inherit; color: inherit; }
+.hp-sch-tab[aria-selected="true"] { color: var(--wp--preset--color--blue, #1A2DC4); border-bottom-color: currentColor; }
+.hp-sch-row {
+  display: grid; grid-template-columns: 120px 2fr 1fr 1fr 140px;
+  gap: 24px; padding: 24px 0; align-items: center;
+  border-bottom: 1px solid rgba(10,10,10,0.08);
+}
+.hp-sch-row[hidden] { display: none; }
+.hp-sch-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+.hp-sch-dot.kind-bjj { background: #1A2DC4; }
+.hp-sch-dot.kind-kick { background: #B26200; }
+.hp-sch-dot.kind-kids { background: #2B8A5F; }
+
+
+/* Filter chips */
+.hp-chip {
+  padding: 8px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(10,10,10,0.18); background: transparent;
+  color: inherit; font: inherit; font-size: 13px;
+}
+.hp-chip[aria-pressed="true"] { background: var(--wp--preset--color--blue, #1A2DC4); color: #fff; border-color: transparent; }
+
+/* Segmented control (location toggle) */
+.hp-seg { display: inline-flex; border: 1px solid rgba(10,10,10,0.18); border-radius: 2px; }
+.hp-seg button { padding: 12px 24px; border: 0; background: transparent; cursor: pointer; font: inherit; }
+.hp-seg button[aria-pressed="true"] { background: #0A0A0A; color: #F6F4EE; }
+
+/* Free-trial wizard */
+.hp-step-bar { display: flex; gap: 0; border-top: 1px solid rgba(10,10,10,0.15); padding-top: 32px; margin-bottom: 64px; }
+.hp-step-bar > div { flex: 1; display: flex; align-items: center; gap: 16px; padding-right: 24px; }
+.hp-step-bullet { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; flex-shrink: 0; font-family: 'Menlo', monospace; font-size: 14px;
+  border: 1px solid rgba(10,10,10,0.2); color: #9A9A98; }
+.hp-step-bar [data-active="true"] .hp-step-bullet { background: #1A2DC4; color: #fff; border-color: transparent; }
+.hp-step-bar [data-done="true"]   .hp-step-bullet { background: #0A0A0A; color: #fff; border-color: transparent; }
+
+.hp-trial-option { display: flex; align-items: center; gap: 24px; padding: 24px 28px;
+  border: 1px solid rgba(10,10,10,0.15); background: #fff; cursor: pointer;
+  text-align: left; font: inherit; width: 100%; border-radius: 2px; }
+.hp-trial-option[aria-pressed="true"] { border-color: #1A2DC4; background: rgba(26,45,196,0.04); }
+.hp-trial-radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #9A9A98; flex-shrink: 0; }
+.hp-trial-option[aria-pressed="true"] .hp-trial-radio { background: #1A2DC4; border-color: #1A2DC4; box-shadow: inset 0 0 0 4px #fff; }
+
+/* FAQ */
+.hp-faq-row { border-bottom: 1px solid rgba(255,255,255,0.12); }
+.hp-faq-head { display: flex; justify-content: space-between; align-items: center; padding: 28px 0;
+  background: transparent; border: 0; cursor: pointer; color: inherit; text-align: left; width: 100%; font: inherit; }
+.hp-faq-body[hidden] { display: none; }
+
+/* Responsive */
+@media (max-width: 1080px) {
+  .hp-acc-head { grid-template-columns: 60px 1fr 60px; }
+  .hp-acc-head > :nth-child(3), .hp-acc-head > :nth-child(4) { display: none; }
+  .hp-acc-body { grid-template-columns: 1fr; padding-left: 0; }
+  .hp-sch-row { grid-template-columns: 100px 1fr; }
+  .hp-sch-row > :nth-child(n+3) { display: none; }
+}

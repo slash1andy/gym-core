@@ -88,6 +88,15 @@ class MemberControllerTest extends TestCase {
 			}
 		);
 
+		// Stub wc_get_logger so the section builders' catch blocks (which call
+		// wc_get_logger()->warning()) don't fatal in tests. Brain Monkey leaks
+		// function definitions across tests once any test stubs them, so a
+		// section that throws in a later, unrelated test would otherwise crash.
+		$logger = Mockery::mock();
+		$logger->allows( 'warning' );
+		$logger->allows( 'error' );
+		Functions\when( 'wc_get_logger' )->justReturn( $logger );
+
 		$this->ranks       = Mockery::mock( RankStore::class );
 		$this->attendance  = Mockery::mock( AttendanceStore::class );
 		$this->foundations = Mockery::mock( FoundationsClearance::class );
@@ -288,6 +297,110 @@ class MemberControllerTest extends TestCase {
 		$memberships  = $response->get_data()['data']['memberships'];
 
 		$this->assertSame( array(), $memberships );
+	}
+
+	// -------------------------------------------------------------------------
+	// Billing — WC_Payment_Tokens lookup
+	// -------------------------------------------------------------------------
+
+	/**
+	 * Builds a Mockery WC_Subscription preconfigured for the billing-section tests.
+	 *
+	 * Returns a mock that responds to every method MemberController touches in the
+	 * subscription flow (memberships + billing): get_status, get_date for any key,
+	 * get_items, get_total, get_payment_method_title, get_meta.
+	 *
+	 * @param int                $token_id     Token id stored on '_payment_tokens' meta.
+	 * @param \DateTimeImmutable $next_payment Date returned for the 'next_payment' key.
+	 * @return \WC_Subscription&\Mockery\MockInterface
+	 */
+	private function make_billing_subscription( int $token_id, \DateTimeImmutable $next_payment ): \WC_Subscription {
+		$subscription = Mockery::mock( \WC_Subscription::class );
+		$subscription->allows( 'get_status' )->andReturn( 'active' );
+		$subscription->allows( 'get_date' )->andReturnUsing(
+			static function ( string $key ) use ( $next_payment ): mixed {
+				return 'next_payment' === $key ? $next_payment : '';
+			}
+		);
+		$subscription->allows( 'get_items' )->andReturn( array() );
+		$subscription->allows( 'get_payment_method_title' )->andReturn( 'Credit card' );
+		$subscription->allows( 'get_meta' )->with( '_payment_tokens' )->andReturn( $token_id );
+		$subscription->allows( 'get_total' )->andReturn( '99.00' );
+
+		return $subscription;
+	}
+
+	#[TestDox('build_billing_section uses the matching WC_Payment_Token display name when WC_Payment_Tokens is available.')]
+	public function test_billing_uses_token_display_name_when_payment_tokens_class_exists(): void {
+		$user = $this->make_user();
+		$this->stub_successful_dashboard( 42, $user );
+
+		$this->foundations->allows( 'get_status' )->andReturn(
+			array( 'in_foundations' => false, 'cleared' => true )
+		);
+		$this->streaks->allows( 'get_streak' )->andReturn(
+			array( 'current_streak' => 0, 'longest_streak' => 0 )
+		);
+		$this->badges->allows( 'get_user_badges' )->andReturn( array() );
+
+		$next_payment = new \DateTimeImmutable( '2026-06-01T00:00:00Z' );
+		$subscription = $this->make_billing_subscription( 7, $next_payment );
+
+		Functions\when( 'wcs_get_users_subscriptions' )->justReturn( array( $subscription ) );
+
+		\WC_Payment_Tokens::$__customer_tokens = array(
+			42 => array(
+				new \WC_Payment_Token( 3, 'Mastercard ending in 1111' ),
+				new \WC_Payment_Token( 7, 'Visa ending in 4242' ),
+			),
+		);
+
+		try {
+			$request  = $this->make_request();
+			$response = $this->sut->get_dashboard( $request );
+			$billing  = $response->get_data()['data']['billing'];
+
+			$this->assertNotNull( $billing );
+			$this->assertSame( '2026-06-01', $billing['next_payment_date'] );
+			$this->assertSame( '99.00', $billing['next_payment_amount'] );
+			$this->assertSame( 'Visa ending in 4242', $billing['payment_method_summary'] );
+		} finally {
+			\WC_Payment_Tokens::__test_reset();
+		}
+	}
+
+	#[TestDox('build_billing_section falls back to payment method title when no saved token matches the subscription.')]
+	public function test_billing_falls_back_to_payment_method_title_when_no_token_matches(): void {
+		$user = $this->make_user();
+		$this->stub_successful_dashboard( 42, $user );
+
+		$this->foundations->allows( 'get_status' )->andReturn(
+			array( 'in_foundations' => false, 'cleared' => true )
+		);
+		$this->streaks->allows( 'get_streak' )->andReturn(
+			array( 'current_streak' => 0, 'longest_streak' => 0 )
+		);
+		$this->badges->allows( 'get_user_badges' )->andReturn( array() );
+
+		$next_payment = new \DateTimeImmutable( '2026-06-01T00:00:00Z' );
+		$subscription = $this->make_billing_subscription( 999, $next_payment );
+
+		Functions\when( 'wcs_get_users_subscriptions' )->justReturn( array( $subscription ) );
+
+		\WC_Payment_Tokens::$__customer_tokens = array(
+			42 => array( new \WC_Payment_Token( 7, 'Visa ending in 4242' ) ),
+		);
+
+		try {
+			$request  = $this->make_request();
+			$response = $this->sut->get_dashboard( $request );
+			$billing  = $response->get_data()['data']['billing'];
+
+			$this->assertNotNull( $billing );
+			$this->assertSame( 'Credit card', $billing['payment_method_summary'] );
+		} finally {
+			\WC_Payment_Tokens::__test_reset();
+		}
 	}
 
 	// -------------------------------------------------------------------------
