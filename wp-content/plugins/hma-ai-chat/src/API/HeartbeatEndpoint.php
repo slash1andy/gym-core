@@ -314,18 +314,10 @@ class HeartbeatEndpoint {
 	 * @return WP_REST_Response
 	 */
 	private function handle_check_approval_status( $run_id, $agent, $task_id ) {
-		global $wpdb;
-
-		$table = $wpdb->prefix . 'hma_ai_pending_actions';
+		$store = new \HMA_AI_Chat\Data\PendingActionStore();
 
 		// Find the action by run_id.
-		$action = $wpdb->get_row(
-			$wpdb->prepare(
-				"SELECT id, status, action_data FROM $table WHERE run_id = %s ORDER BY created_at DESC LIMIT 1",
-				$run_id
-			),
-			ARRAY_A
-		);
+		$action = $store->get_action_by_run_id( $run_id );
 
 		if ( ! $action ) {
 			return rest_ensure_response(
@@ -337,7 +329,7 @@ class HeartbeatEndpoint {
 			);
 		}
 
-		$action_data = json_decode( $action['action_data'], true );
+		$action_data = $action['action_data'];
 		$response    = array(
 			'status'   => $action['status'],
 			'runId'    => $run_id,
