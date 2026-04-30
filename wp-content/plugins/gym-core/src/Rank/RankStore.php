@@ -41,9 +41,9 @@ class RankStore {
 	 *
 	 * @param int    $user_id User ID.
 	 * @param string $program Program slug (e.g., 'adult-bjj').
-	 * @return object|null Row object with belt, stripes, promoted_at, promoted_by, or null.
+	 * @return \stdClass|null Row object with belt, stripes, promoted_at, promoted_by, or null.
 	 */
-	public function get_rank( int $user_id, string $program ): ?object {
+	public function get_rank( int $user_id, string $program ): ?\stdClass {
 		$cache_key = self::rank_cache_key( $user_id, $program );
 		$cached    = wp_cache_get( $cache_key, self::RANK_CACHE_GROUP );
 
@@ -158,7 +158,7 @@ class RankStore {
 	 * @since 1.2.0
 	 *
 	 * @param int $user_id User ID.
-	 * @return array<int, object> Array of rank row objects.
+	 * @return array<int, \stdClass> Array of rank row objects.
 	 */
 	public function get_all_ranks( int $user_id ): array {
 		global $wpdb;
@@ -317,7 +317,7 @@ class RankStore {
 	 *
 	 * @param int    $user_id User ID.
 	 * @param string $program Optional program slug to filter by.
-	 * @return array<int, object> Array of rank history row objects.
+	 * @return array<int, \stdClass> Array of rank history row objects.
 	 */
 	public function get_history( int $user_id, string $program = '' ): array {
 		global $wpdb;
@@ -350,7 +350,7 @@ class RankStore {
 	 *
 	 * @param string $program   Program slug.
 	 * @param string $belt_slug Belt slug.
-	 * @return array<int, object> Array of rank row objects (includes user_id).
+	 * @return array<int, \stdClass> Array of rank row objects (includes user_id).
 	 */
 	public function get_members_at_belt( string $program, string $belt_slug ): array {
 		global $wpdb;

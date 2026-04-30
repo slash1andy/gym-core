@@ -212,7 +212,7 @@ class OrderController extends BaseController {
 		);
 
 		$data = array();
-		foreach ( $orders as $order ) {
+		foreach ( is_array( $orders ) ? $orders : array() as $order ) {
 			$items = array();
 			foreach ( $order->get_items() as $item ) {
 				$items[] = $item->get_name();
@@ -280,7 +280,7 @@ class OrderController extends BaseController {
 		);
 
 		$payments = array();
-		foreach ( $recent_payments as $order ) {
+		foreach ( is_array( $recent_payments ) ? $recent_payments : array() as $order ) {
 			$payments[] = array(
 				'order_id' => $order->get_id(),
 				'date'     => $order->get_date_created() ? $order->get_date_created()->format( 'Y-m-d' ) : null,
@@ -487,7 +487,7 @@ class OrderController extends BaseController {
 		}
 
 		$days  = (int) $request->get_param( 'days' );
-		$since = gmdate( 'Y-m-d', strtotime( "-{$days} days" ) );
+		$since = gmdate( 'Y-m-d', (int) strtotime( "-{$days} days" ) );
 
 		// Cancelled subscriptions in period.
 		global $wpdb;

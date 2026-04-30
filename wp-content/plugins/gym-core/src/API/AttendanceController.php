@@ -217,7 +217,7 @@ class AttendanceController extends BaseController {
 		$validation = $this->validator->validate( $user_id, $class_id, $location );
 
 		if ( is_wp_error( $validation ) ) {
-			$code   = $validation->get_error_code();
+			$code   = (string) $validation->get_error_code();
 			$status = 'duplicate_checkin' === $code ? 409 : 403;
 			return $this->error_response( $code, $validation->get_error_message(), $status );
 		}

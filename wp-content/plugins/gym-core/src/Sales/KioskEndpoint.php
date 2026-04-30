@@ -269,7 +269,7 @@ final class KioskEndpoint {
 		}
 
 		$order = wc_get_order( $order_id );
-		if ( ! $order || $order->get_order_key() !== $order_key ) {
+		if ( ! $order instanceof \WC_Order || $order->get_order_key() !== $order_key ) {
 			return;
 		}
 

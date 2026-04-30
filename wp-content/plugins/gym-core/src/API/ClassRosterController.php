@@ -157,7 +157,7 @@ class ClassRosterController extends BaseController {
 		$tables = TableManager::get_table_names();
 
 		$weeks = (int) get_option( 'gym_core_briefing_forecast_weeks', self::DEFAULT_FORECAST_WEEKS );
-		$since = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$since = gmdate( 'Y-m-d', (int) strtotime( "-{$weeks} weeks" ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$results = $wpdb->get_results(

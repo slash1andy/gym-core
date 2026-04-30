@@ -294,12 +294,12 @@ class RankController extends BaseController {
 	/**
 	 * Formats a rank record for API response.
 	 *
-	 * @param object $rank    Rank row object.
-	 * @param string $program Program slug.
-	 * @param int    $user_id User ID.
+	 * @param \stdClass $rank    Rank row object.
+	 * @param string    $program Program slug.
+	 * @param int       $user_id User ID.
 	 * @return array<string, mixed>
 	 */
-	private function format_rank( object $rank, string $program, int $user_id ): array {
+	private function format_rank( \stdClass $rank, string $program, int $user_id ): array {
 		$promoter         = $rank->promoted_by ? get_userdata( (int) $rank->promoted_by ) : null;
 		$next_belt        = RankDefinitions::get_next_belt( $program, $rank->belt );
 		$attendance_since = $this->attendance->get_count_since( $user_id, $rank->promoted_at );

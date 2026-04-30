@@ -1,96 +1,90 @@
 # Testing Report: Gym Core v1.0.0
 
-**Date:** 2026-04-03
-**Branch:** fix/testing-gate
+**Date:** 2026-04-30
+**Branch:** chore/gym-core-phpstan-level7
 **PHP Version:** 8.5.4
-**PHPUnit Version:** 10.5.63
+**PHPUnit Version:** 11.5.55
 
 ---
 
 ## Unit Tests
 
 ```
-Tests: 151, Assertions: 409
+Tests: 276, Assertions: 911
 Errors: 0, Failures: 0, Risky: 0
-PHPUnit Deprecations: 2 (non-blocking, PHPUnit 10 API changes)
 ```
 
 **Result: PASS**
 
 ### Test Suites
 
-| Suite | Tests | Status |
-|-------|-------|--------|
-| API/BaseControllerTest | 20 | Pass |
-| API/LocationControllerTest | 17 | Pass |
-| Attendance/AttendanceStoreTest | 10 | Pass |
-| Attendance/CheckInValidatorTest | 12 | Pass |
-| Attendance/FoundationsClearanceTest | 6 | Pass |
-| Attendance/PromotionEligibilityTest | 8 | Pass |
-| Gamification/BadgeDefinitionsTest | 6 | Pass |
-| Gamification/BadgeEngineTest | 12 | Pass |
-| Gamification/StreakTrackerTest | 14 | Pass |
-| Location/ManagerTest | 26 | Pass |
-| Location/OrderLocationTest | 4 | Pass |
-| Location/ProductFilterTest | 6 | Pass |
-| Location/TaxonomyTest | 6 | Pass |
-| Rank/RankDefinitionsTest | 12 | Pass |
-| Rank/RankStoreTest | 8 | Pass |
-
-### Fixes Applied (this branch)
-
-- Fixed WP_Error stub missing `get_error_data()` method (tests/stubs/WP_Error.php)
-- Updated rate limit tests to match array-based transient format (BaseControllerTest)
-- Fixed RankDefinitions test — Black Belt has 10 degrees, not 4 stripes
-- Added Mockery integration trait to resolve risky test warnings (OrderLocationTest, ProductFilterTest)
-- Added explicit assertions for Brain\Monkey behavior-verification tests (TaxonomyTest, ManagerTest)
-- Created patchwork.json for `headers_sent` redefinition in Manager cookie tests
+| Suite | Status |
+|-------|--------|
+| API/AttendanceController | Pass |
+| API/BaseController | Pass |
+| API/BriefingController | Pass |
+| API/ClassScheduleController | Pass |
+| API/CrmControllerCache | Pass |
+| API/FoundationsController | Pass |
+| API/GamificationController | Pass |
+| API/LocationController | Pass |
+| API/MemberController | Pass |
+| API/OrderController | Pass |
+| API/PromotionController | Pass |
+| API/RankController | Pass |
+| API/SMSController | Pass |
+| API/SocialPostManager | Pass |
+| Attendance/AttendanceStoreCache | Pass |
+| Attendance/CheckInValidator | Pass |
+| Attendance/MilestoneTrackerAsync | Pass |
+| Data/TableManager | Pass |
+| Gamification/BadgeDefinitions | Pass |
+| Gamification/BadgeEngine | Pass |
+| Gamification/StreakTracker | Pass |
+| Gamification/TargetedContentBlock | Pass |
+| Location/Manager | Pass |
+| Location/OrderLocation | Pass |
+| Location/ProductFilter | Pass |
+| Location/Taxonomy | Pass |
+| Rank/RankDefinitions | Pass |
+| Rank/RankStoreCache | Pass |
+| Sales/KioskEndpointLocation | Pass |
+| Sales/PricingCalculator | Pass |
+| Sales/ProspectFilter | Pass |
+| Schedule/ScheduleCachePrimer | Pass |
+| SMS/MessageTemplates | Pass |
+| SMS/TwilioClient | Pass |
+| SMS/TwilioClientRetry | Pass |
 
 ---
 
 ## Static Analysis (PHPStan)
 
-**Level:** 6
+**Level:** 7 (bumped from 6)
 **Result: PASS (0 errors)**
 
-Baseline ignores for:
-- Commercial extension stubs (WC Subscriptions, WC Memberships)
-- Integration module excluded (AutomateWoo, Jetpack CRM — no public stubs, runtime-gated)
-- Level 6 iterable type hints on WP/WC return types
-- Defensive `is_wp_error()` checks on statically-proven non-error types
+96 type errors fixed across 20 source files. Patterns addressed:
+
+- `property.nonObject` — added `is_object()` guards on `WP_Query->posts` iteration (the stub types `posts` as `WP_Post[]|int[]`)
+- `property.notFound` — changed `object` parameter types to `\stdClass` in DB-result methods (`RankController`, `AttendanceDashboard`, `UserProfileRank`)
+- `argument.type` — cast `strtotime()` results to `int` before passing to `gmdate()`/`wp_date()`; cast `WP_Error::get_error_code()` to `string`; added `is_array()` guards on `wc_get_orders()`/`wc_get_products()` which can return `stdClass` when paginated
+- `return.type` — tightened `apply_filters()` returns in `BadgeDefinitions::get_all()` and `MessageTemplates::get_all()` with `is_array()` fallback; fixed shape-typed returns in `RankDefinitions::get_promotion_threshold()` and `MemberDashboard::get_active_subscription()`
+- `method.notFound` — narrowed `wc_get_order()` result to `WC_Order` via `instanceof` before calling `get_order_key()` (not available on `WC_Order_Refund`)
+- `foreach.nonIterable` — wrapped `wc_get_orders()` in `is_array()` guards before iterating
+- `assign.propertyType` — coalesced `add_submenu_page()` `string|false` return with `?: ''`
+- `offsetAccess.nonOffsetAccessible` — switched array-style property access (`$rank['belt']`) to object access (`$rank->belt`) for `stdClass` DB results
+- `function.notFound` / WordPress AI Client — added `function_exists('wp_ai_client_prompt')` guard with proper early return; used direct namespace call within `function_exists` branch for `get_preferred_image_models()`
+
+PHPStan config (`phpstan.neon`) updated to `maximumNumberOfProcesses: 1` to avoid OOM crashes from parallel workers loading the WooCommerce stubs.
 
 ---
 
 ## Code Style (PHPCS)
 
 **Standard:** WordPress-Extra (via phpcs.xml.dist)
-**Result:** 319 errors, 326 warnings across 44 files
-**Auto-fixable:** 443 of 645 violations
+**Result:** 0 errors, 1 warning (1 file)
 
-PHPCS is not blocking for release — the majority are formatting/documentation sniff
-violations, not logic errors. Recommend running `vendor/bin/phpcbf` for the 443
-auto-fixable items in a follow-up.
-
----
-
-## JavaScript (ESLint)
-
-**Standard:** @wordpress/eslint-plugin
-**Status:** Configured; 3 JS files (kiosk.js, location-selector.js, admin-promotion.js)
-
----
-
-## Security Audit Summary
-
-| Severity | Count |
-|----------|-------|
-| Critical | 0 |
-| High | 0 |
-| Medium | 0 (all resolved) |
-| Low | 0 (all resolved) |
-
-All 20 finalization tasks from the March 31 audit have been resolved.
-See `finalization-tasks.md` for full details.
+The single warning is a pre-existing `base64_decode()` notice in `src/API/MediaController.php` (line 284) — the function is used legitimately to decode AI-generated image payloads and was present before this branch.
 
 ---
 
@@ -98,10 +92,9 @@ See `finalization-tasks.md` for full details.
 
 | Check | Status |
 |-------|--------|
-| Unit Tests | **PASS** — 151 tests, 409 assertions, 0 failures |
-| PHPStan Level 6 | **PASS** — 0 errors |
-| Security Audit | **PASS** — 0 open findings |
-| PHPCS | **INFO** — 645 sniff violations (non-blocking, mostly auto-fixable) |
+| Unit Tests | **PASS** — 276 tests, 911 assertions, 0 failures |
+| PHPStan Level 7 | **PASS** — 0 errors |
+| PHPCS | **PASS** — 0 errors (1 pre-existing warning, non-blocking) |
 | Testing Report | **PASS** — this document |
 
-**Overall: PASS** — Ready for checkout flow testing (M1.8).
+**Overall: PASS**

@@ -340,10 +340,13 @@ class ClassScheduleController extends BaseController {
 		$schedule = array();
 
 		foreach ( $days as $i => $day_name ) {
-			$date    = gmdate( 'Y-m-d', strtotime( $monday . " +{$i} days" ) );
+			$date    = gmdate( 'Y-m-d', (int) strtotime( $monday . " +{$i} days" ) );
 			$classes = array();
 
 			foreach ( $query->posts as $post ) {
+				if ( ! $post instanceof \WP_Post ) {
+					continue;
+				}
 				$class_day = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
 				if ( $class_day !== $day_name ) {
 					continue;

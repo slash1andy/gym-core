@@ -566,11 +566,12 @@ final class MemberDashboard {
 				$next_payment = $subscription->get_date( 'next_payment' );
 				$total        = $subscription->get_total();
 
+				$ts = $next_payment ? strtotime( $next_payment ) : false;
 				return array(
 					'plan_name'         => $this->get_subscription_product_name( $subscription ),
 					'status'            => $subscription->get_status(),
-					'next_payment_date' => $next_payment
-						? wp_date( get_option( 'date_format' ), strtotime( $next_payment ) )
+					'next_payment_date' => ( $next_payment && false !== $ts )
+						? (string) wp_date( get_option( 'date_format' ), $ts )
 						: '',
 					'amount'            => wp_strip_all_tags( wc_price( (float) $total ) ),
 				);
@@ -639,6 +640,9 @@ final class MemberDashboard {
 		}
 
 		foreach ( $query->posts as $post ) {
+			if ( ! $post instanceof \WP_Post ) {
+				continue;
+			}
 			$day_of_week   = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
 			$start_time    = get_post_meta( $post->ID, '_gym_class_start_time', true );
 			$end_time      = get_post_meta( $post->ID, '_gym_class_end_time', true );

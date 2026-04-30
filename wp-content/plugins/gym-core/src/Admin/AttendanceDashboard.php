@@ -121,7 +121,7 @@ final class AttendanceDashboard {
 			'gym_check_in_member',
 			self::MENU_SLUG,
 			array( $this, 'render_page' )
-		);
+		) ?: '';
 
 		$this->submenu_hook = $this->hook_suffix;
 	}
@@ -581,10 +581,10 @@ final class AttendanceDashboard {
 	/**
 	 * Renders a collapsible per-class section with check-in table.
 	 *
-	 * @param \WP_Post      $class      Class post object.
-	 * @param array<object> $checkins   Check-in records.
-	 * @param string        $start_time Class start time.
-	 * @param string        $end_time   Class end time.
+	 * @param \WP_Post         $class      Class post object.
+	 * @param array<\stdClass> $checkins   Check-in records.
+	 * @param string           $start_time Class start time.
+	 * @param string           $end_time   Class end time.
 	 * @return void
 	 */
 	private function render_class_section( \WP_Post $class, array $checkins, string $start_time, string $end_time ): void {
@@ -617,7 +617,7 @@ final class AttendanceDashboard {
 	/**
 	 * Renders the check-in members table, including Foundations badges.
 	 *
-	 * @param array<object> $checkins Check-in records with display_name.
+	 * @param array<\stdClass> $checkins Check-in records with display_name.
 	 * @return void
 	 */
 	private function render_checkin_table( array $checkins ): void {
@@ -637,7 +637,7 @@ final class AttendanceDashboard {
 		foreach ( $checkins as $record ) {
 			$user_id = (int) $record->user_id;
 			$name    = isset( $record->display_name ) ? $record->display_name : '#' . $user_id;
-			$time    = gmdate( 'g:i A', strtotime( $record->checked_in_at ) );
+			$time    = gmdate( 'g:i A', (int) strtotime( $record->checked_in_at ) );
 			$method  = ucfirst( $record->method );
 
 			echo '<tr>';
@@ -1205,20 +1205,20 @@ class Attendance_List_Table extends \WP_List_Table {
 	/**
 	 * Renders the Member Name column.
 	 *
-	 * @param object $item Row object.
+	 * @param \stdClass $item Row object.
 	 * @return string
 	 */
-	public function column_member_name( object $item ): string {
+	public function column_member_name( \stdClass $item ): string {
 		return esc_html( $item->display_name ?? '#' . $item->user_id );
 	}
 
 	/**
 	 * Renders the Class column.
 	 *
-	 * @param object $item Row object.
+	 * @param \stdClass $item Row object.
 	 * @return string
 	 */
-	public function column_class_name( object $item ): string {
+	public function column_class_name( \stdClass $item ): string {
 		$class_id = (int) $item->class_id;
 		if ( 0 === $class_id ) {
 			return '<em>' . esc_html__( 'Walk-in', 'gym-core' ) . '</em>';
@@ -1230,31 +1230,31 @@ class Attendance_List_Table extends \WP_List_Table {
 	/**
 	 * Renders the Location column.
 	 *
-	 * @param object $item Row object.
+	 * @param \stdClass $item Row object.
 	 * @return string
 	 */
-	public function column_location( object $item ): string {
+	public function column_location( \stdClass $item ): string {
 		return esc_html( ucfirst( $item->location ) );
 	}
 
 	/**
 	 * Renders the Date/Time column.
 	 *
-	 * @param object $item Row object.
+	 * @param \stdClass $item Row object.
 	 * @return string
 	 */
-	public function column_checked_in( object $item ): string {
+	public function column_checked_in( \stdClass $item ): string {
 		$timestamp = strtotime( $item->checked_in_at );
-		return esc_html( gmdate( 'M j, Y g:i A', $timestamp ) );
+		return esc_html( gmdate( 'M j, Y g:i A', (int) $timestamp ) );
 	}
 
 	/**
 	 * Renders the Method column.
 	 *
-	 * @param object $item Row object.
+	 * @param \stdClass $item Row object.
 	 * @return string
 	 */
-	public function column_method( object $item ): string {
+	public function column_method( \stdClass $item ): string {
 		return esc_html( ucfirst( $item->method ) );
 	}
 
