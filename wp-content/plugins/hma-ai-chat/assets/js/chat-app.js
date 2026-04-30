@@ -215,9 +215,10 @@
 			// eslint-disable-next-line no-console -- User-facing error logging.
 			console.error('Error sending message:', error);
 			// wp.apiFetch throws the parsed JSON body for non-2xx responses.
-			const errorDetail = (typeof error === 'object' && error !== null)
-				? (error.message || error.code || JSON.stringify(error))
-				: String(error);
+			const errorDetail =
+				typeof error === 'object' && error !== null
+					? error.message || error.code || JSON.stringify(error)
+					: String(error);
 			addMessage('assistant', '**Error:** ' + errorDetail);
 		}
 
@@ -244,13 +245,17 @@
 		});
 
 		// Render markdown for assistant messages, escape user messages.
-		const rendered = role === 'assistant'
-			? renderMarkdown(content)
-			: escapeHtml(content);
+		const rendered =
+			role === 'assistant'
+				? renderMarkdown(content)
+				: escapeHtml(content);
 
-		const toolCallsHtml = (role === 'assistant' && Array.isArray(toolCalls) && toolCalls.length > 0)
-			? renderToolCalls(toolCalls)
-			: '';
+		const toolCallsHtml =
+			role === 'assistant' &&
+			Array.isArray(toolCalls) &&
+			toolCalls.length > 0
+				? renderToolCalls(toolCalls)
+				: '';
 
 		messageDiv.className = `hma-ai-message ${role}`;
 		messageDiv.innerHTML = `
@@ -270,28 +275,33 @@
 	 * literal input/output that was sent to / received from the tool.
 	 *
 	 * @param {Array} toolCalls List of {name, input, output, is_error, pending}.
-	 * @returns {string} HTML for the tool-call block.
+	 * @return {string} HTML for the tool-call block.
 	 */
 	function renderToolCalls(toolCalls) {
-		const items = toolCalls.map((call) => {
-			const name = escapeHtml(call.name || 'unknown_tool');
-			let badge;
-			let badgeClass;
-			if (call.is_error) {
-				badge = 'error';
-				badgeClass = 'error';
-			} else if (call.pending) {
-				badge = 'queued for approval';
-				badgeClass = 'pending';
-			} else {
-				badge = 'ok';
-				badgeClass = 'ok';
-			}
+		const items = toolCalls
+			.map((call) => {
+				const name = escapeHtml(call.name || 'unknown_tool');
+				let badge;
+				let badgeClass;
+				if (call.is_error) {
+					badge = 'error';
+					badgeClass = 'error';
+				} else if (call.pending) {
+					badge = 'queued for approval';
+					badgeClass = 'pending';
+				} else {
+					badge = 'ok';
+					badgeClass = 'ok';
+				}
 
-			const input = escapeHtml(JSON.stringify(call.input ?? {}, null, 2));
-			const output = escapeHtml(JSON.stringify(call.output ?? null, null, 2));
+				const input = escapeHtml(
+					JSON.stringify(call.input ?? {}, null, 2)
+				);
+				const output = escapeHtml(
+					JSON.stringify(call.output ?? null, null, 2)
+				);
 
-			return `
+				return `
 				<details class="hma-ai-tool-call">
 					<summary>
 						<span class="hma-ai-tool-call-name">${name}</span>
@@ -309,11 +319,13 @@
 					</div>
 				</details>
 			`;
-		}).join('');
+			})
+			.join('');
 
-		const summary = toolCalls.length === 1
-			? '1 tool call'
-			: `${toolCalls.length} tool calls`;
+		const summary =
+			toolCalls.length === 1
+				? '1 tool call'
+				: `${toolCalls.length} tool calls`;
 
 		return `
 			<details class="hma-ai-tool-calls" open>
@@ -336,7 +348,7 @@
 	 */
 	async function loadPendingActions() {
 		// Check if user has permissions to approve actions.
-		if ( ! config.canManageActions ) {
+		if (!config.canManageActions) {
 			return;
 		}
 
@@ -368,7 +380,8 @@
 	 * @return {string} HTML string for the preview block, or empty string.
 	 */
 	function renderActionPreview(action) {
-		const params = (action.action_data && action.action_data.parameters) || {};
+		const params =
+			(action.action_data && action.action_data.parameters) || {};
 		const type = action.action_type;
 
 		let title = '';
@@ -380,7 +393,9 @@
 				title = params.title || '';
 				body = params.content || params.body || '';
 				if (params.type) {
-					let scope = params.type.charAt(0).toUpperCase() + params.type.slice(1);
+					let scope =
+						params.type.charAt(0).toUpperCase() +
+						params.type.slice(1);
 					if (params.target_location) {
 						scope += ` — ${params.target_location}`;
 					}
@@ -414,14 +429,20 @@
 					meta.push({ label: 'To', value: params.phone });
 				}
 				if (params.template_slug) {
-					meta.push({ label: 'Template', value: params.template_slug });
+					meta.push({
+						label: 'Template',
+						value: params.template_slug,
+					});
 				}
 				break;
 
 			case 'add_crm_contact_note':
 				body = params.note || params.content || '';
 				if (params.contact_id) {
-					meta.push({ label: 'Contact', value: '#' + params.contact_id });
+					meta.push({
+						label: 'Contact',
+						value: '#' + params.contact_id,
+					});
 				}
 				break;
 
@@ -545,17 +566,21 @@
 		});
 
 		// Approve with Changes — show textarea.
-		list.querySelectorAll('.hma-ai-action-approve-changes').forEach((btn) => {
-			btn.addEventListener('click', (e) => {
-				const id = e.target.dataset.actionId;
-				hideAllForms(id);
-				const form = document.getElementById(`hma-changes-form-${id}`);
-				if (form) {
-					form.style.display = 'block';
-					form.querySelector('textarea').focus();
-				}
-			});
-		});
+		list.querySelectorAll('.hma-ai-action-approve-changes').forEach(
+			(btn) => {
+				btn.addEventListener('click', (e) => {
+					const id = e.target.dataset.actionId;
+					hideAllForms(id);
+					const form = document.getElementById(
+						`hma-changes-form-${id}`
+					);
+					if (form) {
+						form.style.display = 'block';
+						form.querySelector('textarea').focus();
+					}
+				});
+			}
+		);
 
 		// Reject — show reason textarea.
 		list.querySelectorAll('.hma-ai-action-reject').forEach((btn) => {
@@ -571,21 +596,27 @@
 		});
 
 		// Submit changes.
-		list.querySelectorAll('.hma-ai-action-submit-changes').forEach((btn) => {
-			btn.addEventListener('click', (e) => {
-				const id = e.target.dataset.actionId;
-				const textarea = document.getElementById(`hma-changes-text-${id}`);
-				if (textarea && textarea.value.trim()) {
-					approveWithChanges(id, textarea.value.trim());
-				}
-			});
-		});
+		list.querySelectorAll('.hma-ai-action-submit-changes').forEach(
+			(btn) => {
+				btn.addEventListener('click', (e) => {
+					const id = e.target.dataset.actionId;
+					const textarea = document.getElementById(
+						`hma-changes-text-${id}`
+					);
+					if (textarea && textarea.value.trim()) {
+						approveWithChanges(id, textarea.value.trim());
+					}
+				});
+			}
+		);
 
 		// Submit rejection.
 		list.querySelectorAll('.hma-ai-action-submit-reject').forEach((btn) => {
 			btn.addEventListener('click', (e) => {
 				const id = e.target.dataset.actionId;
-				const textarea = document.getElementById(`hma-reject-text-${id}`);
+				const textarea = document.getElementById(
+					`hma-reject-text-${id}`
+				);
 				rejectAction(id, textarea ? textarea.value.trim() : '');
 			});
 		});
@@ -635,8 +666,12 @@
 	 * @param {string} actionId The action ID.
 	 */
 	function hideAllForms(actionId) {
-		const changesForm = document.getElementById(`hma-changes-form-${actionId}`);
-		const rejectForm = document.getElementById(`hma-reject-form-${actionId}`);
+		const changesForm = document.getElementById(
+			`hma-changes-form-${actionId}`
+		);
+		const rejectForm = document.getElementById(
+			`hma-reject-form-${actionId}`
+		);
 		if (changesForm) {
 			changesForm.style.display = 'none';
 		}
@@ -652,12 +687,16 @@
 	 */
 	async function approveAction(actionId) {
 		try {
-			const response = await wp.apiFetch({
+			await wp.apiFetch({
 				url: config.apiUrl + `actions/${actionId}/approve`,
 				method: 'POST',
 			});
 
-			showActionNotice(actionId, config.strings.actionApproved, 'success');
+			showActionNotice(
+				actionId,
+				config.strings.actionApproved,
+				'success'
+			);
 			loadPendingActions();
 		} catch (error) {
 			// eslint-disable-next-line no-console -- User-facing error logging.
@@ -674,13 +713,17 @@
 	 */
 	async function approveWithChanges(actionId, instructions) {
 		try {
-			const response = await wp.apiFetch({
+			await wp.apiFetch({
 				url: config.apiUrl + `actions/${actionId}/approve-with-changes`,
 				method: 'POST',
 				data: { instructions },
 			});
 
-			showActionNotice(actionId, config.strings.actionApprovedChanges, 'success');
+			showActionNotice(
+				actionId,
+				config.strings.actionApprovedChanges,
+				'success'
+			);
 			loadPendingActions();
 		} catch (error) {
 			// eslint-disable-next-line no-console -- User-facing error logging.
@@ -697,13 +740,17 @@
 	 */
 	async function rejectAction(actionId, reason) {
 		try {
-			const response = await wp.apiFetch({
+			await wp.apiFetch({
 				url: config.apiUrl + `actions/${actionId}/reject`,
 				method: 'POST',
 				data: { reason: reason || '' },
 			});
 
-			showActionNotice(actionId, config.strings.actionRejected, 'success');
+			showActionNotice(
+				actionId,
+				config.strings.actionRejected,
+				'success'
+			);
 			loadPendingActions();
 		} catch (error) {
 			// eslint-disable-next-line no-console -- User-facing error logging.
@@ -832,11 +879,17 @@
 	function renderMarkdown(text) {
 		if (!text) return '';
 
-		var s = escapeHtml(text);
+		let s = escapeHtml(text);
 
 		// Code blocks (``` ... ```)
-		s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function(_, lang, code) {
-			return '<pre><code' + (lang ? ' class="language-' + lang + '"' : '') + '>' + code.trim() + '</code></pre>';
+		s = s.replace(/```(\w*)\n([\s\S]*?)```/g, function (_, lang, code) {
+			return (
+				'<pre><code' +
+				(lang ? ' class="language-' + lang + '"' : '') +
+				'>' +
+				code.trim() +
+				'</code></pre>'
+			);
 		});
 
 		// Inline code (`...`)
@@ -856,23 +909,34 @@
 		s = s.replace(/(?<![\\*\w])\*([^*\n]+?)\*(?!\*)/g, '<em>$1</em>');
 
 		// Unordered lists — consecutive lines starting with - or *
-		s = s.replace(/((?:^[\t ]*[-*] .+$\n?)+)/gm, function(block) {
-			var items = block.trim().split('\n').map(function(line) {
-				return '<li>' + line.replace(/^[\t ]*[-*] /, '') + '</li>';
-			}).join('');
+		s = s.replace(/((?:^[\t ]*[-*] .+$\n?)+)/gm, function (block) {
+			const items = block
+				.trim()
+				.split('\n')
+				.map(function (line) {
+					return '<li>' + line.replace(/^[\t ]*[-*] /, '') + '</li>';
+				})
+				.join('');
 			return '<ul>' + items + '</ul>';
 		});
 
 		// Ordered lists — consecutive lines starting with 1. 2. etc
-		s = s.replace(/((?:^[\t ]*\d+\. .+$\n?)+)/gm, function(block) {
-			var items = block.trim().split('\n').map(function(line) {
-				return '<li>' + line.replace(/^[\t ]*\d+\. /, '') + '</li>';
-			}).join('');
+		s = s.replace(/((?:^[\t ]*\d+\. .+$\n?)+)/gm, function (block) {
+			const items = block
+				.trim()
+				.split('\n')
+				.map(function (line) {
+					return '<li>' + line.replace(/^[\t ]*\d+\. /, '') + '</li>';
+				})
+				.join('');
 			return '<ol>' + items + '</ol>';
 		});
 
 		// Links [text](url)
-		s = s.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+		s = s.replace(
+			/\[([^\]]+)\]\(([^)]+)\)/g,
+			'<a href="$2" target="_blank" rel="noopener">$1</a>'
+		);
 
 		// Paragraphs — double newlines become paragraph breaks
 		s = s.replace(/\n{2,}/g, '</p><p>');
