@@ -116,6 +116,34 @@ final class ContentGating {
 			return false;
 		}
 
+		// TASK-OPT-002: Cache results per user+program for the duration of the request.
+		// Without caching, each call triggers up to 4 wc_memberships_is_user_active_member
+		// queries. Composite key covers both the "any program" and specific-program paths.
+		static $membership_cache = array();
+		$cache_key               = $user_id . '|' . $program;
+		if ( isset( $membership_cache[ $cache_key ] ) ) {
+			return $membership_cache[ $cache_key ];
+		}
+
+		$result = self::resolve_active_membership( $user_id, $program );
+
+		$membership_cache[ $cache_key ] = $result;
+		return $result;
+	}
+
+	/**
+	 * Resolves active membership status without caching.
+	 *
+	 * Internal helper extracted from has_active_membership() so the static
+	 * cache can wrap a single return point. Do not call directly.
+	 *
+	 * @since 3.0.0
+	 *
+	 * @param int    $user_id User ID (guaranteed non-zero by caller).
+	 * @param string $program Optional program slug. Empty = any program.
+	 * @return bool
+	 */
+	private static function resolve_active_membership( int $user_id, string $program ): bool {
 		// Strategy 1: Check WooCommerce Memberships if available.
 		if ( function_exists( 'wc_memberships_is_user_active_member' ) ) {
 			if ( '' === $program ) {
@@ -242,9 +270,17 @@ final class ContentGating {
 			return $purchasable;
 		}
 
-		$user_id       = get_current_user_id();
-		$product_id    = $product->get_id();
-		$subscriptions = wcs_get_users_subscriptions( $user_id );
+		$user_id    = get_current_user_id();
+		$product_id = $product->get_id();
+
+		// TASK-OPT-001: Cache subscriptions per user for the duration of the request.
+		// woocommerce_is_purchasable fires once per product on archive/shop pages, so
+		// without caching this query executes once per product per page load.
+		static $subscriptions_cache = array();
+		if ( ! isset( $subscriptions_cache[ $user_id ] ) ) {
+			$subscriptions_cache[ $user_id ] = wcs_get_users_subscriptions( $user_id );
+		}
+		$subscriptions = $subscriptions_cache[ $user_id ];
 
 		foreach ( $subscriptions as $subscription ) {
 			$status = $subscription->get_status();
