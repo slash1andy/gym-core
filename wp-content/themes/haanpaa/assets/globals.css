@@ -1,0 +1,41 @@
+/* Haanpaa global styles — minimal layer over theme.json tokens */
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-feature-settings: "ss01", "cv11";
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tighter heading wrapping */
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+
+/* Selection */
+::selection { background: var(--wp--preset--color--blue); color: var(--wp--preset--color--paper); }
+
+/* Focus ring — accessibility */
+:focus-visible {
+  outline: 2px solid var(--wp--preset--color--blue);
+  outline-offset: 2px;
+}
+
+/* Reduce default link underline thickness on dark sections */
+.has-paper-color a, .has-text-color.has-paper-color a { color: inherit; }
+
+/* Site header */
+.wp-block-template-part .wp-block-site-title a { text-decoration: none; }
+
+/* Buttons — outline style */
+.wp-block-button.is-style-outline .wp-block-button__link {
+  background: transparent;
+  border-width: 1px;
+}
+
+/* Constrain default container padding */
+.is-layout-constrained > * {
+  max-width: var(--wp--style--global--content-size);
+  margin-left: auto;
+  margin-right: auto;
+}
