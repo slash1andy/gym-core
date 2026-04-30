@@ -240,7 +240,7 @@ class SalesController extends BaseController {
 
 		remove_filter( 'woocommerce_product_is_visible', '__return_true', 999 );
 
-		$data = array_map( array( $this, 'format_sales_product' ), $products );
+		$data = array_map( array( $this, 'format_sales_product' ), is_array( $products ) ? $products : array() );
 
 		return $this->success_response( array_values( $data ) );
 	}
@@ -405,7 +405,7 @@ class SalesController extends BaseController {
 
 		if ( is_wp_error( $result ) ) {
 			return $this->error_response(
-				$result->get_error_code(),
+				(string) $result->get_error_code(),
 				$result->get_error_message(),
 				(int) ( $result->get_error_data()['status'] ?? 500 )
 			);

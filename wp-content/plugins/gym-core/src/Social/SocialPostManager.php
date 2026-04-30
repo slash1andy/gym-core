@@ -281,6 +281,9 @@ class SocialPostManager extends BaseController {
 		$posts = array();
 
 		foreach ( $query->posts as $post ) {
+			if ( ! is_object( $post ) ) {
+				continue;
+			}
 			$posts[] = array(
 				'id'           => $post->ID,
 				'title'        => $post->post_title,

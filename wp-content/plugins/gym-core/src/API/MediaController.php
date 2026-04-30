@@ -189,16 +189,22 @@ class MediaController extends BaseController {
 		}
 
 		$request_options = new $request_options_class();
-		if ( method_exists( $request_options, 'setTimeout' ) ) {
-			$request_options->setTimeout( self::DEFAULT_TIMEOUT );
+		if ( is_object( $request_options ) && method_exists( $request_options, 'setTimeout' ) ) {
+			call_user_func( array( $request_options, 'setTimeout' ), self::DEFAULT_TIMEOUT );
 		}
 
-		$builder = wp_ai_client_prompt( $prompt )
+		// wp_ai_client_prompt and get_preferred_image_models are WordPress AI Client
+		// runtime functions not present in static-analysis stubs.
+		if ( ! function_exists( 'wp_ai_client_prompt' ) ) {
+			return $this->error_response( 'wp_ai_client_unavailable', __( 'WordPress AI Client is not loaded.', 'gym-core' ), 503 );
+		}
+
+		$builder = wp_ai_client_prompt( $prompt ) // phpcs:ignore PHPCompatibility
 			->using_request_options( $request_options )
 			->as_output_file_type( $file_type_enum_class::inline() );
 
 		if ( function_exists( 'WordPress\\AI\\get_preferred_image_models' ) ) {
-			$models = call_user_func( 'WordPress\\AI\\get_preferred_image_models' );
+			$models = \WordPress\AI\get_preferred_image_models();
 			if ( is_array( $models ) && ! empty( $models ) ) {
 				$builder = $builder->using_model_preference( ...$models );
 			}
@@ -209,7 +215,7 @@ class MediaController extends BaseController {
 			$builder = $builder->using_system_instruction( $instruction );
 		}
 
-		if ( method_exists( $builder, 'is_supported_for_image_generation' )
+		if ( is_object( $builder ) && method_exists( $builder, 'is_supported_for_image_generation' )
 			&& ! $builder->is_supported_for_image_generation() ) {
 			return $this->error_response(
 				'unsupported_image_generation',
@@ -259,9 +265,10 @@ class MediaController extends BaseController {
 		}
 
 		try {
+			/** @var object $image_file */
 			$image_file = $result->toImageFile();
-			$base64     = method_exists( $image_file, 'getBase64Data' ) ? (string) $image_file->getBase64Data() : '';
-			$mime       = method_exists( $image_file, 'getMimeType' ) ? (string) $image_file->getMimeType() : 'image/png';
+			$base64     = is_object( $image_file ) && method_exists( $image_file, 'getBase64Data' ) ? (string) $image_file->getBase64Data() : '';
+			$mime       = is_object( $image_file ) && method_exists( $image_file, 'getMimeType' ) ? (string) $image_file->getMimeType() : 'image/png';
 		} catch ( \Throwable $e ) {
 			return $this->error_response( 'image_extract_failed', $e->getMessage(), 502 );
 		}

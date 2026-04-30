@@ -155,18 +155,26 @@ final class RankDefinitions {
 		$all_thresholds = get_option( self::THRESHOLDS_OPTION, array() );
 
 		if ( isset( $all_thresholds[ $program ][ $rank_slug ] ) ) {
-			return wp_parse_args(
+			$parsed = wp_parse_args(
 				$all_thresholds[ $program ][ $rank_slug ],
 				array(
 					'min_days'    => 0,
 					'min_classes' => 0,
 				)
 			);
+			return array(
+				'min_days'    => (int) ( $parsed['min_days'] ?? 0 ),
+				'min_classes' => (int) ( $parsed['min_classes'] ?? 0 ),
+			);
 		}
 
 		$defaults = self::get_default_thresholds();
 		if ( isset( $defaults[ $program ][ $rank_slug ] ) ) {
-			return $defaults[ $program ][ $rank_slug ];
+			$def = $defaults[ $program ][ $rank_slug ];
+			return array(
+				'min_days'    => (int) ( $def['min_days'] ?? 0 ),
+				'min_classes' => (int) ( $def['min_classes'] ?? 0 ),
+			);
 		}
 
 		return array(

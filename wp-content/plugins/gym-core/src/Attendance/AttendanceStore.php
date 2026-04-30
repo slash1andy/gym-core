@@ -161,7 +161,7 @@ class AttendanceStore {
 	 * @param int    $offset  Offset for pagination.
 	 * @param string $from    Optional start date (Y-m-d format).
 	 * @param string $to      Optional end date (Y-m-d format).
-	 * @return array<int, object> Array of attendance row objects.
+	 * @return array<int, \stdClass> Array of attendance row objects.
 	 */
 	public function get_user_history( int $user_id, int $limit = 50, int $offset = 0, string $from = '', string $to = '' ): array {
 		// Validate date format before using in SQL.
@@ -290,7 +290,7 @@ class AttendanceStore {
 	 * @since 1.2.0
 	 *
 	 * @param string $location Location slug.
-	 * @return array<int, object> Array of attendance row objects with user data.
+	 * @return array<int, \stdClass> Array of attendance row objects with user data.
 	 */
 	public function get_today_by_location( string $location ): array {
 		global $wpdb;
@@ -317,7 +317,7 @@ class AttendanceStore {
 	 * @since 1.2.0
 	 *
 	 * @param int $class_id Class post ID.
-	 * @return array<int, object> Array of attendance row objects.
+	 * @return array<int, \stdClass> Array of attendance row objects.
 	 */
 	public function get_today_by_class( int $class_id ): array {
 		global $wpdb;
@@ -345,12 +345,13 @@ class AttendanceStore {
 	 *
 	 * @param int $user_id User ID.
 	 * @param int $weeks   Number of weeks to look back.
-	 * @return array<int, object> Objects with week_start and count.
+	 * @return array<int, \stdClass> Objects with week_start and count.
 	 */
 	public function get_weekly_trend( int $user_id, int $weeks = 12 ): array {
 		global $wpdb;
-		$tables = TableManager::get_table_names();
-		$since  = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$tables     = TableManager::get_table_names();
+		$ts         = strtotime( "-{$weeks} weeks" );
+		$since      = gmdate( 'Y-m-d', false !== $ts ? $ts : 0 );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return $wpdb->get_results(

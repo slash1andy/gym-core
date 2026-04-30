@@ -157,7 +157,7 @@ class ClassRosterController extends BaseController {
 		$tables = TableManager::get_table_names();
 
 		$weeks = (int) get_option( 'gym_core_briefing_forecast_weeks', self::DEFAULT_FORECAST_WEEKS );
-		$since = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$since = gmdate( 'Y-m-d', (int) strtotime( "-{$weeks} weeks" ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$results = $wpdb->get_results(
@@ -216,7 +216,7 @@ class ClassRosterController extends BaseController {
 			if ( $program ) {
 				$rank = $this->ranks->get_rank( $user_id, $program );
 				if ( $rank ) {
-					$rank_label = $rank['belt'] . ( $rank['stripes'] > 0 ? ' (' . $rank['stripes'] . ' stripe' . ( $rank['stripes'] > 1 ? 's' : '' ) . ')' : '' );
+					$rank_label = $rank->belt . ( $rank->stripes > 0 ? ' (' . $rank->stripes . ' stripe' . ( $rank->stripes > 1 ? 's' : '' ) . ')' : '' );
 				}
 
 				$is_foundations = $this->is_foundations_student( $user_id, $program );

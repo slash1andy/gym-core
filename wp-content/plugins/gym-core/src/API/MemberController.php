@@ -406,12 +406,15 @@ class MemberController extends BaseController {
 			// loop below doesn't call get_the_terms() 7 times per class.
 			$program_map = array();
 			foreach ( $query->posts as $post ) {
+				if ( ! $post instanceof \WP_Post ) {
+					continue;
+				}
 				$terms                    = get_the_terms( $post->ID, ClassPostType::PROGRAM_TAXONOMY );
 				$program_map[ $post->ID ] = ( $terms && ! is_wp_error( $terms ) ) ? $terms[0]->slug : null;
 			}
 
 			foreach ( $days as $i => $day_name ) {
-				$date = gmdate( 'Y-m-d', strtotime( $monday . " +{$i} days" ) );
+				$date = gmdate( 'Y-m-d', (int) strtotime( $monday . " +{$i} days" ) );
 
 				// Only include today and future days.
 				if ( $date < $today ) {
@@ -421,6 +424,9 @@ class MemberController extends BaseController {
 				$classes = array();
 
 				foreach ( $query->posts as $post ) {
+					if ( ! $post instanceof \WP_Post ) {
+						continue;
+					}
 					$class_day = get_post_meta( $post->ID, '_gym_class_day_of_week', true );
 					if ( $class_day !== $day_name ) {
 						continue;

@@ -179,12 +179,12 @@ final class UserProfileRank {
 	/**
 	 * Renders a single rank card with belt indicator, stripes, and metadata.
 	 *
-	 * @param object $rank        Rank row object from RankStore.
-	 * @param array  $current_def Belt definition from RankDefinitions.
-	 * @param int    $user_id     The user ID.
+	 * @param \stdClass $rank        Rank row object from RankStore.
+	 * @param array     $current_def Belt definition from RankDefinitions.
+	 * @param int       $user_id     The user ID.
 	 * @return void
 	 */
-	private function render_rank_card( object $rank, array $current_def, int $user_id ): void {
+	private function render_rank_card( \stdClass $rank, array $current_def, int $user_id ): void {
 		$color       = $current_def['color'];
 		$type        = $current_def['type'];
 		$stripes     = (int) $rank->stripes;
@@ -369,7 +369,8 @@ final class UserProfileRank {
 					__( 'Coach #%d', 'gym-core' ),
 					$roll['coach_id']
 				);
-				$roll_date  = wp_date( 'M j, Y', strtotime( $roll['date'] ) );
+				$roll_ts   = strtotime( $roll['date'] );
+				$roll_date = false !== $roll_ts ? (string) wp_date( 'M j, Y', $roll_ts ) : $roll['date'];
 
 				echo '<li>';
 				echo esc_html( $coach_name ) . ' &mdash; ' . esc_html( $roll_date );

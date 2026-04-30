@@ -130,9 +130,10 @@ final class MessageTemplates {
 		 *
 		 * @since 1.3.0
 		 *
-		 * @param array<string, array> $templates Template slug => definition.
+		 * @param array<string, array{name: string, body: string, description: string}> $templates Template slug => definition.
 		 */
-		return apply_filters( 'gym_core_sms_templates', $templates );
+		$filtered = apply_filters( 'gym_core_sms_templates', $templates );
+		return is_array( $filtered ) ? $filtered : $templates;
 	}
 
 	/**

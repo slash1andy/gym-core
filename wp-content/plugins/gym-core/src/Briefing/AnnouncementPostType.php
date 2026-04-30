@@ -388,6 +388,9 @@ class AnnouncementPostType {
 		$announcements = array();
 
 		foreach ( $query->posts as $post ) {
+			if ( ! is_object( $post ) ) {
+				continue;
+			}
 			$ann_type     = get_post_meta( $post->ID, '_gym_announcement_type', true ) ?: 'global';
 			$ann_location = get_post_meta( $post->ID, '_gym_announcement_target_location', true );
 			$ann_program  = get_post_meta( $post->ID, '_gym_announcement_target_program', true );

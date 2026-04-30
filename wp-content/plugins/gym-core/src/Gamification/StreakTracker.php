@@ -130,7 +130,7 @@ class StreakTracker {
 		$previous_week = $weeks[0];
 
 		for ( $i = 1, $count = count( $weeks ); $i < $count; $i++ ) {
-			$expected_next = gmdate( 'Y-m-d', strtotime( $previous_week . ' +7 days' ) );
+			$expected_next = gmdate( 'Y-m-d', (int) strtotime( $previous_week . ' +7 days' ) );
 
 			if ( $weeks[ $i ] === $expected_next ) {
 				// Consecutive week — extend streak.

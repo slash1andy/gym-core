@@ -511,7 +511,7 @@ final class StaffDashboard {
 			)
 		);
 
-		return count( $orders );
+		return count( is_array( $orders ) ? $orders : array() );
 	}
 
 	/**
@@ -546,6 +546,8 @@ final class StaffDashboard {
 			)
 		);
 
-		return $query->posts ?: array();
+		return array_values(
+			array_filter( $query->posts, static fn( $p ) => $p instanceof \WP_Post )
+		);
 	}
 }
