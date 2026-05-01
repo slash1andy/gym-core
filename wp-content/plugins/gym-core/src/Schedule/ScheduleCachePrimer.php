@@ -36,7 +36,9 @@ final class ScheduleCachePrimer {
 			return;
 		}
 
-		$post_ids = wp_list_pluck( $query->posts, 'ID' );
+		/** @var array<\WP_Post|\stdClass> $posts */
+		$posts    = array_filter( $query->posts, static fn( $p ) => is_object( $p ) );
+		$post_ids = wp_list_pluck( $posts, 'ID' );
 		update_meta_cache( 'post', $post_ids );
 		update_object_term_cache( $post_ids, ClassPostType::POST_TYPE );
 
@@ -44,8 +46,8 @@ final class ScheduleCachePrimer {
 			array_unique(
 				array_filter(
 					array_map(
-						static fn( $post ) => (int) get_post_meta( $post->ID, '_gym_class_instructor', true ),
-						$query->posts
+						static fn( object $post ) => (int) get_post_meta( $post->ID, '_gym_class_instructor', true ),
+						$posts
 					)
 				)
 			)

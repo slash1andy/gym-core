@@ -82,6 +82,23 @@ final class Plugin {
 	private ?Gamification\BadgeEngine $badge_engine = null;
 
 	/**
+	 * Twilio SMS client — shared instance so credentials are read only once
+	 * and the same object is injected into both the SMS API controller and
+	 * the PromotionNotifier.
+	 *
+	 * @var SMS\TwilioClient|null
+	 */
+	private ?SMS\TwilioClient $twilio_client = null;
+
+	/**
+	 * SMS opt-out store — shared instance so the same TCPA gate object is
+	 * injected into every dispatch path (SMSController, PromotionNotifier, etc.).
+	 *
+	 * @var SMS\SmsOptOut|null
+	 */
+	private ?SMS\SmsOptOut $sms_opt_out = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -288,12 +305,10 @@ final class Plugin {
 
 				// SMS controller.
 				if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
-					$twilio_client  = new SMS\TwilioClient();
-					$sms_opt_out    = new SMS\SmsOptOut();
-					$sms_controller = new API\SMSController( $twilio_client, $sms_opt_out );
+					$sms_controller = new API\SMSController( $this->get_twilio_client(), $this->get_sms_opt_out() );
 					$sms_controller->register_hooks();
 
-					$inbound_handler = new SMS\InboundHandler( $twilio_client );
+					$inbound_handler = new SMS\InboundHandler( $this->get_twilio_client() );
 					$inbound_handler->register_hooks();
 				}
 
@@ -373,6 +388,50 @@ final class Plugin {
 	}
 
 	/**
+	 * Returns the shared TwilioClient instance, creating it on first call.
+	 *
+	 * Using a single client per request ensures the Twilio credentials are read
+	 * from the database only once, regardless of how many modules consume the
+	 * client (SMS API controller, inbound handler, PromotionNotifier, etc.).
+	 *
+	 * Callers are responsible for checking the `gym_core_sms_enabled` option
+	 * before invoking this method — the getter always returns an instance.
+	 *
+	 * @since 4.1.0
+	 *
+	 * @return SMS\TwilioClient
+	 */
+	private function get_twilio_client(): SMS\TwilioClient {
+		if ( null === $this->twilio_client ) {
+			$this->twilio_client = new SMS\TwilioClient();
+		}
+
+		return $this->twilio_client;
+	}
+
+	/**
+	 * Returns the shared SmsOptOut instance, creating it on first call.
+	 *
+	 * Using a single instance per request ensures the same TCPA opt-out store
+	 * is injected into every dispatch path — SMSController, PromotionNotifier,
+	 * and any future consumer — so the opt-out check is always consistent.
+	 *
+	 * Callers are responsible for checking the `gym_core_sms_enabled` option
+	 * before invoking this method — the getter always returns an instance.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @return SMS\SmsOptOut
+	 */
+	private function get_sms_opt_out(): SMS\SmsOptOut {
+		if ( null === $this->sms_opt_out ) {
+			$this->sms_opt_out = new SMS\SmsOptOut();
+		}
+
+		return $this->sms_opt_out;
+	}
+
+	/**
 	 * Registers the attendance and promotion eligibility modules.
 	 *
 	 * Makes store instances available for dependency injection into
@@ -432,11 +491,9 @@ final class Plugin {
 
 		// SmsOptOut hooks must be registered whenever SMS is enabled so that
 		// STOP/START inbound messages are persisted for the outbound gate.
-		$sms_opt_out = new SMS\SmsOptOut();
-		$sms_opt_out->register_hooks();
+		$this->get_sms_opt_out()->register_hooks();
 
-		$twilio_client      = new SMS\TwilioClient();
-		$promotion_notifier = new Notifications\PromotionNotifier( $twilio_client, $sms_opt_out );
+		$promotion_notifier = new Notifications\PromotionNotifier( $this->get_twilio_client(), $this->get_sms_opt_out() );
 		$promotion_notifier->register_hooks();
 	}
 

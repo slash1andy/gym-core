@@ -148,7 +148,7 @@ final class TargetedContent {
 	 *
 	 * @param int $user_id User ID.
 	 * @return array{
-	 *   ranks: array<int, object>,
+	 *   ranks: array<int, \stdClass>,
 	 *   foundations_status: array,
 	 *   total_classes: int,
 	 *   current_streak: int,
@@ -203,6 +203,7 @@ final class TargetedContent {
 	 * @return string Rendered HTML or empty string.
 	 */
 	public function render_targeted( $atts, ?string $content = null ): string {
+		$atts = is_array( $atts ) ? $atts : array();
 		$atts = shortcode_atts(
 			array(
 				'program'          => '',

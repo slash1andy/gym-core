@@ -173,7 +173,7 @@ class BriefingGenerator {
 
 		$query = new \WP_Query( $args );
 
-		return array_map( 'intval', $query->posts );
+		return array_map( static fn( $p ) => $p instanceof \WP_Post ? $p->ID : (int) $p, $query->posts );
 	}
 
 	/**
@@ -237,7 +237,7 @@ class BriefingGenerator {
 		$tables = TableManager::get_table_names();
 
 		$weeks = (int) get_option( 'gym_core_briefing_forecast_weeks', self::DEFAULT_FORECAST_WEEKS );
-		$since = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$since = gmdate( 'Y-m-d', (int) strtotime( "-{$weeks} weeks" ) );
 
 		// Count how many class instances occurred in the window.
 		// Each distinct date with at least one check-in = one class instance.

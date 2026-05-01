@@ -161,7 +161,7 @@ class AttendanceStore {
 	 * @param int    $offset  Offset for pagination.
 	 * @param string $from    Optional start date (Y-m-d format).
 	 * @param string $to      Optional end date (Y-m-d format).
-	 * @return array<int, object> Array of attendance row objects.
+	 * @return array<int, \stdClass> Array of attendance row objects.
 	 */
 	public function get_user_history( int $user_id, int $limit = 50, int $offset = 0, string $from = '', string $to = '' ): array {
 		// Validate date format before using in SQL.
@@ -290,7 +290,7 @@ class AttendanceStore {
 	 * @since 1.2.0
 	 *
 	 * @param string $location Location slug.
-	 * @return array<int, object> Array of attendance row objects with user data.
+	 * @return array<int, \stdClass> Array of attendance row objects with user data.
 	 */
 	public function get_today_by_location( string $location ): array {
 		global $wpdb;
@@ -312,12 +312,65 @@ class AttendanceStore {
 	}
 
 	/**
+	 * Returns today's attendance for multiple locations in a single query.
+	 *
+	 * Replaces the N-queries-per-location fan-out in AttendanceController::get_today()
+	 * when no specific location is requested. Uses a single WHERE location IN (...)
+	 * query and groups the results by location slug.
+	 *
+	 * @since 2.4.1
+	 *
+	 * @param string[] $locations Location slugs to query.
+	 * @return array<string, array<int, object>> Results keyed by location slug.
+	 *                                           Locations with no check-ins today
+	 *                                           are included as empty arrays.
+	 */
+	public function get_today_all_locations( array $locations ): array {
+		// Normalize and deduplicate; filter out empty strings.
+		$locations = array_values( array_unique( array_filter( $locations ) ) );
+
+		// Pre-fill keyed output so locations with zero check-ins always appear.
+		$grouped = array_fill_keys( $locations, array() );
+
+		if ( empty( $locations ) ) {
+			return $grouped;
+		}
+
+		global $wpdb;
+		$tables = TableManager::get_table_names();
+		$today  = gmdate( 'Y-m-d' );
+
+		$placeholders = implode( ', ', array_fill( 0, count( $locations ), '%s' ) );
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT a.*, u.display_name
+				FROM {$tables['attendance']} a
+				INNER JOIN {$wpdb->users} u ON a.user_id = u.ID
+				WHERE a.location IN ({$placeholders}) AND DATE(a.checked_in_at) = %s
+				ORDER BY a.checked_in_at DESC",
+				array_merge( $locations, array( $today ) )
+			)
+		) ?: array();
+
+		foreach ( $rows as $row ) {
+			$slug = (string) $row->location;
+			if ( array_key_exists( $slug, $grouped ) ) {
+				$grouped[ $slug ][] = $row;
+			}
+		}
+
+		return $grouped;
+	}
+
+	/**
 	 * Returns today's attendance for a specific class.
 	 *
 	 * @since 1.2.0
 	 *
 	 * @param int $class_id Class post ID.
-	 * @return array<int, object> Array of attendance row objects.
+	 * @return array<int, \stdClass> Array of attendance row objects.
 	 */
 	public function get_today_by_class( int $class_id ): array {
 		global $wpdb;
@@ -345,12 +398,13 @@ class AttendanceStore {
 	 *
 	 * @param int $user_id User ID.
 	 * @param int $weeks   Number of weeks to look back.
-	 * @return array<int, object> Objects with week_start and count.
+	 * @return array<int, \stdClass> Objects with week_start and count.
 	 */
 	public function get_weekly_trend( int $user_id, int $weeks = 12 ): array {
 		global $wpdb;
-		$tables = TableManager::get_table_names();
-		$since  = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$tables     = TableManager::get_table_names();
+		$ts         = strtotime( "-{$weeks} weeks" );
+		$since      = gmdate( 'Y-m-d', false !== $ts ? $ts : 0 );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		return $wpdb->get_results(

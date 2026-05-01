@@ -139,9 +139,10 @@ final class BadgeDefinitions {
 		 *
 		 * @since 1.3.0
 		 *
-		 * @param array<string, array> $badges Badge slug => definition.
+		 * @param array<string, array{name: string, description: string, category: string, criteria_summary: string, icon: string}> $badges Badge slug => definition.
 		 */
-		return apply_filters( 'gym_core_badge_definitions', $badges );
+		$filtered = apply_filters( 'gym_core_badge_definitions', $badges );
+		return is_array( $filtered ) ? $filtered : $badges;
 	}
 
 	/**

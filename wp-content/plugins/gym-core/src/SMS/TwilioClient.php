@@ -210,7 +210,7 @@ class TwilioClient {
 	public function record_send( int $contact_id ): void {
 		$rate_limit    = (int) get_option( 'gym_core_sms_rate_limit', 1 );
 		$transient_key = 'gym_sms_rate_' . $contact_id;
-		set_transient( $transient_key, time(), HOUR_IN_SECONDS / max( 1, $rate_limit ) );
+		set_transient( $transient_key, time(), (int) ( HOUR_IN_SECONDS / max( 1, $rate_limit ) ) );
 	}
 
 	/**

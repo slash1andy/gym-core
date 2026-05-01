@@ -217,7 +217,7 @@ class AttendanceController extends BaseController {
 		$validation = $this->validator->validate( $user_id, $class_id, $location );
 
 		if ( is_wp_error( $validation ) ) {
-			$code   = $validation->get_error_code();
+			$code   = (string) $validation->get_error_code();
 			$status = 'duplicate_checkin' === $code ? 409 : 403;
 			return $this->error_response( $code, $validation->get_error_message(), $status );
 		}
@@ -331,7 +331,7 @@ class AttendanceController extends BaseController {
 		} elseif ( $location ) {
 			$records = $this->store->get_today_by_location( $location );
 		} else {
-			// All locations — query gym_location taxonomy dynamically.
+			// All locations — single batched query instead of one query per location.
 			$location_slugs = get_terms(
 				array(
 					'taxonomy'   => 'gym_location',
@@ -340,12 +340,9 @@ class AttendanceController extends BaseController {
 				)
 			);
 
-			$records = array();
-			if ( ! is_wp_error( $location_slugs ) && is_array( $location_slugs ) ) {
-				foreach ( $location_slugs as $slug ) {
-					$records = array_merge( $records, $this->store->get_today_by_location( $slug ) );
-				}
-			}
+			$slugs   = ( ! is_wp_error( $location_slugs ) && is_array( $location_slugs ) ) ? $location_slugs : array();
+			$grouped = $this->store->get_today_all_locations( $slugs );
+			$records = array_merge( ...array_values( $grouped ) );
 		}
 
 		$formatted = array_map(

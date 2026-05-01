@@ -13,6 +13,7 @@ parameters:
         - vendor
         - node_modules (?)
         - assets/build (?)
+        - tests
     treatPhpDocTypesAsCertain: false
 
     bootstrapFiles:

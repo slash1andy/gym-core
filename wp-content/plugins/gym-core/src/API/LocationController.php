@@ -253,6 +253,10 @@ class LocationController extends BaseController {
 			)
 		);
 
+		if ( ! is_object( $result ) ) {
+			return $this->success_response( array(), $this->pagination_meta( 0, 1, $page, $per_page ) );
+		}
+
 		$products = array_map( array( $this, 'format_product' ), $result->products );
 
 		return $this->success_response(

@@ -133,18 +133,15 @@ class BadgeEngine {
 			return;
 		}
 
-		$this->award_badge(
-			$user_id,
-			'belt_promotion',
-			wp_json_encode(
-				array(
-					'program'     => $program,
-					'belt'        => $new_belt,
-					'from'        => $from_belt,
-					'promoted_by' => $promoted_by,
-				)
+		$metadata = wp_json_encode(
+			array(
+				'program'     => $program,
+				'belt'        => $new_belt,
+				'from'        => $from_belt,
+				'promoted_by' => $promoted_by,
 			)
 		);
+		$this->award_badge( $user_id, 'belt_promotion', false !== $metadata ? $metadata : '' );
 	}
 
 	/**
@@ -295,7 +292,7 @@ class BadgeEngine {
 	 * @since 1.3.0
 	 *
 	 * @param int $user_id User ID.
-	 * @return array<int, object> Array of achievement row objects.
+	 * @return array<int, \stdClass> Array of achievement row objects.
 	 */
 	public function get_user_badges( int $user_id ): array {
 		global $wpdb;

@@ -625,18 +625,22 @@ final class FormToCrm {
 	}
 
 	/**
-	 * Returns the number of completed orders for a customer.
+	 * Returns the number of completed orders for a customer, capped at 2.
+	 *
+	 * Only fetches up to 2 order IDs so the caller can distinguish "first
+	 * purchase" (count === 1) from "repeat purchase" (count > 1) without
+	 * loading every historical order into memory.
 	 *
 	 * @since 2.2.0
 	 *
 	 * @param int    $customer_id WP user ID (0 for guests).
 	 * @param string $email       Billing email as fallback for guests.
-	 * @return int Number of completed orders.
+	 * @return int Number of completed orders (maximum value returned is 2).
 	 */
 	private function get_completed_order_count( int $customer_id, string $email ): int {
 		$args = array(
 			'status' => 'completed',
-			'limit'  => -1,
+			'limit'  => 2,
 			'return' => 'ids',
 		);
 

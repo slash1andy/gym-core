@@ -1,30 +1,44 @@
 {
-	"name": "hma/ai-chat",
-	"description": "AI-powered chat interface for Haanpaa Martial Arts staff",
-	"type": "wordpress-plugin",
-	"license": "GPL-2.0-or-later",
-	"authors": [
-		{
-			"name": "Andrew Wikel",
-			"email": "andrew@haanpaa.com"
-		}
-	],
-	"require": {
-		"php": "^8.0"
-	},
-	"require-dev": {
-		"phpstan/phpstan": "^2.0",
-		"phpstan/phpstan-deprecation-rules": "^2.0",
-		"szepeviktor/phpstan-wordpress": "^2.0",
-		"php-stubs/wordpress-stubs": "^6.6"
-	},
-	"autoload": {
-		"psr-4": {
-			"HMA_AI_Chat\\": "src/"
-		}
-	},
-	"scripts": {
-		"analyse": "phpstan analyse --memory-limit=1G",
-		"test": "echo 'No tests defined for hma-ai-chat.'"
-	}
+    "name": "hma/ai-chat",
+    "description": "AI-powered chat interface for Haanpaa Martial Arts staff",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Andrew Wikel",
+            "email": "andrew@haanpaa.com"
+        }
+    ],
+    "require": {
+        "php": "^8.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-deprecation-rules": "^2.0",
+        "szepeviktor/phpstan-wordpress": "^2.0",
+        "php-stubs/wordpress-stubs": "^6.6",
+        "phpunit/phpunit": "^11.0",
+        "brain/monkey": "^2.6",
+        "mockery/mockery": "^1.6",
+        "dg/bypass-finals": "^1.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "HMA_AI_Chat\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "HMA_AI_Chat\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "test": "vendor/bin/phpunit"
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    }
 }

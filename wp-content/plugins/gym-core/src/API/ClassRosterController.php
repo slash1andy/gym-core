@@ -157,7 +157,7 @@ class ClassRosterController extends BaseController {
 		$tables = TableManager::get_table_names();
 
 		$weeks = (int) get_option( 'gym_core_briefing_forecast_weeks', self::DEFAULT_FORECAST_WEEKS );
-		$since = gmdate( 'Y-m-d', strtotime( "-{$weeks} weeks" ) );
+		$since = gmdate( 'Y-m-d', (int) strtotime( "-{$weeks} weeks" ) );
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$results = $wpdb->get_results(
@@ -187,6 +187,11 @@ class ClassRosterController extends BaseController {
 	/**
 	 * Enriches forecasted roster with user details.
 	 *
+	 * Batch-fetches all required data up front to avoid N+1 queries:
+	 *   - cache_users() primes WP user objects and user-meta (covers is_foundations_student).
+	 *   - get_ranks_for_users() fetches all rank rows in one query.
+	 *   - get_last_attended_for_users() fetches the latest check-in per user in one query.
+	 *
 	 * @param array<int, array{user_id: int, attendance_count: int}> $roster  Forecasted roster.
 	 * @param string|null                                            $program Program slug.
 	 * @return array<int, array<string, mixed>>
@@ -197,7 +202,12 @@ class ClassRosterController extends BaseController {
 		}
 
 		$user_ids = array_map( static fn( array $r ) => $r['user_id'], $roster );
+
+		// Prime WP user objects and user-meta cache (covers is_foundations_student calls below).
 		cache_users( $user_ids );
+
+		// Batch-fetch rank rows and last-attended timestamps — one query each.
+		$rank_map          = $program ? $this->ranks->get_ranks_for_users( $user_ids, $program ) : array();
 		$last_attended_map = $this->attendance->get_last_attended_for_users( $user_ids );
 
 		$enriched = array();
@@ -214,9 +224,9 @@ class ClassRosterController extends BaseController {
 			$is_foundations = false;
 
 			if ( $program ) {
-				$rank = $this->ranks->get_rank( $user_id, $program );
+				$rank = $rank_map[ $user_id ] ?? null;
 				if ( $rank ) {
-					$rank_label = $rank['belt'] . ( $rank['stripes'] > 0 ? ' (' . $rank['stripes'] . ' stripe' . ( $rank['stripes'] > 1 ? 's' : '' ) . ')' : '' );
+					$rank_label = $rank->belt . ( $rank->stripes > 0 ? ' (' . $rank->stripes . ' stripe' . ( $rank->stripes > 1 ? 's' : '' ) . ')' : '' );
 				}
 
 				$is_foundations = $this->is_foundations_student( $user_id, $program );

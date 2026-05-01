@@ -423,7 +423,7 @@ final class ImportCommand {
 					)
 				);
 			} else {
-				$username = sanitize_user( $row['username'] ?? strstr( $email, '@', true ), true );
+				$username = sanitize_user( (string) ( $row['username'] ?? strstr( $email, '@', true ) ), true );
 
 				// Ensure unique username.
 				if ( username_exists( $username ) ) {
@@ -624,20 +624,22 @@ final class ImportCommand {
 			\WP_CLI::error( "File not found: {$file}" );
 		}
 
-		$handle = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
-		if ( false === $handle ) {
+		$fp = fopen( $file, 'r' ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen
+		if ( false === $fp ) {
 			\WP_CLI::error( "Cannot open file: {$file}" );
+			return array(); // Unreachable; WP_CLI::error() halts execution.
 		}
+		$handle = $fp;
 
-		$headers = fgetcsv( $handle );
-		if ( false === $headers ) {
+		$raw_headers = fgetcsv( $handle );
+		if ( false === $raw_headers ) {
 			fclose( $handle ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose
 			\WP_CLI::error( 'CSV file is empty or has no header row.' );
+			return array(); // Unreachable; WP_CLI::error() halts execution.
 		}
 
 		// Normalize header names.
-		$headers = array_map( 'trim', $headers );
-		$headers = array_map( 'strtolower', $headers );
+		$headers = array_map( static fn( ?string $h ) => strtolower( trim( (string) $h ) ), $raw_headers );
 
 		$rows = array();
 		while ( ( $data = fgetcsv( $handle ) ) !== false ) { // phpcs:ignore WordPress.CodeAnalysis.AssignmentInCondition
