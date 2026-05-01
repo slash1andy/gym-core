@@ -6,12 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'SzepeViktor\\PHPStan\\WordPress\\' => array($vendorDir . '/szepeviktor/phpstan-wordpress/src'),
-    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
-    'PHPStan\\' => array($vendorDir . '/phpstan/phpstan-deprecation-rules/src'),
-    'Mockery\\' => array($vendorDir . '/mockery/mockery/library/Mockery'),
-    'HMA_AI_Chat\\Tests\\' => array($baseDir . '/tests'),
     'HMA_AI_Chat\\' => array($baseDir . '/src'),
-    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
-    'Brain\\Monkey\\' => array($vendorDir . '/brain/monkey/src'),
 );
