@@ -63,6 +63,21 @@ class WebhookValidator {
 	const IP_ALLOWLIST_ENFORCE_KEY = 'hma_ai_chat_ip_allowlist_enforce';
 
 	/**
+	 * Expected header name for HMAC signatures.
+	 *
+	 * @since 0.4.2
+	 */
+	const SIGNATURE_HEADER = 'X-HMA-Signature';
+
+	/**
+	 * Tolerance window in seconds for HMAC timestamp validation.
+	 * Prevents replay attacks: requests older than 5 minutes are rejected.
+	 *
+	 * @since 0.4.2
+	 */
+	const TIMESTAMP_TOLERANCE = 300;
+
+	/**
 	 * Validate incoming webhook request.
 	 *
 	 * Accepts the current secret, and during a rotation grace period,
@@ -102,6 +117,75 @@ class WebhookValidator {
 			$previous_secret = get_option( self::PREVIOUS_SECRET_KEY, '' );
 			if ( ! empty( $previous_secret ) && hash_equals( $previous_secret, $provided_token ) ) {
 				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Validate HMAC-over-body signature from the X-HMA-Signature header.
+	 *
+	 * Stronger than Bearer: the signature covers the request timestamp and
+	 * the raw body, so a captured request cannot be replayed after the
+	 * 5-minute timestamp tolerance window.
+	 *
+	 * Header format: `X-HMA-Signature: t=<unix_ts>,v1=<hmac_sha256_hex>`
+	 * Signed payload: `"t={ts}\n{raw_body}"`
+	 *
+	 * @since 0.4.2
+	 *
+	 * @param string $raw_body   Raw request body string.
+	 * @param string $sig_header Value of the X-HMA-Signature header.
+	 * @return bool True when signature is valid and timestamp is fresh.
+	 */
+	public function validate_hmac_signature( string $raw_body, string $sig_header ): bool {
+		if ( empty( $sig_header ) ) {
+			return false;
+		}
+
+		$secret = $this->get_secret();
+		if ( empty( $secret ) ) {
+			return false;
+		}
+
+		// Parse "t={ts},v1={hmac}" into key-value pairs.
+		$parsed = array();
+		foreach ( explode( ',', $sig_header ) as $token ) {
+			$parts = explode( '=', $token, 2 );
+			if ( 2 === count( $parts ) ) {
+				$parsed[ trim( $parts[0] ) ] = trim( $parts[1] );
+			}
+		}
+
+		$ts           = $parsed['t'] ?? '';
+		$provided_hmac = $parsed['v1'] ?? '';
+
+		if ( '' === $ts || '' === $provided_hmac || ! ctype_digit( $ts ) ) {
+			return false;
+		}
+
+		// Reject stale requests outside the tolerance window.
+		if ( abs( time() - (int) $ts ) > self::TIMESTAMP_TOLERANCE ) {
+			return false;
+		}
+
+		$signed_payload = "t={$ts}\n{$raw_body}";
+
+		// Check current secret.
+		$expected = hash_hmac( 'sha256', $signed_payload, $secret );
+		if ( hash_equals( $expected, $provided_hmac ) ) {
+			return true;
+		}
+
+		// During rotation grace period, also accept the previous secret.
+		if ( $this->is_in_rotation_grace_period() ) {
+			$previous_secret = get_option( self::PREVIOUS_SECRET_KEY, '' );
+			if ( ! empty( $previous_secret ) ) {
+				$expected_prev = hash_hmac( 'sha256', $signed_payload, $previous_secret );
+				if ( hash_equals( $expected_prev, $provided_hmac ) ) {
+					return true;
+				}
 			}
 		}
 

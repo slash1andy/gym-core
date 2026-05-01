@@ -62,14 +62,26 @@ class HeartbeatEndpoint {
 			);
 		}
 
-		// Check webhook signature.
-		$auth_header = $request->get_header( 'Authorization' );
-		if ( ! $validator->validate_request( $auth_header ) ) {
-			return new WP_Error(
-				'invalid_signature',
-				esc_html__( 'Invalid webhook signature.', 'hma-ai-chat' ),
-				array( 'status' => 401 )
-			);
+		// Check webhook signature — prefer HMAC-over-body, fall back to Bearer.
+		$sig_header = $request->get_header( 'x-hma-signature' );
+
+		if ( ! empty( $sig_header ) ) {
+			if ( ! $validator->validate_hmac_signature( $request->get_body(), $sig_header ) ) {
+				return new WP_Error(
+					'invalid_signature',
+					esc_html__( 'Invalid webhook signature.', 'hma-ai-chat' ),
+					array( 'status' => 401 )
+				);
+			}
+		} else {
+			$auth_header = $request->get_header( 'Authorization' );
+			if ( ! $validator->validate_request( $auth_header ) ) {
+				return new WP_Error(
+					'invalid_signature',
+					esc_html__( 'Invalid webhook signature.', 'hma-ai-chat' ),
+					array( 'status' => 401 )
+				);
+			}
 		}
 
 		return true;
