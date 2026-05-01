@@ -10,12 +10,26 @@
 
 // Map gym_program term slugs to dot/color identifiers used by the Interactivity API store.
 $slug_to_id = [
-	'bjj'        => 'bjj',
-	'muay-thai'  => 'kick',
-	'muay_thai'  => 'kick',
-	'kickboxing' => 'kick',
-	'kids'       => 'kids',
+	'bjj'            => 'bjj',
+	'adult-bjj'      => 'bjj',
+	'muay-thai'      => 'kick',
+	'muay_thai'      => 'kick',
+	'kickboxing'     => 'kick',
+	'kids'           => 'kids',
+	'kids-bjj'       => 'kids',
 	'kids-jiu-jitsu' => 'kids',
+];
+
+// Map slugs to display names so slug-style term names in the DB render as proper titles.
+$slug_to_name = [
+	'bjj'            => 'Brazilian Jiu-Jitsu',
+	'adult-bjj'      => 'Brazilian Jiu-Jitsu',
+	'kickboxing'     => 'Kickboxing',
+	'muay-thai'      => 'Kickboxing',
+	'muay_thai'      => 'Kickboxing',
+	'kids'           => 'Kids Jiu-Jitsu',
+	'kids-bjj'       => 'Kids Jiu-Jitsu',
+	'kids-jiu-jitsu' => 'Kids Jiu-Jitsu',
 ];
 
 $rows = [];
@@ -45,7 +59,7 @@ if ( taxonomy_exists( 'gym_program' ) ) {
 			$rows[] = [
 				'id'       => $id,
 				'num'      => sprintf( '%02d', $i + 1 ),
-				'name'     => $term->name,
+				'name'     => $slug_to_name[ $term->slug ] ?? $term->name,
 				'desc'     => wp_strip_all_tags( $term->description ),
 				'long'     => $term->description ?: 'Details coming soon.',
 				'sessions' => $class_count ? $class_count . ' / week' : '',
@@ -60,8 +74,8 @@ if ( taxonomy_exists( 'gym_program' ) ) {
 if ( empty( $rows ) ) {
 	$rows = [
 		[ 'id' => 'bjj',  'num' => '01', 'name' => 'Brazilian Jiu-Jitsu',  'desc' => 'Pedro Sauer / Royler Gracie lineage. Gi &amp; no-gi.',         'long' => 'The art of submission grappling. We coach the IBJJF curriculum with a fundamentals-first ethos — drilling positions, escapes, and the small-game details that win matches. Beginners get their own dedicated track.', 'sessions' => '', 'open' => true,  'link' => '#' ],
-		[ 'id' => 'kick', 'num' => '02', 'name' => 'Muay Thai Kickboxing', 'desc' => 'Striking, conditioning, sparring on Fridays.',                   'long' => 'Stand-up striking with shins, knees, elbows, and clinch. Optional sparring twice a week. Fitness kickboxing track for students who want the work without the hits.', 'sessions' => '', 'open' => false, 'link' => '#' ],
-		[ 'id' => 'kids', 'num' => '03', 'name' => 'Kids Jiu-Jitsu (5–13)','desc' => 'Anti-bullying curriculum, character development.',               'long' => 'Confidence, discipline, and real grappling skill — without aggression. Two age groups (5–8 and 9–13) keep classes paced and safe.', 'sessions' => '', 'open' => false, 'link' => '#' ],
+		[ 'id' => 'kick', 'num' => '02', 'name' => 'Kickboxing',           'desc' => 'Striking, conditioning, sparring on Fridays.',                   'long' => 'Stand-up striking with shins, knees, elbows, and clinch. Optional sparring twice a week. Fitness kickboxing track for students who want the work without the hits.', 'sessions' => '', 'open' => false, 'link' => '#' ],
+		[ 'id' => 'kids', 'num' => '03', 'name' => 'Kids Jiu-Jitsu',      'desc' => 'Anti-bullying curriculum, character development.',               'long' => 'Confidence, discipline, and real grappling skill — without aggression. Two age groups (5–8 and 9–13) keep classes paced and safe.', 'sessions' => '', 'open' => false, 'link' => '#' ],
 	];
 }
 ?>
@@ -78,7 +92,7 @@ if ( empty( $rows ) ) {
     <!-- wp:column {"width":"70%"} -->
     <div class="wp-block-column" style="flex-basis:70%">
       <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
-      <h2 class="wp-block-heading" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Three programs. One floor. No ego.</h2>
+      <h2 class="wp-block-heading" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Three Programs. One Mat. No Ego.</h2>
       <!-- /wp:heading -->
     </div>
     <!-- /wp:column -->
