@@ -807,3 +807,10 @@
 	max-height: 240px;
 	overflow: auto;
 }
+
+@media (prefers-reduced-motion: reduce) {
+	.hma-ai-typing-dot,
+	.hma-ai-action-notice {
+		animation: none !important;
+	}
+}
