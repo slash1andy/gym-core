@@ -58,7 +58,7 @@ Tags: block-theme, full-site-editing, one-column, custom-colors, custom-menu, ed
 .site-header {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(10, 10, 10, 0.08);
 }
 
 /* ---------- Hero overlay gradient ---------- */

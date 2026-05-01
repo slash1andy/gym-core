@@ -364,8 +364,13 @@ class ClaudeClient {
 				__( 'Failed to encode request body for Claude API.', 'hma-ai-chat' )
 			);
 		}
+		// Scale timeout to PHP's execution budget so the HTTP call can't
+		// outlast the process. Unlimited execution (0) keeps the 60s cap.
+		$max_exec = (int) ini_get( 'max_execution_time' );
+		$timeout  = 0 === $max_exec ? 60 : max( 10, min( 60, $max_exec - 10 ) );
+
 		$args = array(
-			'timeout' => 60,
+			'timeout' => $timeout,
 			'headers' => array(
 				'Content-Type'      => 'application/json',
 				'x-api-key'         => $api_key,

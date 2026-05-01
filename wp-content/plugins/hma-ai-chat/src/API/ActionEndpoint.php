@@ -269,10 +269,16 @@ class ActionEndpoint {
 		}
 
 		// Fall back to webhook signature validation for Paperclip.
-		$validator   = new \HMA_AI_Chat\Security\WebhookValidator();
-		$auth_header = $request->get_header( 'Authorization' );
+		$validator  = new \HMA_AI_Chat\Security\WebhookValidator();
+		$sig_header = $request->get_header( 'x-hma-signature' );
 
-		if ( $validator->validate_request( $auth_header ) && $validator->validate_ip() ) {
+		if ( ! empty( $sig_header ) ) {
+			// Prefer HMAC-over-body when the stronger header is present — not replayable.
+			if ( $validator->validate_hmac_signature( $request->get_body(), $sig_header ) && $validator->validate_ip() ) {
+				return true;
+			}
+		} elseif ( $validator->validate_request( $request->get_header( 'Authorization' ) ) && $validator->validate_ip() ) {
+			// Bearer token fallback for backward compatibility.
 			return true;
 		}
 

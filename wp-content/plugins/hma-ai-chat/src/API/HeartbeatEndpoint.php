@@ -62,14 +62,26 @@ class HeartbeatEndpoint {
 			);
 		}
 
-		// Check webhook signature.
-		$auth_header = $request->get_header( 'Authorization' );
-		if ( ! $validator->validate_request( $auth_header ) ) {
-			return new WP_Error(
-				'invalid_signature',
-				esc_html__( 'Invalid webhook signature.', 'hma-ai-chat' ),
-				array( 'status' => 401 )
-			);
+		// Check webhook signature — prefer HMAC-over-body, fall back to Bearer.
+		$sig_header = $request->get_header( 'x-hma-signature' );
+
+		if ( ! empty( $sig_header ) ) {
+			if ( ! $validator->validate_hmac_signature( $request->get_body(), $sig_header ) ) {
+				return new WP_Error(
+					'invalid_signature',
+					esc_html__( 'Invalid webhook signature.', 'hma-ai-chat' ),
+					array( 'status' => 401 )
+				);
+			}
+		} else {
+			$auth_header = $request->get_header( 'Authorization' );
+			if ( ! $validator->validate_request( $auth_header ) ) {
+				return new WP_Error(
+					'invalid_signature',
+					esc_html__( 'Invalid webhook signature.', 'hma-ai-chat' ),
+					array( 'status' => 401 )
+				);
+			}
 		}
 
 		return true;
@@ -121,7 +133,7 @@ class HeartbeatEndpoint {
 					return $this->handle_revised_action_complete( $run_id, $agent, $task_id, $request );
 
 				case 'check_approval_status':
-					return $this->handle_check_approval_status( $run_id, $agent, $task_id );
+					return $this->handle_check_approval_status( $run_id, $agent, $task_id, absint( $request->get_param( 'actionId' ) ?? 0 ) );
 
 				default:
 					return rest_ensure_response(
@@ -306,18 +318,27 @@ class HeartbeatEndpoint {
 	 * Paperclip polls this after submitting an approval request to find out
 	 * whether staff approved, approved with changes, or rejected.
 	 *
+	 * When Paperclip supplies the actionId returned from the first poll it
+	 * queries by primary key, eliminating the race condition in
+	 * get_action_by_run_id() where two actions sharing a run_id caused the
+	 * older one to be silently stranded.
+	 *
 	 * @since 0.1.0
 	 *
-	 * @param string                            $run_id  The run ID.
-	 * @param \HMA_AI_Chat\Agents\AgentPersona $agent   The agent object.
-	 * @param string                            $task_id The task ID.
+	 * @param string                            $run_id         The run ID.
+	 * @param \HMA_AI_Chat\Agents\AgentPersona $agent          The agent object.
+	 * @param string                            $task_id        The task ID.
+	 * @param int                               $action_id_hint Optional action ID from a prior poll response.
 	 * @return WP_REST_Response
 	 */
-	private function handle_check_approval_status( $run_id, $agent, $task_id ) {
+	private function handle_check_approval_status( $run_id, $agent, $task_id, int $action_id_hint = 0 ) {
 		$store = new \HMA_AI_Chat\Data\PendingActionStore();
 
-		// Find the action by run_id.
-		$action = $store->get_action_by_run_id( $run_id );
+		// Prefer primary-key lookup when Paperclip supplies the actionId from
+		// a previous poll — eliminates the ORDER BY created_at DESC race.
+		$action = $action_id_hint > 0
+			? $store->get_action( $action_id_hint )
+			: $store->get_action_by_run_id( $run_id );
 
 		if ( ! $action ) {
 			return rest_ensure_response(
@@ -380,6 +401,14 @@ class HeartbeatEndpoint {
 				'type'              => 'string',
 				'required'          => false,
 				'sanitize_callback' => 'sanitize_text_field',
+				'validate_callback' => 'rest_validate_request_arg',
+			),
+			// Returned in check_approval_status responses so Paperclip can pass it
+			// back on subsequent polls for a primary-key lookup (eliminates race).
+			'actionId'   => array(
+				'type'              => 'integer',
+				'required'          => false,
+				'sanitize_callback' => 'absint',
 				'validate_callback' => 'rest_validate_request_arg',
 			),
 		);
