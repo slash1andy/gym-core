@@ -137,108 +137,108 @@ class GymContextProvider {
 			return '';
 		}
 
-		$user = get_userdata( $user_id );
-		if ( ! $user ) {
-			return '';
-		}
+		return $this->cached_dispatch( "member_{$user_id}", function () use ( $user_id ): string {
+			$user = get_userdata( $user_id );
+			if ( ! $user ) {
+				return '';
+			}
 
-		$lines   = array();
-		$lines[] = '## Member Context';
-		$lines[] = sprintf( 'Name: %s', esc_html( $user->display_name ) );
+			$lines   = array();
+			$lines[] = '## Member Context';
+			$lines[] = sprintf( 'Name: %s', esc_html( $user->display_name ) );
 
-		// Active memberships via WooCommerce Subscriptions.
-		$subscriptions = $this->rest_get( '/wc/v3/subscriptions', array(
-			'customer' => $user_id,
-			'status'   => 'active',
-			'per_page' => 10,
-		) );
+			// Active memberships via WooCommerce Subscriptions.
+			$subscriptions = $this->rest_get( '/wc/v3/subscriptions', array(
+				'customer' => $user_id,
+				'status'   => 'active',
+				'per_page' => 10,
+			) );
 
-		if ( is_array( $subscriptions ) && ! empty( $subscriptions ) ) {
-			$plans = array();
-			foreach ( $subscriptions as $sub ) {
-				if ( isset( $sub['line_items'] ) ) {
-					foreach ( $sub['line_items'] as $item ) {
-						$plans[] = $item['name'] ?? 'Unknown plan';
+			if ( is_array( $subscriptions ) && ! empty( $subscriptions ) ) {
+				$plans = array();
+				foreach ( $subscriptions as $sub ) {
+					if ( isset( $sub['line_items'] ) ) {
+						foreach ( $sub['line_items'] as $item ) {
+							$plans[] = $item['name'] ?? 'Unknown plan';
+						}
+					}
+				}
+				if ( ! empty( $plans ) ) {
+					$lines[] = sprintf( 'Active Memberships: %s', implode( ', ', $plans ) );
+				}
+			} else {
+				$lines[] = 'Active Memberships: None';
+			}
+
+			// Location from user meta.
+			$location = get_user_meta( $user_id, 'gym_location', true );
+			if ( $location ) {
+				$lines[] = sprintf( 'Home Location: %s', esc_html( ucfirst( $location ) ) );
+			}
+
+			// Rank per program.
+			$rank_data = $this->rest_get( '/gym/v1/members/' . $user_id . '/rank' );
+			if ( is_array( $rank_data ) ) {
+				if ( isset( $rank_data['program'] ) ) {
+					$lines[] = sprintf(
+						'Rank: %s (%s)',
+						$rank_data['rank_label'] ?? $rank_data['rank'] ?? 'Unknown',
+						$rank_data['program'] ?? 'Unknown'
+					);
+				} elseif ( ! empty( $rank_data ) ) {
+					$rank_parts = array();
+					foreach ( $rank_data as $rank ) {
+						if ( isset( $rank['program'], $rank['rank_label'] ) ) {
+							$rank_parts[] = sprintf( '%s: %s', ucfirst( $rank['program'] ), $rank['rank_label'] );
+						}
+					}
+					if ( ! empty( $rank_parts ) ) {
+						$lines[] = sprintf( 'Ranks: %s', implode( ', ', $rank_parts ) );
 					}
 				}
 			}
-			if ( ! empty( $plans ) ) {
-				$lines[] = sprintf( 'Active Memberships: %s', implode( ', ', $plans ) );
+
+			// Foundations status.
+			$foundations = $this->rest_get( '/gym/v1/foundations/' . $user_id );
+			if ( is_array( $foundations ) && ! empty( $foundations ) ) {
+				$status  = $foundations['status'] ?? 'unknown';
+				$rolls   = $foundations['coach_roll_count'] ?? 0;
+				$lines[] = sprintf( 'Foundations: %s (coach rolls: %d)', ucfirst( $status ), $rolls );
 			}
-		} else {
-			$lines[] = 'Active Memberships: None';
-		}
 
-		// Location from user meta.
-		$location = get_user_meta( $user_id, 'gym_location', true );
-		if ( $location ) {
-			$lines[] = sprintf( 'Home Location: %s', esc_html( ucfirst( $location ) ) );
-		}
+			// Attendance stats + last check-in (single request).
+			$attendance = $this->rest_get( '/gym/v1/attendance/' . $user_id, array(
+				'per_page' => 1,
+				'page'     => 1,
+			) );
 
-		// Rank per program.
-		$rank_data = $this->rest_get( '/gym/v1/members/' . $user_id . '/rank' );
-		if ( is_array( $rank_data ) ) {
-			if ( isset( $rank_data['program'] ) ) {
-				// Single program response.
-				$lines[] = sprintf(
-					'Rank: %s (%s)',
-					$rank_data['rank_label'] ?? $rank_data['rank'] ?? 'Unknown',
-					$rank_data['program'] ?? 'Unknown'
-				);
-			} elseif ( ! empty( $rank_data ) ) {
-				// Multiple programs.
-				$rank_parts = array();
-				foreach ( $rank_data as $rank ) {
-					if ( isset( $rank['program'], $rank['rank_label'] ) ) {
-						$rank_parts[] = sprintf( '%s: %s', ucfirst( $rank['program'] ), $rank['rank_label'] );
-					}
-				}
-				if ( ! empty( $rank_parts ) ) {
-					$lines[] = sprintf( 'Ranks: %s', implode( ', ', $rank_parts ) );
+			if ( is_array( $attendance ) && ! empty( $attendance ) ) {
+				$last = reset( $attendance );
+				if ( isset( $last['checked_in_at'] ) ) {
+					$lines[] = sprintf( 'Last Check-in: %s', $last['checked_in_at'] );
 				}
 			}
-		}
 
-		// Foundations status.
-		$foundations = $this->rest_get( '/gym/v1/foundations/' . $user_id );
-		if ( is_array( $foundations ) && ! empty( $foundations ) ) {
-			$status = $foundations['status'] ?? 'unknown';
-			$rolls  = $foundations['coach_roll_count'] ?? 0;
-			$lines[] = sprintf( 'Foundations: %s (coach rolls: %d)', ucfirst( $status ), $rolls );
-		}
-
-		// Attendance stats + last check-in (single request).
-		$attendance = $this->rest_get( '/gym/v1/attendance/' . $user_id, array(
-			'per_page' => 1,
-			'page'     => 1,
-		) );
-
-		if ( is_array( $attendance ) && ! empty( $attendance ) ) {
-			$last = reset( $attendance );
-			if ( isset( $last['checked_in_at'] ) ) {
-				$lines[] = sprintf( 'Last Check-in: %s', $last['checked_in_at'] );
+			// Streak.
+			$streak = $this->rest_get( '/gym/v1/members/' . $user_id . '/streak' );
+			if ( is_array( $streak ) ) {
+				$current = $streak['current_streak'] ?? $streak['current'] ?? 0;
+				$longest = $streak['longest_streak'] ?? $streak['longest'] ?? 0;
+				$lines[] = sprintf( 'Streak: %d weeks current, %d weeks longest', $current, $longest );
 			}
-		}
 
-		// Streak.
-		$streak = $this->rest_get( '/gym/v1/members/' . $user_id . '/streak' );
-		if ( is_array( $streak ) ) {
-			$current = $streak['current_streak'] ?? $streak['current'] ?? 0;
-			$longest = $streak['longest_streak'] ?? $streak['longest'] ?? 0;
-			$lines[] = sprintf( 'Streak: %d weeks current, %d weeks longest', $current, $longest );
-		}
-
-		// Badges.
-		$badges = $this->rest_get( '/gym/v1/members/' . $user_id . '/badges' );
-		if ( is_array( $badges ) && ! empty( $badges ) ) {
-			$badge_names = array();
-			foreach ( $badges as $badge ) {
-				$badge_names[] = $badge['name'] ?? $badge['badge_name'] ?? 'Badge';
+			// Badges.
+			$badges = $this->rest_get( '/gym/v1/members/' . $user_id . '/badges' );
+			if ( is_array( $badges ) && ! empty( $badges ) ) {
+				$badge_names = array();
+				foreach ( $badges as $badge ) {
+					$badge_names[] = $badge['name'] ?? $badge['badge_name'] ?? 'Badge';
+				}
+				$lines[] = sprintf( 'Badges: %s', implode( ', ', $badge_names ) );
 			}
-			$lines[] = sprintf( 'Badges: %s', implode( ', ', $badge_names ) );
-		}
 
-		return implode( "\n", $lines );
+			return implode( "\n", $lines );
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -251,56 +251,47 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_pricing_context(): string {
-		$cache_key = 'pricing_context';
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		return $this->cached_dispatch( 'pricing_context', function (): string {
+			$locations = $this->rest_get( '/gym/v1/locations' );
 
-		if ( false !== $cached ) {
-			return $cached;
-		}
-
-		$locations = $this->rest_get( '/gym/v1/locations' );
-
-		if ( ! is_array( $locations ) || empty( $locations ) ) {
-			return '';
-		}
-
-		$lines   = array();
-		$lines[] = '## Current Membership Pricing';
-
-		foreach ( $locations as $location ) {
-			$slug = $location['slug'] ?? '';
-			$name = $location['name'] ?? $slug;
-
-			if ( empty( $slug ) ) {
-				continue;
+			if ( ! is_array( $locations ) || empty( $locations ) ) {
+				return '';
 			}
 
-			$products = $this->rest_get( '/gym/v1/locations/' . $slug . '/products' );
+			$lines   = array();
+			$lines[] = '## Current Membership Pricing';
 
-			if ( ! is_array( $products ) || empty( $products ) ) {
-				continue;
-			}
+			foreach ( $locations as $location ) {
+				$slug = $location['slug'] ?? '';
+				$name = $location['name'] ?? $slug;
 
-			$lines[] = sprintf( "\n### %s", esc_html( $name ) );
-
-			foreach ( $products as $product ) {
-				$product_name  = $product['name'] ?? 'Unknown';
-				$price         = $product['price'] ?? $product['regular_price'] ?? 'N/A';
-				$description   = $product['short_description'] ?? '';
-
-				$line = sprintf( '- %s: $%s/mo', esc_html( $product_name ), esc_html( (string) $price ) );
-				if ( $description ) {
-					$line .= sprintf( ' — %s', wp_strip_all_tags( $description ) );
+				if ( empty( $slug ) ) {
+					continue;
 				}
-				$lines[] = $line;
+
+				$products = $this->rest_get( '/gym/v1/locations/' . $slug . '/products' );
+
+				if ( ! is_array( $products ) || empty( $products ) ) {
+					continue;
+				}
+
+				$lines[] = sprintf( "\n### %s", esc_html( $name ) );
+
+				foreach ( $products as $product ) {
+					$product_name = $product['name'] ?? 'Unknown';
+					$price        = $product['price'] ?? $product['regular_price'] ?? 'N/A';
+					$description  = $product['short_description'] ?? '';
+
+					$line = sprintf( '- %s: $%s/mo', esc_html( $product_name ), esc_html( (string) $price ) );
+					if ( $description ) {
+						$line .= sprintf( ' — %s', wp_strip_all_tags( $description ) );
+					}
+					$lines[] = $line;
+				}
 			}
-		}
 
-		$result = implode( "\n", $lines );
-
-		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
-
-		return $result;
+			return implode( "\n", $lines );
+		} );
 	}
 
 	/**
@@ -309,28 +300,29 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_trial_context(): string {
-		$lines = array( '## Trial & Drop-In Options' );
+		return $this->cached_dispatch( 'trial_context', function (): string {
+			$lines = array( '## Trial & Drop-In Options' );
 
-		// Query WC products tagged as trials.
-		$trial_products = $this->rest_get( '/wc/v3/products', array(
-			'tag'      => 'trial',
-			'status'   => 'publish',
-			'per_page' => 5,
-		) );
+			$trial_products = $this->rest_get( '/wc/v3/products', array(
+				'tag'      => 'trial',
+				'status'   => 'publish',
+				'per_page' => 5,
+			) );
 
-		if ( is_array( $trial_products ) && ! empty( $trial_products ) ) {
-			foreach ( $trial_products as $product ) {
-				$lines[] = sprintf(
-					'- %s: $%s',
-					$product['name'] ?? 'Trial',
-					$product['price'] ?? '0'
-				);
+			if ( is_array( $trial_products ) && ! empty( $trial_products ) ) {
+				foreach ( $trial_products as $product ) {
+					$lines[] = sprintf(
+						'- %s: $%s',
+						$product['name'] ?? 'Trial',
+						$product['price'] ?? '0'
+					);
+				}
+			} else {
+				$lines[] = '- Free trial class available for new students';
 			}
-		} else {
-			$lines[] = '- Free trial class available for new students';
-		}
 
-		return implode( "\n", $lines );
+			return implode( "\n", $lines );
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -343,69 +335,59 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_schedule_context(): string {
-		$cache_key = 'schedule_today';
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		return $this->cached_dispatch( 'schedule_today', function (): string {
+			$today    = (string) wp_date( 'Y-m-d' );
+			$day_name = (string) wp_date( 'l' );
 
-		if ( false !== $cached ) {
-			return $cached;
-		}
+			$lines   = array();
+			$lines[] = sprintf( "## Today's Schedule (%s, %s)", $day_name, $today );
 
-		$today    = (string) wp_date( 'Y-m-d' );
-		$day_name = (string) wp_date( 'l' );
+			$locations = $this->rest_get( '/gym/v1/locations' );
 
-		$lines   = array();
-		$lines[] = sprintf( "## Today's Schedule (%s, %s)", $day_name, $today );
-
-		$locations = $this->rest_get( '/gym/v1/locations' );
-
-		if ( ! is_array( $locations ) ) {
-			return '';
-		}
-
-		foreach ( $locations as $location ) {
-			$slug = $location['slug'] ?? '';
-			$name = $location['name'] ?? $slug;
-
-			if ( empty( $slug ) ) {
-				continue;
+			if ( ! is_array( $locations ) ) {
+				return '';
 			}
 
-			$schedule = $this->rest_get( '/gym/v1/schedule', array(
-				'location' => $slug,
-				'week_of'  => $today,
-			) );
+			foreach ( $locations as $location ) {
+				$slug = $location['slug'] ?? '';
+				$name = $location['name'] ?? $slug;
 
-			if ( ! is_array( $schedule ) || empty( $schedule ) ) {
-				continue;
-			}
-
-			$lines[] = sprintf( "\n### %s", esc_html( $name ) );
-
-			// Filter to today's classes.
-			$today_lower = strtolower( $day_name );
-			foreach ( $schedule as $class ) {
-				$class_day = strtolower( $class['day'] ?? $class['day_of_week'] ?? '' );
-				if ( $class_day !== $today_lower ) {
+				if ( empty( $slug ) ) {
 					continue;
 				}
 
-				$time    = $class['time'] ?? $class['start_time'] ?? '';
-				$title   = $class['title'] ?? $class['name'] ?? 'Class';
-				$coach   = $class['coach'] ?? $class['instructor'] ?? '';
+				$schedule = $this->rest_get( '/gym/v1/schedule', array(
+					'location' => $slug,
+					'week_of'  => $today,
+				) );
 
-				$line = sprintf( '- %s: %s', esc_html( $time ), esc_html( $title ) );
-				if ( $coach ) {
-					$line .= sprintf( ' (Coach: %s)', esc_html( $coach ) );
+				if ( ! is_array( $schedule ) || empty( $schedule ) ) {
+					continue;
 				}
-				$lines[] = $line;
+
+				$lines[] = sprintf( "\n### %s", esc_html( $name ) );
+
+				$today_lower = strtolower( $day_name );
+				foreach ( $schedule as $class ) {
+					$class_day = strtolower( $class['day'] ?? $class['day_of_week'] ?? '' );
+					if ( $class_day !== $today_lower ) {
+						continue;
+					}
+
+					$time  = $class['time'] ?? $class['start_time'] ?? '';
+					$title = $class['title'] ?? $class['name'] ?? 'Class';
+					$coach = $class['coach'] ?? $class['instructor'] ?? '';
+
+					$line = sprintf( '- %s: %s', esc_html( $time ), esc_html( $title ) );
+					if ( $coach ) {
+						$line .= sprintf( ' (Coach: %s)', esc_html( $coach ) );
+					}
+					$lines[] = $line;
+				}
 			}
-		}
 
-		$result = implode( "\n", $lines );
-
-		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
-
-		return $result;
+			return implode( "\n", $lines );
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -418,15 +400,17 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_foundations_summary(): string {
-		$data = $this->rest_get( '/gym/v1/foundations/active' );
+		return $this->cached_dispatch( 'foundations_summary', function (): string {
+			$data = $this->rest_get( '/gym/v1/foundations/active' );
 
-		if ( ! is_array( $data ) ) {
-			return '';
-		}
+			if ( ! is_array( $data ) ) {
+				return '';
+			}
 
-		$count = isset( $data['total'] ) ? (int) $data['total'] : count( $data );
+			$count = isset( $data['total'] ) ? (int) $data['total'] : count( $data );
 
-		return sprintf( "## Foundations Program\nActive Foundations students: %d", $count );
+			return sprintf( "## Foundations Program\nActive Foundations students: %d", $count );
+		} );
 	}
 
 	/**
@@ -435,32 +419,34 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_promotion_candidates(): string {
-		$programs = class_exists( '\Gym_Core\Rank\RankDefinitions' )
-			? array_keys( \Gym_Core\Rank\RankDefinitions::get_programs() )
-			: array( 'adult-bjj', 'kids-bjj', 'kickboxing' );
-		$lines    = array( '## Promotion Candidates' );
-		$found    = false;
+		return $this->cached_dispatch( 'promotion_candidates', function (): string {
+			$programs = class_exists( '\Gym_Core\Rank\RankDefinitions' )
+				? array_keys( \Gym_Core\Rank\RankDefinitions::get_programs() )
+				: array( 'adult-bjj', 'kids-bjj', 'kickboxing' );
+			$lines    = array( '## Promotion Candidates' );
+			$found    = false;
 
-		foreach ( $programs as $program ) {
-			$eligible = $this->rest_get( '/gym/v1/promotions/eligible', array(
-				'program' => $program,
-			) );
+			foreach ( $programs as $program ) {
+				$eligible = $this->rest_get( '/gym/v1/promotions/eligible', array(
+					'program' => $program,
+				) );
 
-			if ( ! is_array( $eligible ) || empty( $eligible ) ) {
-				continue;
+				if ( ! is_array( $eligible ) || empty( $eligible ) ) {
+					continue;
+				}
+
+				$found   = true;
+				$lines[] = sprintf( "\n### %s", ucfirst( str_replace( '-', ' ', (string) $program ) ) );
+
+				foreach ( $eligible as $member ) {
+					$name    = $member['display_name'] ?? $member['name'] ?? 'Member';
+					$rank    = $member['current_rank'] ?? $member['rank_label'] ?? '';
+					$lines[] = sprintf( '- %s (current: %s)', esc_html( $name ), esc_html( $rank ) );
+				}
 			}
 
-			$found   = true;
-			$lines[] = sprintf( "\n### %s", ucfirst( str_replace( '-', ' ', (string) $program ) ) );
-
-			foreach ( $eligible as $member ) {
-				$name   = $member['display_name'] ?? $member['name'] ?? 'Member';
-				$rank   = $member['current_rank'] ?? $member['rank_label'] ?? '';
-				$lines[] = sprintf( '- %s (current: %s)', esc_html( $name ), esc_html( $rank ) );
-			}
-		}
-
-		return $found ? implode( "\n", $lines ) : '';
+			return $found ? implode( "\n", $lines ) : '';
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -566,17 +552,19 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_failed_payments_context(): string {
-		$first_of_month = wp_date( 'Y-m-01\TH:i:s' );
+		return $this->cached_dispatch( 'failed_payments', function (): string {
+			$first_of_month = wp_date( 'Y-m-01\TH:i:s' );
 
-		$failed = $this->rest_get( '/wc/v3/orders', array(
-			'status'   => 'failed',
-			'after'    => $first_of_month,
-			'per_page' => 100,
-		) );
+			$failed = $this->rest_get( '/wc/v3/orders', array(
+				'status'   => 'failed',
+				'after'    => $first_of_month,
+				'per_page' => 100,
+			) );
 
-		$count = is_array( $failed ) ? count( $failed ) : 0;
+			$count = is_array( $failed ) ? count( $failed ) : 0;
 
-		return sprintf( "## Failed Payments\nFailed payments this month: %d", $count );
+			return sprintf( "## Failed Payments\nFailed payments this month: %d", $count );
+		} );
 	}
 
 	/**
@@ -585,17 +573,19 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_new_signups_context(): string {
-		$first_of_month = wp_date( 'Y-m-01\TH:i:s' );
+		return $this->cached_dispatch( 'new_signups', function (): string {
+			$first_of_month = wp_date( 'Y-m-01\TH:i:s' );
 
-		$orders = $this->rest_get( '/wc/v3/orders', array(
-			'status'   => array( 'completed', 'processing' ),
-			'after'    => $first_of_month,
-			'per_page' => 100,
-		) );
+			$orders = $this->rest_get( '/wc/v3/orders', array(
+				'status'   => array( 'completed', 'processing' ),
+				'after'    => $first_of_month,
+				'per_page' => 100,
+			) );
 
-		$count = is_array( $orders ) ? count( $orders ) : 0;
+			$count = is_array( $orders ) ? count( $orders ) : 0;
 
-		return sprintf( "## New Signups\nNew orders this month: %d", $count );
+			return sprintf( "## New Signups\nNew orders this month: %d", $count );
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -608,15 +598,17 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_attendance_summary(): string {
-		$data = $this->rest_get( '/gym/v1/attendance/today' );
+		return $this->cached_dispatch( 'attendance_today', function (): string {
+			$data = $this->rest_get( '/gym/v1/attendance/today' );
 
-		if ( ! is_array( $data ) ) {
-			return '';
-		}
+			if ( ! is_array( $data ) ) {
+				return '';
+			}
 
-		$count = isset( $data['total'] ) ? (int) $data['total'] : count( $data );
+			$count = isset( $data['total'] ) ? (int) $data['total'] : count( $data );
 
-		return sprintf( "## Today's Attendance\nTotal check-ins today: %d", $count );
+			return sprintf( "## Today's Attendance\nTotal check-ins today: %d", $count );
+		} );
 	}
 
 	/**
@@ -625,50 +617,52 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_announcements_context(): string {
-		$today = wp_date( 'Y-m-d' );
+		return $this->cached_dispatch( 'announcements', function (): string {
+			$today = wp_date( 'Y-m-d' );
 
-		$args = array(
-			'post_type'      => 'gym_announcement',
-			'post_status'    => 'publish',
-			'posts_per_page' => 10,
-			'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
-				'relation' => 'OR',
-				array(
-					'key'     => '_gym_announcement_end_date',
-					'compare' => 'NOT EXISTS',
+			$args = array(
+				'post_type'      => 'gym_announcement',
+				'post_status'    => 'publish',
+				'posts_per_page' => 10,
+				'meta_query'     => array( // phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_query
+					'relation' => 'OR',
+					array(
+						'key'     => '_gym_announcement_end_date',
+						'compare' => 'NOT EXISTS',
+					),
+					array(
+						'key'     => '_gym_announcement_end_date',
+						'value'   => $today,
+						'compare' => '>=',
+						'type'    => 'DATE',
+					),
 				),
-				array(
-					'key'     => '_gym_announcement_end_date',
-					'value'   => $today,
-					'compare' => '>=',
-					'type'    => 'DATE',
-				),
-			),
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-		);
-
-		$posts = get_posts( $args );
-
-		if ( empty( $posts ) ) {
-			return '';
-		}
-
-		$lines   = array();
-		$lines[] = '## Active Announcements';
-
-		foreach ( $posts as $post ) {
-			$pinned = get_post_meta( $post->ID, '_gym_announcement_pinned', true );
-			$prefix = $pinned ? '[PINNED] ' : '';
-			$lines[] = sprintf(
-				'- %s%s: %s',
-				$prefix,
-				esc_html( $post->post_title ),
-				wp_strip_all_tags( wp_trim_words( $post->post_content, 20 ) )
+				'orderby'        => 'date',
+				'order'          => 'DESC',
 			);
-		}
 
-		return implode( "\n", $lines );
+			$posts = get_posts( $args );
+
+			if ( empty( $posts ) ) {
+				return '';
+			}
+
+			$lines   = array();
+			$lines[] = '## Active Announcements';
+
+			foreach ( $posts as $post ) {
+				$pinned  = get_post_meta( $post->ID, '_gym_announcement_pinned', true );
+				$prefix  = $pinned ? '[PINNED] ' : '';
+				$lines[] = sprintf(
+					'- %s%s: %s',
+					$prefix,
+					esc_html( $post->post_title ),
+					wp_strip_all_tags( wp_trim_words( $post->post_content, 20 ) )
+				);
+			}
+
+			return implode( "\n", $lines );
+		} );
 	}
 
 	/**
@@ -677,35 +671,37 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_pending_social_context(): string {
-		$args = array(
-			'post_type'      => 'post',
-			'post_status'    => 'pending',
-			'posts_per_page' => 10,
-			'category_name'  => 'social',
-			'orderby'        => 'date',
-			'order'          => 'DESC',
-		);
-
-		$posts = get_posts( $args );
-		$count = count( $posts );
-
-		if ( 0 === $count ) {
-			return '';
-		}
-
-		$lines   = array();
-		$lines[] = sprintf( '## Pending Social Posts (%d awaiting approval)', $count );
-
-		foreach ( $posts as $post ) {
-			$ts      = strtotime( $post->post_date );
-			$lines[] = sprintf(
-				'- "%s" — drafted %s',
-				esc_html( $post->post_title ),
-				wp_date( 'M j', false === $ts ? null : $ts )
+		return $this->cached_dispatch( 'pending_social', function (): string {
+			$args = array(
+				'post_type'      => 'post',
+				'post_status'    => 'pending',
+				'posts_per_page' => 10,
+				'category_name'  => 'social',
+				'orderby'        => 'date',
+				'order'          => 'DESC',
 			);
-		}
 
-		return implode( "\n", $lines );
+			$posts = get_posts( $args );
+			$count = count( $posts );
+
+			if ( 0 === $count ) {
+				return '';
+			}
+
+			$lines   = array();
+			$lines[] = sprintf( '## Pending Social Posts (%d awaiting approval)', $count );
+
+			foreach ( $posts as $post ) {
+				$ts      = strtotime( $post->post_date );
+				$lines[] = sprintf(
+					'- "%s" — drafted %s',
+					esc_html( $post->post_title ),
+					wp_date( 'M j', false === $ts ? null : $ts )
+				);
+			}
+
+			return implode( "\n", $lines );
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -720,37 +716,28 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_pipeline_summary(): string {
-		$cache_key = 'pipeline_summary';
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		return $this->cached_dispatch( 'pipeline_summary', function (): string {
+			$data = $this->rest_get( '/gym/v1/crm/pipeline' );
 
-		if ( false !== $cached ) {
-			return $cached;
-		}
+			if ( ! is_array( $data ) || empty( $data ) ) {
+				return '';
+			}
 
-		$data = $this->rest_get( '/gym/v1/crm/pipeline' );
+			$lines   = array();
+			$lines[] = '## CRM Pipeline';
 
-		if ( ! is_array( $data ) || empty( $data ) ) {
-			return '';
-		}
+			$total = 0;
+			foreach ( $data as $stage ) {
+				$name    = $stage['stage'] ?? 'Unknown';
+				$count   = (int) ( $stage['count'] ?? 0 );
+				$total  += $count;
+				$lines[] = sprintf( '- %s: %d', esc_html( $name ), $count );
+			}
 
-		$lines   = array();
-		$lines[] = '## CRM Pipeline';
+			$lines[] = sprintf( 'Total contacts: %d', $total );
 
-		$total = 0;
-		foreach ( $data as $stage ) {
-			$name  = $stage['stage'] ?? 'Unknown';
-			$count = (int) ( $stage['count'] ?? 0 );
-			$total += $count;
-			$lines[] = sprintf( '- %s: %d', esc_html( $name ), $count );
-		}
-
-		$lines[] = sprintf( 'Total contacts: %d', $total );
-
-		$result = implode( "\n", $lines );
-
-		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
-
-		return $result;
+			return implode( "\n", $lines );
+		} );
 	}
 
 	/**
@@ -761,40 +748,31 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_recent_leads(): string {
-		$cache_key = 'recent_leads';
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		return $this->cached_dispatch( 'recent_leads', function (): string {
+			$data = $this->rest_get( '/gym/v1/crm/contacts', array(
+				'status'         => 'Lead',
+				'per_page'       => 5,
+				'prospects_only' => true,
+			) );
 
-		if ( false !== $cached ) {
-			return $cached;
-		}
-
-		$data = $this->rest_get( '/gym/v1/crm/contacts', array(
-			'status'         => 'Lead',
-			'per_page'       => 5,
-			'prospects_only' => true,
-		) );
-
-		if ( ! is_array( $data ) || empty( $data ) ) {
-			return '';
-		}
-
-		$lines   = array();
-		$lines[] = '## Recent Leads';
-
-		foreach ( $data as $contact ) {
-			$name  = trim( ( $contact['first_name'] ?? '' ) . ' ' . ( $contact['last_name'] ?? '' ) );
-			$email = $contact['email'] ?? '';
-			if ( '' === $name ) {
-				$name = $email ?: 'Unknown';
+			if ( ! is_array( $data ) || empty( $data ) ) {
+				return '';
 			}
-			$lines[] = sprintf( '- %s (%s)', esc_html( $name ), esc_html( $email ) );
-		}
 
-		$result = implode( "\n", $lines );
+			$lines   = array();
+			$lines[] = '## Recent Leads';
 
-		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+			foreach ( $data as $contact ) {
+				$name  = trim( ( $contact['first_name'] ?? '' ) . ' ' . ( $contact['last_name'] ?? '' ) );
+				$email = $contact['email'] ?? '';
+				if ( '' === $name ) {
+					$name = $email ?: 'Unknown';
+				}
+				$lines[] = sprintf( '- %s (%s)', esc_html( $name ), esc_html( $email ) );
+			}
 
-		return $result;
+			return implode( "\n", $lines );
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -809,71 +787,58 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_todays_rosters(): string {
-		$cache_key = 'todays_rosters';
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		return $this->cached_dispatch( 'todays_rosters', function (): string {
+			$day_name = strtolower( (string) wp_date( 'l' ) );
+			$today    = wp_date( 'Y-m-d' );
 
-		if ( false !== $cached ) {
-			return $cached;
-		}
+			$locations = $this->rest_get( '/gym/v1/locations' );
 
-		$day_name = strtolower( (string) wp_date( 'l' ) );
-		$today    = wp_date( 'Y-m-d' );
-
-		$locations = $this->rest_get( '/gym/v1/locations' );
-
-		if ( ! is_array( $locations ) ) {
-			return '';
-		}
-
-		$lines = array( "## Today's Class Rosters" );
-		$found = false;
-
-		foreach ( $locations as $location ) {
-			$slug = $location['slug'] ?? '';
-			if ( empty( $slug ) ) {
-				continue;
+			if ( ! is_array( $locations ) ) {
+				return '';
 			}
 
-			$schedule = $this->rest_get( '/gym/v1/schedule', array(
-				'location' => $slug,
-				'week_of'  => $today,
-			) );
+			$lines = array( "## Today's Class Rosters" );
+			$found = false;
 
-			if ( ! is_array( $schedule ) ) {
-				continue;
-			}
-
-			foreach ( $schedule as $class ) {
-				$class_day = strtolower( $class['day'] ?? $class['day_of_week'] ?? '' );
-				if ( $class_day !== $day_name ) {
+			foreach ( $locations as $location ) {
+				$slug = $location['slug'] ?? '';
+				if ( empty( $slug ) ) {
 					continue;
 				}
 
-				$class_id = $class['id'] ?? $class['class_id'] ?? 0;
-				$title    = $class['title'] ?? $class['name'] ?? 'Class';
-				$time     = $class['time'] ?? $class['start_time'] ?? '';
+				$schedule = $this->rest_get( '/gym/v1/schedule', array(
+					'location' => $slug,
+					'week_of'  => $today,
+				) );
 
-				if ( $class_id > 0 ) {
-					$roster = $this->rest_get( '/gym/v1/classes/' . $class_id . '/roster' );
-					$count  = is_array( $roster ) ? ( $roster['expected_count'] ?? 0 ) : 0;
-				} else {
-					$count = '?';
+				if ( ! is_array( $schedule ) ) {
+					continue;
 				}
 
-				$found   = true;
-				$lines[] = sprintf( '- %s %s: %s expected', esc_html( $time ), esc_html( $title ), $count );
+				foreach ( $schedule as $class ) {
+					$class_day = strtolower( $class['day'] ?? $class['day_of_week'] ?? '' );
+					if ( $class_day !== $day_name ) {
+						continue;
+					}
+
+					$class_id = $class['id'] ?? $class['class_id'] ?? 0;
+					$title    = $class['title'] ?? $class['name'] ?? 'Class';
+					$time     = $class['time'] ?? $class['start_time'] ?? '';
+
+					if ( $class_id > 0 ) {
+						$roster = $this->rest_get( '/gym/v1/classes/' . $class_id . '/roster' );
+						$count  = is_array( $roster ) ? ( $roster['expected_count'] ?? 0 ) : 0;
+					} else {
+						$count = '?';
+					}
+
+					$found   = true;
+					$lines[] = sprintf( '- %s %s: %s expected', esc_html( $time ), esc_html( $title ), $count );
+				}
 			}
-		}
 
-		if ( ! $found ) {
-			return '';
-		}
-
-		$result = implode( "\n", $lines );
-
-		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
-
-		return $result;
+			return $found ? implode( "\n", $lines ) : '';
+		} );
 	}
 
 	// -------------------------------------------------------------------------
@@ -888,38 +853,54 @@ class GymContextProvider {
 	 * @return string
 	 */
 	private function get_churn_summary(): string {
-		$cache_key = 'churn_summary';
-		$cached    = wp_cache_get( $cache_key, self::CACHE_GROUP );
+		return $this->cached_dispatch( 'churn_summary', function (): string {
+			$data = $this->rest_get( '/gym/v1/orders/churn', array( 'days' => 30 ) );
 
-		if ( false !== $cached ) {
-			return $cached;
-		}
+			if ( ! is_array( $data ) ) {
+				return '';
+			}
 
-		$data = $this->rest_get( '/gym/v1/orders/churn', array( 'days' => 30 ) );
+			$cancelled = $data['cancelled'] ?? 0;
+			$retention = $data['retention_rate'] ?? 100;
+			$new       = $data['new_signups'] ?? 0;
 
-		if ( ! is_array( $data ) ) {
-			return '';
-		}
-
-		$cancelled = $data['cancelled'] ?? 0;
-		$retention = $data['retention_rate'] ?? 100;
-		$new       = $data['new_signups'] ?? 0;
-
-		$result = sprintf(
-			"## Churn (30 days)\nCancellations: %d | New signups: %d | Retention: %s%%",
-			$cancelled,
-			$new,
-			number_format( (float) $retention, 1 )
-		);
-
-		wp_cache_set( $cache_key, $result, self::CACHE_GROUP, self::CACHE_TTL );
-
-		return $result;
+			return sprintf(
+				"## Churn (30 days)\nCancellations: %d | New signups: %d | Retention: %s%%",
+				$cancelled,
+				$new,
+				number_format( (float) $retention, 1 )
+			);
+		} );
 	}
 
 	// -------------------------------------------------------------------------
 	// Internal REST dispatch helper
 	// -------------------------------------------------------------------------
+
+	/**
+	 * Get a cached string result, building it with $builder on a cache miss.
+	 *
+	 * Centralises the wp_cache_get / wp_cache_set boilerplate so no method
+	 * can forget to cache its REST dispatches. Empty results are not stored
+	 * so a momentary REST failure doesn't poison the cache for 5 minutes.
+	 *
+	 * @since 0.4.2
+	 *
+	 * @param string   $key     Cache key (within CACHE_GROUP).
+	 * @param callable $builder Callable that builds and returns the string value.
+	 * @return string
+	 */
+	private function cached_dispatch( string $key, callable $builder ): string {
+		$cached = wp_cache_get( $key, self::CACHE_GROUP );
+		if ( false !== $cached ) {
+			return (string) $cached;
+		}
+		$result = $builder();
+		if ( '' !== $result ) {
+			wp_cache_set( $key, $result, self::CACHE_GROUP, self::CACHE_TTL );
+		}
+		return $result;
+	}
 
 	/**
 	 * Perform an internal REST GET request (zero HTTP overhead).
