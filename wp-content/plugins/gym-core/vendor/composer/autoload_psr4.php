@@ -6,13 +6,5 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
-    'SzepeViktor\\PHPStan\\WordPress\\' => array($vendorDir . '/szepeviktor/phpstan-wordpress/src'),
-    'PhpParser\\' => array($vendorDir . '/nikic/php-parser/lib/PhpParser'),
-    'PHPStan\\' => array($vendorDir . '/phpstan/phpstan-deprecation-rules/src'),
-    'PHPCSStandards\\Composer\\Plugin\\Installers\\PHPCodeSniffer\\' => array($vendorDir . '/dealerdirect/phpcodesniffer-composer-installer/src'),
-    'Mockery\\' => array($vendorDir . '/mockery/mockery/library/Mockery'),
-    'Gym_Core\\Tests\\' => array($baseDir . '/tests'),
     'Gym_Core\\' => array($baseDir . '/src'),
-    'DeepCopy\\' => array($vendorDir . '/myclabs/deep-copy/src/DeepCopy'),
-    'Brain\\Monkey\\' => array($vendorDir . '/brain/monkey/src'),
 );
