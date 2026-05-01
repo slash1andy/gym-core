@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap');
+
 /*
 Theme Name: Team Haanpää
 Author: Andrew Wikel
@@ -83,13 +85,21 @@ Tags: block-theme, full-site-editing, one-column, custom-colors, custom-menu, ed
   border-color: rgba(255, 255, 255, 0.25);
 }
 
-/* ---------- Accent CTA button hover ---------- */
+/* ---------- Accent CTA button ---------- */
 .btn-accent .wp-block-button__link {
-  transition: all 200ms ease;
+  background: #0A0A0A !important;
+  color: #fff !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: none !important;
+  transition: background 160ms ease;
 }
 .btn-accent .wp-block-button__link:hover {
-  transform: scale(1.03);
-  box-shadow: 0 4px 16px rgba(0, 50, 160, 0.35);
+  background: #1A2DC4 !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* ---------- Value card subtle lift ---------- */
@@ -300,4 +310,40 @@ footer a:hover,
 .wc-block-components-textarea:focus {
   border-color: var(--wp--preset--color--royal-blue);
   box-shadow: 0 0 0 3px rgba(0, 50, 160, 0.15);
+}
+
+/* ---------- Logo mark ---------- */
+a.hp-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: #0A0A0A;
+}
+.hp-mark-dot {
+  width: 36px;
+  height: 36px;
+  background: #0A0A0A;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hp-mark-text {
+  font-size: 18px;
+  line-height: 1;
+}
+.hp-mark-text small {
+  display: block;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #4A4A48;
+  margin-top: 3px;
 }
