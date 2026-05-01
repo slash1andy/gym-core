@@ -1,0 +1,51 @@
+/**
+ * Audit log admin page styles.
+ *
+ * @package HMA_AI_Chat
+ * @since   0.5.2
+ */
+
+.hma-audit-log-filters {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin: 16px 0;
+}
+.hma-audit-log-table .column-id { width: 50px; }
+.hma-audit-log-table .column-agent { width: 90px; }
+.hma-audit-log-table .column-status { width: 130px; }
+.hma-audit-log-table .column-reviewer { width: 120px; }
+.hma-audit-log-table .column-created,
+.hma-audit-log-table .column-reviewed { width: 140px; }
+.hma-audit-agent-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	background: #e8f0fe;
+	color: #1a73e8;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 500;
+}
+.hma-audit-status-badge {
+	display: inline-block;
+	padding: 2px 8px;
+	border-radius: 3px;
+	font-size: 12px;
+	font-weight: 500;
+}
+.hma-audit-status-pending { background: #fff3cd; color: #856404; }
+.hma-audit-status-approved { background: #d4edda; color: #155724; }
+.hma-audit-status-approved_with_changes { background: #cce5ff; color: #004085; }
+.hma-audit-status-completed { background: #d1ecf1; color: #0c5460; }
+.hma-audit-status-rejected { background: #f8d7da; color: #721c24; }
+.hma-audit-na { color: #999; }
+
+@media (max-width: 782px) {
+	.hma-audit-log-filters {
+		flex-wrap: wrap;
+	}
+	.hma-audit-log-table .column-detail,
+	.hma-audit-log-table .column-reviewed {
+		display: none;
+	}
+}

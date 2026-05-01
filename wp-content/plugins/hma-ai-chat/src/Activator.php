@@ -68,7 +68,8 @@ class Activator {
 			PRIMARY KEY  (id),
 			KEY user_id (user_id),
 			KEY agent (agent),
-			KEY created_at (created_at)
+			KEY created_at (created_at),
+			KEY updated_at (updated_at)
 		) $charset_collate;";
 
 		dbDelta( $conversations_sql );

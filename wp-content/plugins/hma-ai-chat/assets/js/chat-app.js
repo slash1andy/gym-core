@@ -62,7 +62,7 @@
 							${agents
 								.map(
 									(agent) => `
-								<option value="${agent.slug}">${agent.icon} ${agent.name}</option>
+								<option value="${escapeHtml(agent.slug)}">${escapeHtml(agent.icon)} ${escapeHtml(agent.name)}</option>
 							`
 								)
 								.join('')}
@@ -776,6 +776,7 @@
 
 		const notice = document.createElement('div');
 		notice.className = `hma-ai-action-notice hma-ai-action-notice-${type}`;
+		notice.setAttribute('role', type === 'error' ? 'alert' : 'status');
 		notice.textContent = message;
 		item.appendChild(notice);
 

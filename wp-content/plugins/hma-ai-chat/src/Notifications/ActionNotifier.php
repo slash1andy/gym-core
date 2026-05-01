@@ -129,6 +129,15 @@ class ActionNotifier {
 			return;
 		}
 
+		// Rate limit: max 10 Slack posts per 5 minutes to avoid webhook flooding.
+		$rl_key   = 'hma_ai_chat_slack_rl';
+		$rl_count = (int) get_transient( $rl_key );
+		if ( $rl_count >= 10 ) {
+			$this->log_error( 'slack', 'rate limit reached — skipping Slack notification' );
+			return;
+		}
+		set_transient( $rl_key, $rl_count + 1, 5 * MINUTE_IN_SECONDS );
+
 		$audit_url    = admin_url( 'admin.php?page=hma-ai-chat-audit-log&action_status=pending' );
 		$summary_line = ( '' !== $summary && $this->include_summary_in_slack() ) ? "\n• " . $summary : '';
 		$text         = sprintf(
@@ -219,6 +228,14 @@ class ActionNotifier {
 		if ( ! class_exists( $twilio_class ) ) {
 			return;
 		}
+
+		// Rate limit: one SMS per phone number per minute to prevent duplicate sends.
+		$rl_key = 'hma_ai_chat_sms_rl_' . md5( $to );
+		if ( false !== get_transient( $rl_key ) ) {
+			$this->log_error( 'sms', sprintf( 'rate limit — skipping SMS to %s', $to ) );
+			return;
+		}
+		set_transient( $rl_key, 1, MINUTE_IN_SECONDS );
 
 		$body = $this->build_sms_body( $action_id, $agent, $action_type );
 

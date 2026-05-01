@@ -629,6 +629,43 @@ class SettingsPage {
 			);
 			return '';
 		}
+
+		/**
+		 * Allowlist of webhook hostname suffixes accepted as Slack webhook targets.
+		 *
+		 * Extend this via the filter when testing against a local proxy or when
+		 * Slack introduces new regional webhook hostnames.
+		 *
+		 * @since 0.5.2
+		 *
+		 * @param string[] $allowed_hosts Allowed hostname suffixes.
+		 */
+		$allowed_hosts = (array) apply_filters(
+			'hma_ai_chat_allowed_slack_hosts',
+			array( 'hooks.slack.com' )
+		);
+
+		$host = (string) wp_parse_url( $url, PHP_URL_HOST );
+		$host = strtolower( $host );
+
+		$host_ok = false;
+		foreach ( $allowed_hosts as $allowed ) {
+			$allowed = strtolower( (string) $allowed );
+			if ( $host === $allowed || str_ends_with( $host, '.' . $allowed ) ) {
+				$host_ok = true;
+				break;
+			}
+		}
+
+		if ( ! $host_ok ) {
+			add_settings_error(
+				\HMA_AI_Chat\Notifications\ActionNotifier::OPTION_SLACK_WEBHOOK,
+				'hma_slack_webhook_domain',
+				__( 'Slack webhook URL must point to hooks.slack.com.', 'hma-ai-chat' )
+			);
+			return '';
+		}
+
 		return $url;
 	}
 

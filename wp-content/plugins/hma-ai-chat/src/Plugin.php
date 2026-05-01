@@ -44,6 +44,19 @@ class Plugin {
 	private $tool_executor = null;
 
 	/**
+	 * Shared pending action store instance.
+	 *
+	 * Instantiated once in register_hooks() and passed to both ToolExecutor
+	 * and ActionEndpoint so they operate on the same object rather than
+	 * creating two separate store instances per request.
+	 *
+	 * @since 0.5.2
+	 *
+	 * @var Data\PendingActionStore|null
+	 */
+	private $pending_store = null;
+
+	/**
 	 * Get plugin instance (singleton pattern for compatibility).
 	 *
 	 * @since 0.1.0
@@ -162,10 +175,11 @@ class Plugin {
 		// Ensure agent user accounts exist and capabilities are current.
 		Agents\AgentUserManager::provision();
 
-		// Initialize tool layer.
-		$tool_registry      = Tools\ToolRegistry::instance();
-		$pending_store      = new Data\PendingActionStore();
-		$this->tool_executor = new Tools\ToolExecutor( $tool_registry, $pending_store );
+		// Initialize tool layer — share one PendingActionStore instance across
+		// ToolExecutor and ActionEndpoint so they operate on the same object.
+		$tool_registry       = Tools\ToolRegistry::instance();
+		$this->pending_store = new Data\PendingActionStore();
+		$this->tool_executor = new Tools\ToolExecutor( $tool_registry, $this->pending_store );
 	}
 
 	/**
@@ -180,7 +194,11 @@ class Plugin {
 	public function register_rest_routes() {
 		$message_endpoint   = new API\MessageEndpoint();
 		$heartbeat_endpoint = new API\HeartbeatEndpoint();
-		$action_endpoint    = new API\ActionEndpoint( new Data\PendingActionStore() );
+		// Reuse the shared pending store instantiated in register_hooks() when
+		// available; fall back to a fresh instance on direct REST-only requests
+		// where register_hooks() may not have fired yet.
+		$pending_store   = $this->pending_store ?? new Data\PendingActionStore();
+		$action_endpoint = new API\ActionEndpoint( $pending_store );
 
 		$message_endpoint->register_route();
 		$heartbeat_endpoint->register_route();
@@ -252,8 +270,23 @@ class Plugin {
 	 * @internal
 	 */
 	public function enqueue_admin_scripts( $hook_suffix ) {
-		$allowed_pages = array( 'gym_page_hma-ai-chat', 'toplevel_page_gym-core' );
-		if ( ! in_array( $hook_suffix, $allowed_pages, true ) ) {
+		// Hook suffixes for hma-ai-chat admin pages:
+		//   'toplevel_page_gym-core'       — registered by gym-core Plugin::register_top_level_menu()
+		//   'gym_page_hma-ai-chat'         — legacy chat-panel suffix (kept for back-compat)
+		//   'gym_page_hma-ai-chat-audit-log' — AuditLogPage, registered as a submenu of 'gym-core'
+		$chat_pages  = array( 'gym_page_hma-ai-chat', 'toplevel_page_gym-core' );
+		$audit_pages = array( 'gym_page_hma-ai-chat-audit-log' );
+
+		if ( in_array( $hook_suffix, $audit_pages, true ) ) {
+			wp_enqueue_style(
+				'hma-ai-chat-audit-log',
+				HMA_AI_CHAT_URL . 'assets/css/audit-log.css',
+				array(),
+				HMA_AI_CHAT_VERSION
+			);
+		}
+
+		if ( ! in_array( $hook_suffix, $chat_pages, true ) ) {
 			return;
 		}
 
