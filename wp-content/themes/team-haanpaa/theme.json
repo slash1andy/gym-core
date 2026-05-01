@@ -17,7 +17,9 @@
         { "slug": "gray-light", "color": "#F5F5F7", "name": "Light Gray" },
         { "slug": "gray-100", "color": "#E5E5E7", "name": "Gray 100" },
         { "slug": "gray-800", "color": "#2A2A2A", "name": "Gray 800" },
-        { "slug": "gray-900", "color": "#1A1A1A", "name": "Gray 900" }
+        { "slug": "gray-900", "color": "#1A1A1A", "name": "Gray 900" },
+        { "slug": "ink",   "color": "#0A0A0A", "name": "Ink" },
+        { "slug": "paper", "color": "#F6F4EE", "name": "Paper" }
       ]
     },
     "typography": {
@@ -31,6 +33,11 @@
           "fontFamily": "'Inter', 'Helvetica Neue', Arial, sans-serif",
           "slug": "inter",
           "name": "Inter"
+        },
+        {
+          "fontFamily": "'Fraunces', ui-serif, Georgia, serif",
+          "slug": "fraunces",
+          "name": "Fraunces"
         }
       ],
       "fontSizes": [
