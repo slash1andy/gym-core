@@ -12,6 +12,7 @@ namespace Gym_Core\API;
 
 use Gym_Core\SMS\TwilioClient;
 use Gym_Core\SMS\MessageTemplates;
+use Gym_Core\SMS\SmsOptOut;
 use Gym_Core\Integrations\CrmSmsBridge;
 
 /**
@@ -33,13 +34,20 @@ class SMSController extends BaseController {
 	private TwilioClient $twilio;
 
 	/**
+	 * @var SmsOptOut
+	 */
+	private SmsOptOut $opt_out;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param TwilioClient $twilio Twilio API client.
+	 * @param TwilioClient $twilio  Twilio API client.
+	 * @param SmsOptOut    $opt_out TCPA opt-out store.
 	 */
-	public function __construct( TwilioClient $twilio ) {
+	public function __construct( TwilioClient $twilio, SmsOptOut $opt_out ) {
 		parent::__construct();
-		$this->twilio = $twilio;
+		$this->twilio  = $twilio;
+		$this->opt_out = $opt_out;
 	}
 
 	/**
@@ -176,6 +184,15 @@ class SMSController extends BaseController {
 		$clean_phone = TwilioClient::sanitize_phone( $phone );
 		if ( '' === $clean_phone ) {
 			return $this->error_response( 'invalid_phone', __( 'Invalid phone number. Use E.164 format.', 'gym-core' ), 400 );
+		}
+
+		// TCPA opt-out gate — must not send to opted-out numbers.
+		if ( $this->opt_out->is_opted_out( $clean_phone ) ) {
+			return $this->error_response(
+				'sms_opted_out',
+				__( 'User has opted out of SMS.', 'gym-core' ),
+				422
+			);
 		}
 
 		// Rate limit check — by contact_id if provided, otherwise by sending user.

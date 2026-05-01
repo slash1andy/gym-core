@@ -91,6 +91,14 @@ final class Plugin {
 	private ?SMS\TwilioClient $twilio_client = null;
 
 	/**
+	 * SMS opt-out store — shared instance so the same TCPA gate object is
+	 * injected into every dispatch path (SMSController, PromotionNotifier, etc.).
+	 *
+	 * @var SMS\SmsOptOut|null
+	 */
+	private ?SMS\SmsOptOut $sms_opt_out = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -297,7 +305,7 @@ final class Plugin {
 
 				// SMS controller.
 				if ( 'yes' === get_option( 'gym_core_sms_enabled', 'no' ) ) {
-					$sms_controller = new API\SMSController( $this->get_twilio_client() );
+					$sms_controller = new API\SMSController( $this->get_twilio_client(), $this->get_sms_opt_out() );
 					$sms_controller->register_hooks();
 
 					$inbound_handler = new SMS\InboundHandler( $this->get_twilio_client() );
@@ -402,6 +410,28 @@ final class Plugin {
 	}
 
 	/**
+	 * Returns the shared SmsOptOut instance, creating it on first call.
+	 *
+	 * Using a single instance per request ensures the same TCPA opt-out store
+	 * is injected into every dispatch path — SMSController, PromotionNotifier,
+	 * and any future consumer — so the opt-out check is always consistent.
+	 *
+	 * Callers are responsible for checking the `gym_core_sms_enabled` option
+	 * before invoking this method — the getter always returns an instance.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @return SMS\SmsOptOut
+	 */
+	private function get_sms_opt_out(): SMS\SmsOptOut {
+		if ( null === $this->sms_opt_out ) {
+			$this->sms_opt_out = new SMS\SmsOptOut();
+		}
+
+		return $this->sms_opt_out;
+	}
+
+	/**
 	 * Registers the attendance and promotion eligibility modules.
 	 *
 	 * Makes store instances available for dependency injection into
@@ -459,7 +489,11 @@ final class Plugin {
 			return;
 		}
 
-		$promotion_notifier = new Notifications\PromotionNotifier( $this->get_twilio_client() );
+		// SmsOptOut hooks must be registered whenever SMS is enabled so that
+		// STOP/START inbound messages are persisted for the outbound gate.
+		$this->get_sms_opt_out()->register_hooks();
+
+		$promotion_notifier = new Notifications\PromotionNotifier( $this->get_twilio_client(), $this->get_sms_opt_out() );
 		$promotion_notifier->register_hooks();
 	}
 
