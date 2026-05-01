@@ -164,7 +164,7 @@ foreach ( $loc_slugs as $slug ) {
         started exactly where you are now.
       </p>
 
-      <div style="display:flex;gap:12px;align-items:center">
+      <div class="hp-hero-ctas">
         <a href="/free-trial"
            style="display:inline-flex;align-items:center;gap:8px;padding:20px 36px;background:#1A2DC4;color:#F6F4EE;font-size:15px;font-weight:600;letter-spacing:0.04em;text-decoration:none;border-radius:2px;line-height:1;transition:background 160ms">
           Book your free trial &#x2192;
@@ -175,8 +175,48 @@ foreach ( $loc_slugs as $slug ) {
         </a>
       </div>
 
+    </div><!-- /left -->
+
+    <!-- ── RIGHT COLUMN ────────────────────────────────────── -->
+    <div>
+      <div class="hp-photo-wrap">
+
+      <div class="hp-photo hp-photo-bjj">
+        <span style="position:relative;z-index:1">photo &#xB7; BJJ class on the mat</span>
+      </div>
+
+      <?php foreach ( $loc_slugs as $loc_slug ) :
+        $cls        = $loc_data[ $loc_slug ]['next'];
+        $is_default = ( 'rockford' === $loc_slug );
+        $is_today   = $cls && ( strtolower( $cls['day_label'] ) === $today_dow );
+        $live_label = $is_today ? '&#9679; Next &middot; Tonight' : '&#9679; Up Next';
+      ?>
+      <div class="hp-photo-overlay-card"
+           data-wp-interactive="haanpaa/schedule"
+           data-wp-context='{"location":"<?php echo esc_attr( $loc_slug ); ?>"}'
+           data-wp-bind--hidden="!state.locActive"
+           <?php echo $is_default ? '' : 'hidden'; ?>>
+        <?php if ( $cls ) : ?>
+          <div class="hp-eyebrow-mono" style="color:#1A2DC4"><?php echo $live_label; ?></div>
+          <div style="margin-top:8px;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#0A0A0A">
+            <?php echo esc_html( $cls['title'] ) . ' &middot; ' . esc_html( $cls['time_display'] ); ?>
+          </div>
+          <div style="margin-top:4px;font-size:13px;color:#4A4A48">
+            Beginners welcome. Loaner gi available at the front desk.
+          </div>
+        <?php else : ?>
+          <div class="hp-eyebrow-mono" style="color:#9A9A98">Schedule</div>
+          <div style="margin-top:8px;font-size:16px;font-weight:600;color:#0A0A0A">
+            <a href="/schedule" style="color:inherit;text-decoration:none">See today&#8217;s classes &#x2192;</a>
+          </div>
+        <?php endif; ?>
+      </div>
+      <?php endforeach; ?>
+
+      </div><!-- /.hp-photo-wrap -->
+
       <!-- Location selector + affiliation strip -->
-      <div style="margin-top:32px;display:flex;gap:56px;align-items:flex-start;flex-wrap:wrap">
+      <div style="margin-top:24px;display:flex;gap:56px;align-items:flex-start;flex-wrap:wrap">
 
         <div>
           <div class="hp-meta" style="margin-bottom:10px">Location</div>
@@ -212,42 +252,6 @@ foreach ( $loc_slugs as $slug ) {
         </div>
 
       </div>
-    </div><!-- /left -->
-
-    <!-- ── RIGHT COLUMN ────────────────────────────────────── -->
-    <div class="hp-photo-wrap">
-
-      <div class="hp-photo hp-photo-bjj">
-        <span style="position:relative;z-index:1">photo &#xB7; BJJ class on the mat</span>
-      </div>
-
-      <?php foreach ( $loc_slugs as $loc_slug ) :
-        $cls        = $loc_data[ $loc_slug ]['next'];
-        $is_default = ( 'rockford' === $loc_slug );
-        $is_today   = $cls && ( strtolower( $cls['day_label'] ) === $today_dow );
-        $live_label = $is_today ? '&#9679; Next &middot; Tonight' : '&#9679; Up Next';
-      ?>
-      <div class="hp-photo-overlay-card"
-           data-wp-interactive="haanpaa/schedule"
-           data-wp-context='{"location":"<?php echo esc_attr( $loc_slug ); ?>"}'
-           data-wp-bind--hidden="!state.locActive"
-           <?php echo $is_default ? '' : 'hidden'; ?>>
-        <?php if ( $cls ) : ?>
-          <div class="hp-eyebrow-mono" style="color:#1A2DC4"><?php echo $live_label; ?></div>
-          <div style="margin-top:8px;font-size:16px;font-weight:600;letter-spacing:-0.01em;color:#0A0A0A">
-            <?php echo esc_html( $cls['title'] ) . ' &middot; ' . esc_html( $cls['time_display'] ); ?>
-          </div>
-          <div style="margin-top:4px;font-size:13px;color:#4A4A48">
-            Beginners welcome. Loaner gi available at the front desk.
-          </div>
-        <?php else : ?>
-          <div class="hp-eyebrow-mono" style="color:#9A9A98">Schedule</div>
-          <div style="margin-top:8px;font-size:16px;font-weight:600;color:#0A0A0A">
-            <a href="/schedule" style="color:inherit;text-decoration:none">See today&#8217;s classes &#x2192;</a>
-          </div>
-        <?php endif; ?>
-      </div>
-      <?php endforeach; ?>
 
     </div><!-- /right -->
 
