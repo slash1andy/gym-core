@@ -164,7 +164,7 @@ foreach ( $loc_slugs as $slug ) {
         started exactly where you are now.
       </p>
 
-      <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center">
+      <div style="display:flex;gap:12px;align-items:center">
         <a href="/free-trial"
            style="display:inline-flex;align-items:center;gap:8px;padding:20px 36px;background:#1A2DC4;color:#F6F4EE;font-size:15px;font-weight:600;letter-spacing:0.04em;text-decoration:none;border-radius:2px;line-height:1;transition:background 160ms">
           Book your free trial &#x2192;
@@ -176,7 +176,7 @@ foreach ( $loc_slugs as $slug ) {
       </div>
 
       <!-- Location selector + affiliation strip -->
-      <div style="margin-top:56px;display:flex;gap:48px;align-items:flex-start;flex-wrap:wrap">
+      <div style="margin-top:32px;display:flex;gap:56px;align-items:flex-start;flex-wrap:wrap">
 
         <div>
           <div class="hp-meta" style="margin-bottom:10px">Location</div>
