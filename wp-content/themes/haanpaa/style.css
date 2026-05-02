@@ -11,3 +11,52 @@ License: GPL-2.0-or-later
 Text Domain: haanpaa
 Tags: full-site-editing, block-patterns, custom-colors, custom-menu, editor-style, featured-images, sticky-post, threaded-comments, translation-ready
 */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&display=swap');
+
+/* ---------- Logo mark ---------- */
+a.hp-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  color: inherit;
+}
+.hp-mark-dot {
+  width: 36px; height: 36px;
+  background: #0A0A0A;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.hp-mark-text { font-size: 18px; line-height: 1; }
+.hp-mark-text small {
+  display: block;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: #4A4A48;
+  margin-top: 3px;
+}
+
+/* ---------- CTA button — dark fill, blue on hover ---------- */
+.btn-accent .wp-block-button__link {
+  background: #0A0A0A !important;
+  color: #F6F4EE !important;
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  transition: background 160ms ease;
+}
+.btn-accent .wp-block-button__link:hover {
+  background: #1A2DC4 !important;
+}

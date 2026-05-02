@@ -1,30 +1,39 @@
-<!-- wp:group {"tagName":"header","align":"full","style":{"spacing":{"padding":{"top":"24px","bottom":"24px","left":"clamp(24px,4vw,48px)","right":"clamp(24px,4vw,48px)"}},"border":{"bottom":{"color":"rgba(10,10,10,0.08)","width":"1px"}},"position":{"type":"sticky","top":"0px"},"color":{"background":"rgba(246,244,238,0.92)"}},"layout":{"type":"constrained","contentSize":"1440px"}} -->
-<header class="wp-block-group alignfull has-background" style="background-color:rgba(246,244,238,0.92);border-bottom-color:rgba(10,10,10,0.08);border-bottom-width:1px;padding-top:24px;padding-right:clamp(24px,4vw,48px);padding-bottom:24px;padding-left:clamp(24px,4vw,48px);position:sticky;top:0px;backdrop-filter:blur(8px);z-index:50">
+<!-- wp:group {"tagName":"header","align":"full","className":"site-header","style":{"spacing":{"padding":{"top":"20px","bottom":"20px","left":"clamp(24px,4vw,48px)","right":"clamp(24px,4vw,48px)"}},"border":{"bottom":{"color":"rgba(10,10,10,0.08)","width":"1px"}},"position":{"type":"sticky","top":"0px"},"color":{"background":"rgba(246,244,238,0.92)"}},"layout":{"type":"flex","justifyContent":"space-between","flexWrap":"nowrap","verticalAlignment":"center"}} -->
+<header class="wp-block-group alignfull site-header has-background" style="background-color:rgba(246,244,238,0.92);border-bottom-color:rgba(10,10,10,0.08);border-bottom-width:1px;padding-top:20px;padding-right:clamp(24px,4vw,48px);padding-bottom:20px;padding-left:clamp(24px,4vw,48px);position:sticky;top:0px"><!-- wp:html -->
+<a href="/" class="hp-mark" aria-label="Haanpaa Martial Arts — Home">
+  <span class="hp-mark-dot">
+    <svg viewBox="0 0 100 100" width="22" height="22" fill="#fff" aria-hidden="true">
+      <polygon points="50,8 43,20 57,20" />
+      <polygon points="50,92 43,80 57,80" />
+      <path d="M28 24 H40 V40 H60 V24 H72 V76 H60 V60 H40 V76 H28 Z" />
+      <rect x="40" y="48" width="20" height="4" />
+    </svg>
+  </span>
+  <span class="hp-mark-text">Haanpaa<small>Martial Arts</small></span>
+</a>
+<!-- /wp:html -->
 
-  <!-- wp:group {"layout":{"type":"flex","justifyContent":"space-between","flexWrap":"nowrap"}} -->
-  <div class="wp-block-group">
+<!-- wp:group {"className":"header-nav","style":{"spacing":{"blockGap":"0rem"}},"layout":{"type":"flex","flexWrap":"nowrap","justifyContent":"center"}} -->
+<div class="wp-block-group header-nav"><!-- wp:navigation {"textColor":"ink","style":{"typography":{"fontSize":"0.875rem","fontWeight":"500","letterSpacing":"0em","textTransform":"none"},"spacing":{"blockGap":"2.25rem"}},"layout":{"type":"flex","justifyContent":"center"}} -->
+<!-- wp:navigation-link {"label":"Programs","url":"/programs/","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"Schedule","url":"/schedule/","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"About","url":"/about/","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"Reviews","url":"/#reviews","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"Locations","url":"/locations/","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"Contact","url":"/#contact","kind":"custom","isTopLevelLink":true} /-->
+<!-- wp:navigation-link {"label":"Check In","url":"/check-in/","kind":"custom","isTopLevelLink":true} /-->
+<!-- /wp:navigation --></div>
+<!-- /wp:group -->
 
-    <!-- wp:group {"layout":{"type":"flex","flexWrap":"nowrap"}} -->
-    <div class="wp-block-group">
-      <!-- wp:site-title {"level":0,"style":{"typography":{"fontSize":"18px","fontWeight":"700","letterSpacing":"-0.02em"}}} /-->
-      <!-- wp:paragraph {"className":"hp-meta","style":{"color":{"text":"#9A9A98"},"typography":{"fontSize":"11px","letterSpacing":"0.06em","textTransform":"uppercase"}}} -->
-      <p class="hp-meta" style="color:#9A9A98;font-size:11px;letter-spacing:0.06em;text-transform:uppercase">Rockford · Beloit</p>
-      <!-- /wp:paragraph -->
-    </div>
-    <!-- /wp:group -->
+<!-- wp:group {"className":"header-actions","style":{"spacing":{"blockGap":"1rem"}},"layout":{"type":"flex","flexWrap":"nowrap","verticalAlignment":"center"}} -->
+<div class="wp-block-group header-actions"><!-- wp:woocommerce/customer-account {"displayStyle":"icon_only","iconClass":"wc-block-customer-account__account-icon","textColor":"ink","style":{"layout":{"selfStretch":"fit"}}} /-->
 
-    <!-- wp:navigation {"ref":0,"layout":{"type":"flex","setCascadingProperties":true,"justifyContent":"right","flexWrap":"nowrap"},"style":{"typography":{"fontSize":"14px","fontWeight":"500","letterSpacing":"0.01em"},"spacing":{"blockGap":"32px"}}} /-->
+<!-- wp:woocommerce/mini-cart {"textColor":"ink","style":{"layout":{"selfStretch":"fit"}}} /-->
 
-    <!-- wp:buttons -->
-    <div class="wp-block-buttons">
-      <!-- wp:button {"backgroundColor":"blue","textColor":"paper","style":{"border":{"radius":"2px"},"spacing":{"padding":{"top":"12px","bottom":"12px","left":"22px","right":"22px"}},"typography":{"fontSize":"13px","letterSpacing":"0.04em","fontWeight":"600"}}} -->
-      <div class="wp-block-button has-custom-font-size" style="font-size:13px;font-weight:600;letter-spacing:0.04em"><a class="wp-block-button__link has-paper-color has-blue-background-color has-text-color has-background wp-element-button" style="border-radius:2px;padding-top:12px;padding-right:22px;padding-bottom:12px;padding-left:22px" href="/free-trial">Free trial →</a></div>
-      <!-- /wp:button -->
-    </div>
-    <!-- /wp:buttons -->
-
-  </div>
-  <!-- /wp:group -->
-
-</header>
+<!-- wp:buttons -->
+<div class="wp-block-buttons"><!-- wp:button {"backgroundColor":"ink","textColor":"paper","className":"btn-accent","style":{"typography":{"fontSize":"0.8125rem","fontWeight":"600","letterSpacing":"0.02em","textTransform":"none","fontFamily":"'Inter', system-ui, sans-serif"},"spacing":{"padding":{"top":"0.75rem","bottom":"0.75rem","left":"1.125rem","right":"1.125rem"}},"border":{"radius":"2px"}}} -->
+<div class="wp-block-button btn-accent"><a class="wp-block-button__link has-paper-color has-ink-background-color has-text-color has-background has-custom-font-size wp-element-button" style="border-radius:2px;padding-top:0.75rem;padding-right:1.125rem;padding-bottom:0.75rem;padding-left:1.125rem;font-size:0.8125rem;font-weight:600;letter-spacing:0.02em;text-transform:none;font-family:'Inter', system-ui, sans-serif" href="/membership/">Book a free trial →</a></div>
+<!-- /wp:button --></div>
+<!-- /wp:buttons --></div>
+<!-- /wp:group --></header>
 <!-- /wp:group -->
