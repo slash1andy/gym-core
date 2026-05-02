@@ -109,14 +109,14 @@
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 64px;
-  align-items: start;
+  align-items: stretch;
   padding-bottom: 80px;
 }
 
 /* Photo wrapper — positioning context for the overlay card */
 .hp-photo-wrap {
   position: relative;
-  aspect-ratio: 4 / 5;
+  height: 100%;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -149,6 +149,7 @@
     gap: 32px;
     padding-bottom: 48px;
   }
+  .hp-photo-wrap { aspect-ratio: 4 / 5; height: auto; }
   .hp-hero-h1 { font-size: 80px !important; line-height: 0.9 !important; }
 }
 @media (max-width: 1080px) and (min-width: 881px) {
