@@ -128,8 +128,8 @@
 }
 
 /* Hero CTA button row — force row layout regardless of theme anchor resets */
-.hp-hero-ctas { display: flex; flex-direction: row; gap: 12px; align-items: center; }
-.hp-hero-ctas a { display: inline-flex !important; white-space: nowrap; }
+.hp-hero-ctas { display: flex; flex-direction: row; flex-wrap: wrap; gap: 12px; align-items: center; }
+.hp-hero-ctas a { display: inline-flex !important; white-space: nowrap; flex-shrink: 0; }
 
 /* Live class overlay card */
 .hp-photo-overlay-card {
