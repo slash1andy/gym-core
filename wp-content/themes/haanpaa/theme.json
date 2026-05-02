@@ -62,6 +62,11 @@
           "slug": "mono",
           "name": "Mono",
           "fontFamily": "'JetBrains Mono', 'Menlo', ui-monospace, monospace"
+        },
+        {
+          "slug": "serif",
+          "name": "Serif",
+          "fontFamily": "'Fraunces', ui-serif, Georgia, serif"
         }
       ],
       "fontSizes": [
