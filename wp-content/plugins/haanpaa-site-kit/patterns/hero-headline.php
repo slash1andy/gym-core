@@ -167,11 +167,11 @@ foreach ( $loc_slugs as $slug ) {
       <div class="hp-hero-ctas">
         <a href="/free-trial"
            style="display:inline-flex;align-items:center;gap:8px;padding:20px 36px;background:#1A2DC4;color:#F6F4EE;font-size:15px;font-weight:600;letter-spacing:0.04em;text-decoration:none;border-radius:2px;line-height:1;transition:background 160ms">
-          Book your free trial &#x2192;
+          <span>Book your free trial</span><span aria-hidden="true">&#x2192;</span>
         </a>
         <a href="/schedule"
-           style="display:inline-flex;align-items:center;padding:19px 36px;background:transparent;color:#0A0A0A;font-size:15px;font-weight:600;letter-spacing:0.04em;text-decoration:none;border-radius:2px;border:1px solid rgba(10,10,10,0.25);line-height:1;transition:border-color 160ms">
-          See class schedule &#x2192;
+           style="display:inline-flex;align-items:center;gap:8px;padding:19px 36px;background:transparent;color:#0A0A0A;font-size:15px;font-weight:600;letter-spacing:0.04em;text-decoration:none;border-radius:2px;border:1px solid rgba(10,10,10,0.25);line-height:1;transition:border-color 160ms">
+          <span>See class schedule</span><span aria-hidden="true">&#x2192;</span>
         </a>
       </div>
 
