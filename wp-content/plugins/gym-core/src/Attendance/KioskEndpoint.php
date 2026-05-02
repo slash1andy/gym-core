@@ -2,10 +2,9 @@
 /**
  * Kiosk check-in endpoint.
  *
- * Registers the /check-in/ URL with a minimal full-screen template
- * designed for tablet use at the gym entrance. The template loads
- * kiosk-specific CSS and JS that handle member lookup, QR scanning,
- * and check-in confirmation via the gym/v1/check-in REST endpoint.
+ * Registers the /check-in/ URL with a full-screen React template
+ * designed for tablet use at the gym entrance. Data is PHP-injected
+ * via window.gymKiosk so the React app boots without a REST round-trip.
  *
  * @package Gym_Core
  * @since   1.3.0
@@ -15,7 +14,10 @@ declare( strict_types=1 );
 
 namespace Gym_Core\Attendance;
 
+use Gym_Core\API\ClassScheduleController;
+use Gym_Core\Data\TableManager;
 use Gym_Core\Location\Taxonomy;
+use Gym_Core\Schedule\ClassPostType;
 
 /**
  * Registers the kiosk check-in page and its assets.
@@ -47,12 +49,6 @@ final class KioskEndpoint {
 	/**
 	 * Registers a Check-In submenu under the Gym admin menu.
 	 *
-	 * The kiosk lives at the front-end /check-in/ URL (rewrite rule above),
-	 * not in wp-admin. The menu entry is a small redirect shim — clicking it
-	 * goes to admin.php?page=gym-checkin-redirect, the callback fires a
-	 * wp_safe_redirect to the kiosk URL, and the front-end opens in the same
-	 * tab so attendants don't have to bookmark the kiosk URL separately.
-	 *
 	 * @since 3.2.0
 	 *
 	 * @return void
@@ -82,8 +78,6 @@ final class KioskEndpoint {
 
 	/**
 	 * Registers custom REST API fields on the user object for kiosk display.
-	 *
-	 * Exposes `gym_foundations_active` so the kiosk can badge Foundations members.
 	 *
 	 * @since 3.1.0
 	 *
@@ -137,9 +131,6 @@ final class KioskEndpoint {
 	/**
 	 * Renders the kiosk template when the query var is set.
 	 *
-	 * Outputs a standalone HTML page (no theme header/footer) optimized
-	 * for touch devices. Enqueues kiosk-specific CSS and JS.
-	 *
 	 * @since 1.3.0
 	 *
 	 * @return void
@@ -149,16 +140,15 @@ final class KioskEndpoint {
 			return;
 		}
 
-		// The kiosk page requires a logged-in staff member for API auth.
 		if ( ! is_user_logged_in() ) {
 			wp_safe_redirect( wp_login_url( home_url( '/' . self::SLUG . '/' ) ) );
 			exit;
 		}
 
-		$timeout  = (int) get_option( 'gym_core_kiosk_timeout', 10 );
 		$location = $this->get_kiosk_location();
 
-		// Enqueue assets.
+		// Enqueue kiosk CSS only — JS is loaded directly in the template
+		// via type="text/babel" tags so Babel standalone can compile JSX at runtime.
 		wp_enqueue_style(
 			'gym-kiosk',
 			GYM_CORE_URL . 'assets/css/kiosk.css',
@@ -166,42 +156,7 @@ final class KioskEndpoint {
 			GYM_CORE_VERSION
 		);
 
-		wp_enqueue_script(
-			'gym-kiosk',
-			GYM_CORE_URL . 'assets/js/kiosk.js',
-			array(),
-			GYM_CORE_VERSION,
-			true
-		);
-
-		wp_localize_script(
-			'gym-kiosk',
-			'gymKiosk',
-			array(
-				'restUrl'  => esc_url_raw( rest_url( 'gym/v1/' ) ),
-				'nonce'    => wp_create_nonce( 'wp_rest' ),
-				'location' => $location,
-				'timeout'  => $timeout,
-				'strings'  => array(
-					'title'             => \Gym_Core\Utilities\Brand::name(),
-					'subtitle'          => __( 'Tap to check in', 'gym-core' ),
-					'searchLabel'       => __( 'Search by Name', 'gym-core' ),
-					'searchPlaceholder' => __( 'Start typing your name...', 'gym-core' ),
-					'checkingIn'        => __( 'Checking in...', 'gym-core' ),
-					'success'           => __( 'Checked in!', 'gym-core' ),
-					'welcomeBack'       => __( 'Welcome back,', 'gym-core' ),
-					'error'             => __( 'Check-in failed', 'gym-core' ),
-					'tryAgain'          => __( 'Tap to try again', 'gym-core' ),
-					'noResults'         => __( 'No members found', 'gym-core' ),
-					'selectClass'       => __( 'Select your class', 'gym-core' ),
-					/* translators: %d: number of consecutive weeks */
-					'weekStreak'        => __( 'Week %d streak!', 'gym-core' ),
-				),
-			)
-		);
-
-		// Output standalone HTML.
-		$this->render_template( $location, $timeout );
+		$this->render_template( $location );
 		exit;
 	}
 
@@ -213,37 +168,218 @@ final class KioskEndpoint {
 	private function get_kiosk_location(): string {
 		$user_location = get_user_meta( get_current_user_id(), 'gym_location', true );
 		if ( $user_location ) {
-			return $user_location;
+			return (string) $user_location;
 		}
 
-		$cookie_location = isset( $_COOKIE['gym_location'] ) ? sanitize_text_field( wp_unslash( $_COOKIE['gym_location'] ) ) : '';
+		$cookie_location = isset( $_COOKIE['gym_location'] )
+			? sanitize_text_field( wp_unslash( $_COOKIE['gym_location'] ) )
+			: '';
+
 		if ( '' === $cookie_location ) {
 			$locations       = Taxonomy::get_location_labels();
 			$cookie_location = ! empty( $locations ) ? array_key_first( $locations ) : '';
 		}
-		return $cookie_location;
+		return (string) $cookie_location;
 	}
 
 	/**
 	 * Renders the kiosk HTML template.
 	 *
 	 * @param string $location Location slug.
-	 * @param int    $timeout  Auto-reset timeout in seconds.
 	 * @return void
 	 */
-	private function render_template( string $location, int $timeout ): void {
+	private function render_template( string $location ): void {
 		$template_path = GYM_CORE_PATH . 'templates/kiosk.php';
 
 		if ( file_exists( $template_path ) ) {
+			$kiosk_data = $this->build_kiosk_data( $location );
 			include $template_path;
 		} else {
-			// Inline fallback if template file doesn't exist yet.
 			$this->render_inline_template( $location );
 		}
 	}
 
 	/**
-	 * Renders an inline kiosk template.
+	 * Builds the kiosk bootstrap data injected as window.gymKiosk.
+	 *
+	 * @param string $location Location slug.
+	 * @return array<string, mixed>
+	 */
+	private function build_kiosk_data( string $location ): array {
+		return array(
+			'restUrl'      => esc_url_raw( rest_url( 'gym/v1/' ) ),
+			'nonce'        => wp_create_nonce( 'wp_rest' ),
+			'location'     => $location,
+			'members'      => $this->get_kiosk_members(),
+			'nextClass'    => $this->get_next_class( $location ),
+			'todayClasses' => $this->get_today_classes( $location ),
+			'todayCount'   => $this->get_today_count( $location ),
+		);
+	}
+
+	/**
+	 * Returns all active members for client-side filtering.
+	 *
+	 * Loads all customer/subscriber users upfront so the search is instant
+	 * without REST round-trips. Works for typical gym rosters (< 500 members).
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_kiosk_members(): array {
+		$query = new \WP_User_Query(
+			array(
+				'role__in' => array( 'customer', 'subscriber' ),
+				'number'   => -1,
+				'orderby'  => 'display_name',
+				'order'    => 'ASC',
+				'fields'   => 'all',
+			)
+		);
+
+		$members = array();
+		foreach ( $query->get_results() as $user ) {
+			$members[] = array(
+				'id'      => $user->ID,
+				'first'   => get_user_meta( $user->ID, 'first_name', true ) ?: '',
+				'last'    => get_user_meta( $user->ID, 'last_name', true ) ?: '',
+				'kind'    => get_user_meta( $user->ID, 'gym_member_type', true ) ?: 'adult',
+				'program' => get_user_meta( $user->ID, 'gym_program', true ) ?: '',
+				'belt'    => get_user_meta( $user->ID, 'gym_belt', true ) ?: '',
+			);
+		}
+		return $members;
+	}
+
+	/**
+	 * Returns the next (or current) class for today at the given location.
+	 *
+	 * Picks the class whose start_time is soonest after the current time.
+	 * Falls back to the last class of the day if all have ended.
+	 *
+	 * @param string $location Location slug.
+	 * @return array<string, mixed>|null Formatted class or null if none scheduled.
+	 */
+	private function get_next_class( string $location ): ?array {
+		$classes = $this->get_today_classes( $location );
+		if ( empty( $classes ) ) {
+			return null;
+		}
+
+		$now_time = (int) gmdate( 'Hi' ); // e.g. 1830 for 18:30
+		$next     = null;
+
+		foreach ( $classes as $cls ) {
+			$start_time = (int) str_replace( ':', '', (string) ( $cls['start_time'] ?? '' ) );
+			if ( $start_time >= $now_time ) {
+				$next = $cls;
+				break;
+			}
+		}
+
+		// All classes passed today — return the last one so the card isn't blank.
+		return $next ?? $classes[ count( $classes ) - 1 ];
+	}
+
+	/**
+	 * Returns all classes scheduled for today at the given location, sorted by start time.
+	 *
+	 * @param string $location Location slug.
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function get_today_classes( string $location ): array {
+		$day_of_week = strtolower( gmdate( 'l' ) ); // 'monday', 'tuesday', etc.
+
+		$query = new \WP_Query(
+			array(
+				'post_type'      => ClassPostType::POST_TYPE,
+				'post_status'    => 'publish',
+				'posts_per_page' => -1,
+				// phpcs:ignore WordPress.DB.SlowDBQuery.slow_db_query_meta_key
+				'meta_key'       => '_gym_class_start_time',
+				'orderby'        => 'meta_value',
+				'order'          => 'ASC',
+				'meta_query'     => array(
+					'relation' => 'AND',
+					array(
+						'key'     => '_gym_class_day_of_week',
+						'value'   => $day_of_week,
+						'compare' => '=',
+					),
+					// Exclude explicitly hidden classes, but include classes with no status meta
+					// (status defaults to 'active' in format_class when the meta key is absent).
+					array(
+						'relation' => 'OR',
+						array(
+							'key'     => '_gym_class_status',
+							'compare' => 'NOT EXISTS',
+						),
+						array(
+							'key'     => '_gym_class_status',
+							'value'   => 'hidden',
+							'compare' => '!=',
+						),
+					),
+				),
+			)
+		);
+
+		if ( ! $query->have_posts() ) {
+			return array();
+		}
+
+		$controller = new ClassScheduleController();
+		$classes    = array();
+
+		foreach ( $query->posts as $post ) {
+			$cls = $controller->format_class_public( $post );
+			if ( ! $cls ) {
+				continue;
+			}
+			// Filter by location if set (empty location = show all).
+			if ( $location && ! empty( $cls['location'] ) && $cls['location'] !== $location ) {
+				continue;
+			}
+			$classes[] = $cls;
+		}
+
+		wp_reset_postdata();
+		return $classes;
+	}
+
+	/**
+	 * Returns the number of check-ins recorded today for the given location.
+	 *
+	 * @param string $location Location slug.
+	 * @return int
+	 */
+	private function get_today_count( string $location ): int {
+		global $wpdb;
+
+		$tables = TableManager::get_table_names();
+		$today  = gmdate( 'Y-m-d' );
+
+		if ( $location ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+			return (int) $wpdb->get_var(
+				$wpdb->prepare(
+					"SELECT COUNT(*) FROM {$tables['attendance']} WHERE location = %s AND DATE(checked_in_at) = %s",
+					$location,
+					$today
+				)
+			);
+		}
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+		return (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$tables['attendance']} WHERE DATE(checked_in_at) = %s",
+				$today
+			)
+		);
+	}
+
+	/**
+	 * Renders an inline kiosk template (fallback when templates/kiosk.php is missing).
 	 *
 	 * @param string $location Location slug.
 	 * @return void
@@ -253,88 +389,26 @@ final class KioskEndpoint {
 <!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
-	<meta charset="<?php bloginfo( 'charset' ); ?>">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>
-		<?php
-		echo esc_html(
-			sprintf(
-				/* translators: %s: brand name */
-				__( 'Check in — %s', 'gym-core' ),
-				\Gym_Core\Utilities\Brand::name()
-			)
-		);
-		?>
-	</title>
-		<?php wp_head(); ?>
+<meta charset="<?php bloginfo( 'charset' ); ?>">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>
+	<?php
+	echo esc_html(
+		sprintf(
+			/* translators: %s: brand name */
+			__( 'Check in — %s', 'gym-core' ),
+			\Gym_Core\Utilities\Brand::name()
+		)
+	);
+	?>
+</title>
+<?php wp_head(); ?>
 </head>
-<body class="gym-kiosk" data-location="<?php echo esc_attr( $location ); ?>">
-
-	<div id="gym-kiosk-app">
-		<!-- Screen: Search -->
-		<div class="kiosk-screen kiosk-screen--search active" id="kiosk-search">
-			<div class="kiosk-header">
-				<h1 class="kiosk-title"><?php echo esc_html( \Gym_Core\Utilities\Brand::name() ); ?></h1>
-				<p class="kiosk-subtitle"><?php echo esc_html( ucfirst( $location ) ); ?></p>
-			</div>
-			<div class="kiosk-search-box">
-				<label for="kiosk-search-input" class="kiosk-search-label">
-					<?php esc_html_e( 'Type your name to check in', 'gym-core' ); ?>
-				</label>
-				<label for="kiosk-search-input" class="screen-reader-text">
-					<?php esc_html_e( 'Search by Name', 'gym-core' ); ?>
-				</label>
-				<input
-					type="text"
-					id="kiosk-search-input"
-					class="kiosk-input"
-					placeholder="<?php esc_attr_e( 'Tap here and type your name...', 'gym-core' ); ?>"
-					autocomplete="off"
-					autocorrect="off"
-					spellcheck="false"
-				>
-			</div>
-			<div id="kiosk-results" class="kiosk-results" role="listbox" aria-label="<?php esc_attr_e( 'Search results', 'gym-core' ); ?>"></div>
-		</div>
-
-		<!-- Screen: Class Selection -->
-		<div class="kiosk-screen kiosk-screen--classes" id="kiosk-classes">
-			<div class="kiosk-header">
-				<h2 class="kiosk-title" id="kiosk-member-name"></h2>
-				<p class="kiosk-subtitle"><?php esc_html_e( 'Select your class', 'gym-core' ); ?></p>
-			</div>
-			<div id="kiosk-class-list" class="kiosk-class-list" role="listbox" aria-label="<?php esc_attr_e( 'Available classes', 'gym-core' ); ?>"></div>
-			<button type="button" class="kiosk-btn kiosk-btn--back" id="kiosk-back">
-				<?php esc_html_e( 'Back', 'gym-core' ); ?>
-			</button>
-		</div>
-
-		<!-- Screen: Success -->
-		<div class="kiosk-screen kiosk-screen--success" id="kiosk-success">
-			<div class="kiosk-success-icon" aria-hidden="true">&#10003;</div>
-			<h2 class="kiosk-title"><?php esc_html_e( 'Checked in!', 'gym-core' ); ?></h2>
-			<p class="kiosk-welcome" id="kiosk-welcome-msg"></p>
-			<p class="kiosk-streak" id="kiosk-streak-display" style="display:none;"></p>
-			<p class="kiosk-rank" id="kiosk-rank-display"></p>
-		</div>
-
-		<!-- Screen: Error -->
-		<div class="kiosk-screen kiosk-screen--error" id="kiosk-error">
-			<div class="kiosk-error-icon" aria-hidden="true">&#10007;</div>
-			<h2 class="kiosk-title"><?php esc_html_e( 'Check-in failed', 'gym-core' ); ?></h2>
-			<p class="kiosk-error-msg" id="kiosk-error-msg"></p>
-			<button type="button" class="kiosk-btn" id="kiosk-retry">
-				<?php esc_html_e( 'Tap to try again', 'gym-core' ); ?>
-			</button>
-		</div>
-
-		<!-- Loading overlay -->
-		<div class="kiosk-loading" id="kiosk-loading">
-			<div class="kiosk-spinner" aria-label="<?php esc_attr_e( 'Loading', 'gym-core' ); ?>"></div>
-		</div>
-	</div>
-
-		<?php wp_footer(); ?>
+<body style="margin:0;background:#0A0A0A;color:#F6F4EE;font-family:sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;">
+<p style="opacity:.5;font-size:1rem;">
+	<?php esc_html_e( 'Kiosk template not found. Please reinstall the gym-core plugin.', 'gym-core' ); ?>
+</p>
+<?php wp_footer(); ?>
 </body>
 </html>
 		<?php
