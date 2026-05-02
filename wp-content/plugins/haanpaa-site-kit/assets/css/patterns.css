@@ -129,7 +129,7 @@
 
 /* Hero CTA button row — force row layout regardless of theme anchor resets */
 .hp-hero-ctas { display: flex; flex-direction: row; gap: 12px; align-items: center; }
-.hp-hero-ctas a { display: inline-flex !important; white-space: nowrap; }
+.hp-hero-ctas a { display: inline-flex !important; white-space: nowrap; flex-shrink: 0; }
 
 /* Live class overlay card */
 .hp-photo-overlay-card {
@@ -154,4 +154,6 @@
 }
 @media (max-width: 1080px) and (min-width: 881px) {
   .hp-hero-h1 { font-size: 120px !important; }
+  /* Buttons can't both fit the left column at this range — let them stack */
+  .hp-hero-ctas { flex-wrap: wrap; }
 }
