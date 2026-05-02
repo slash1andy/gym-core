@@ -160,9 +160,16 @@ final class KioskEndpoint {
 
 		// Enqueue assets.
 		wp_enqueue_style(
+			'haanpaa-fonts',
+			'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400;1,9..144,600&family=Inter:wght@400;500;600;700&display=swap',
+			array(),
+			null
+		);
+
+		wp_enqueue_style(
 			'gym-kiosk',
 			GYM_CORE_URL . 'assets/css/kiosk.css',
-			array(),
+			array( 'haanpaa-fonts' ),
 			GYM_CORE_VERSION
 		);
 
