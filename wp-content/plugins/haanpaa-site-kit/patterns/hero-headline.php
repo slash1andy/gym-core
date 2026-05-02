@@ -210,48 +210,31 @@ foreach ( $loc_slugs as $slug ) {
             <a href="/schedule" style="color:inherit;text-decoration:none">See today&#8217;s classes &#x2192;</a>
           </div>
         <?php endif; ?>
+        <div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(10,10,10,0.1)">
+          <div class="hp-meta" style="margin-bottom:8px">Location</div>
+          <div class="hp-seg" data-wp-interactive="haanpaa/schedule">
+            <?php foreach ( $loc_slugs as $btn_slug ) :
+              $btn_is_default = ( 'rockford' === $btn_slug );
+            ?>
+            <button
+              data-wp-context='{"location":"<?php echo esc_attr( $btn_slug ); ?>"}'
+              data-wp-on--click="actions.setLoc"
+              data-wp-bind--aria-pressed="state.locActive"
+              aria-pressed="<?php echo $btn_is_default ? 'true' : 'false'; ?>"
+            ><?php echo esc_html( ucfirst( $btn_slug ) ); ?></button>
+            <?php endforeach; ?>
+          </div>
+          <?php $addr = $loc_data[ $loc_slug ]['city_state_zip'] ?: ucfirst( $loc_slug ); ?>
+          <div style="margin-top:6px;font-size:12px;color:#4A4A48"><?php echo esc_html( $addr ); ?></div>
+          <div style="margin-top:10px;font-size:12px;color:#4A4A48">
+            <span style="font-family:'Menlo',monospace;font-size:10px;letter-spacing:0.04em;color:#9A9A98;text-transform:uppercase">Affiliation</span>
+            &nbsp;&middot;&nbsp;Team Curran
+          </div>
+        </div>
       </div>
       <?php endforeach; ?>
 
       </div><!-- /.hp-photo-wrap -->
-
-      <!-- Location selector + affiliation strip -->
-      <div style="margin-top:24px;display:flex;gap:56px;align-items:flex-start;flex-wrap:wrap">
-
-        <div>
-          <div class="hp-meta" style="margin-bottom:10px">Location</div>
-          <div class="hp-seg" data-wp-interactive="haanpaa/schedule">
-            <?php foreach ( $loc_slugs as $slug ) :
-              $is_default = ( 'rockford' === $slug );
-            ?>
-            <button
-              data-wp-context='{"location":"<?php echo esc_attr( $slug ); ?>"}'
-              data-wp-on--click="actions.setLoc"
-              data-wp-bind--aria-pressed="state.locActive"
-              aria-pressed="<?php echo $is_default ? 'true' : 'false'; ?>"
-            ><?php echo esc_html( ucfirst( $slug ) ); ?></button>
-            <?php endforeach; ?>
-          </div>
-          <?php foreach ( $loc_data as $slug => $loc ) :
-            $is_default = ( 'rockford' === $slug );
-            $addr       = $loc['city_state_zip'] ?: ucfirst( $slug );
-          ?>
-          <div
-            data-wp-interactive="haanpaa/schedule"
-            data-wp-context='{"location":"<?php echo esc_attr( $slug ); ?>"}'
-            data-wp-bind--hidden="!state.locActive"
-            <?php echo $is_default ? '' : 'hidden'; ?>
-            style="margin-top:6px;font-size:13px;color:#4A4A48"
-          ><?php echo esc_html( $addr ); ?></div>
-          <?php endforeach; ?>
-        </div>
-
-        <div>
-          <div class="hp-meta" style="margin-bottom:10px">Affiliation</div>
-          <div style="font-size:20px;font-weight:600;letter-spacing:-0.01em;color:#0A0A0A">Team Curran</div>
-        </div>
-
-      </div>
 
     </div><!-- /right -->
 
