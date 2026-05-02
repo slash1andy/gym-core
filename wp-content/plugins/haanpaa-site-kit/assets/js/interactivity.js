@@ -39,6 +39,14 @@ store( 'haanpaa/schedule', {
       if ( s.location === 'beloit' && ! [ 'bjj', 'kids' ].includes( c.kind ) ) return false;
       return true;
     },
+    // Week grid: no day filter — only kind and location.
+    get cardVisible() {
+      const c = getContext();
+      const s = store( 'haanpaa/schedule' ).state;
+      if ( s.filter !== 'all' && c.kind !== s.filter ) return false;
+      if ( s.location === 'beloit' && ! [ 'bjj', 'kids' ].includes( c.kind ) ) return false;
+      return true;
+    },
   },
   actions: {
     setDay()    { store( 'haanpaa/schedule' ).state.day      = getContext().day; },
