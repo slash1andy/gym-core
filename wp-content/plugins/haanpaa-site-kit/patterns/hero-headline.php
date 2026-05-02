@@ -171,7 +171,7 @@ foreach ( $loc_slugs as $slug ) {
         </a>
         <a href="/schedule"
            style="display:inline-flex;align-items:center;padding:19px 36px;background:transparent;color:#0A0A0A;font-size:15px;font-weight:600;letter-spacing:0.04em;text-decoration:none;border-radius:2px;border:1px solid rgba(10,10,10,0.25);line-height:1;transition:border-color 160ms">
-          See class schedule
+          See class schedule &#x2192;
         </a>
       </div>
 
