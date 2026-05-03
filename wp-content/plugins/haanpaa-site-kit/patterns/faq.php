@@ -12,7 +12,7 @@ $faqs = [
     [ 'q' => "What do I wear / what do I bring?",            'a' => "Athletic clothes for your first class — t-shirt and shorts (no zippers or pockets) work fine. We'll loan you a gi if you want to try BJJ. Bring water." ],
     [ 'q' => "How does the free week work?",                 'a' => "Seven calendar days, all programs, no card on file. Take as many classes as you want. If it fits, we talk membership at the end of the week." ],
     [ 'q' => "Is there a long-term contract?",               'a' => "No. Memberships are month-to-month. Cancel by emailing us. No fees, no friction." ],
-    [ 'q' => "How old does my kid need to be?",              'a' => "Our youngest mat shoes are size 10. Realistically: 5+ for the kids program, with two age groups (5–8 and 9–13)." ],
+    [ 'q' => "How old does my kid need to be?",              'a' => "5-7 for our Little Ninjas class, and 8-13 for the Kids Jiujitsu class." ],
     [ 'q' => "Can I just do kickboxing — no jiu-jitsu?",     'a' => "Absolutely. Many students train one program. Many train two. Your call." ],
 ];
 ?>
@@ -28,7 +28,7 @@ $faqs = [
         <span style="font-size:20px;font-weight:500;letter-spacing:-0.01em"><?php echo esc_html( $f['q'] ); ?></span>
         <span style="color:#1A2DC4;font-size:24px" data-wp-text="state.isOpen ? '−' : '+'"><?php echo $i === 0 ? '−' : '+'; ?></span>
       </button>
-      <div class="hp-faq-body" data-wp-bind--hidden="!state.isOpen"<?php echo $i === 0 ? '' : ' hidden'; ?> style="padding:0 0 28px 0;color:#C9C7C1;font-size:16px;line-height:1.6;max-width:60ch">
+      <div class="hp-faq-body" data-wp-bind--hidden="!state.isOpen"<?php echo $i === 0 ? '' : ' hidden'; ?> style="padding:0 0 28px 0;color:#C9C7C1;font-size:16px;line-height:1.6;max-width:80ch">
         <?php echo esc_html( $f['a'] ); ?>
       </div>
     </div>
