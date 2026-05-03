@@ -5,8 +5,8 @@
     "appearanceTools": true,
     "useRootPaddingAwareAlignments": true,
     "layout": {
-      "contentSize": "880px",
-      "wideSize": "1280px"
+      "contentSize": "1220px",
+      "wideSize": "1440px"
     },
     "spacing": {
       "padding": true,
@@ -103,9 +103,9 @@
       "letterSpacing": "-0.005em"
     },
     "elements": {
-      "h1": { "typography": { "fontFamily": "var(--wp--preset--font-family--display)", "fontSize": "var(--wp--preset--font-size--h1)", "fontWeight": "600", "lineHeight": "0.95",  "letterSpacing": "-0.04em" } },
-      "h2": { "typography": { "fontFamily": "var(--wp--preset--font-family--display)", "fontSize": "var(--wp--preset--font-size--h2)", "fontWeight": "600", "lineHeight": "1.05",  "letterSpacing": "-0.03em" } },
-      "h3": { "typography": { "fontFamily": "var(--wp--preset--font-family--display)", "fontSize": "var(--wp--preset--font-size--h3)", "fontWeight": "600", "lineHeight": "1.15",  "letterSpacing": "-0.02em" } },
+      "h1": { "typography": { "fontFamily": "var(--wp--preset--font-family--serif)", "fontSize": "var(--wp--preset--font-size--h1)", "fontWeight": "600", "lineHeight": "0.95",  "letterSpacing": "-0.04em", "textTransform": "none" } },
+      "h2": { "typography": { "fontFamily": "var(--wp--preset--font-family--serif)", "fontSize": "var(--wp--preset--font-size--h2)", "fontWeight": "600", "lineHeight": "1.05",  "letterSpacing": "-0.03em", "textTransform": "none" } },
+      "h3": { "typography": { "fontFamily": "var(--wp--preset--font-family--serif)", "fontSize": "var(--wp--preset--font-size--h3)", "fontWeight": "600", "lineHeight": "1.15",  "letterSpacing": "-0.02em", "textTransform": "none" } },
       "link": { "color": { "text": "var(--wp--preset--color--blue)" }, "typography": { "textDecoration": "none" }, ":hover": { "typography": { "textDecoration": "underline" } } },
       "button": {
         "border": { "radius": "2px" },
@@ -121,7 +121,8 @@
     { "name": "footer", "title": "Footer", "area": "footer" }
   ],
   "customTemplates": [
-    { "name": "page-wide",  "title": "Wide page",   "postTypes": [ "page" ] },
-    { "name": "free-trial", "title": "Free Trial",  "postTypes": [ "page" ] }
+    { "name": "page-wide",     "title": "Wide page",        "postTypes": [ "page" ] },
+    { "name": "free-trial",    "title": "Free Trial",       "postTypes": [ "page" ] },
+    { "name": "page-schedule", "title": "Schedule Page",    "postTypes": [ "page" ] }
   ]
 }

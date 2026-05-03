@@ -157,3 +157,108 @@
   /* Buttons can't both fit the left column at this range — let them stack */
   .hp-hero-ctas { flex-wrap: wrap; }
 }
+
+/* ============================================================
+   Display typography scale — mirrors design prototype base.css
+   ============================================================ */
+.hp-display-xl { font-family: 'Fraunces', ui-serif, Georgia, serif; font-size: clamp(64px, 10vw, 124px); font-weight: 600; line-height: 0.95; letter-spacing: -0.03em; }
+.hp-display-lg { font-family: 'Fraunces', ui-serif, Georgia, serif; font-size: clamp(48px, 7vw, 88px);  font-weight: 600; line-height: 1;    letter-spacing: -0.025em; }
+.hp-display-md { font-family: 'Fraunces', ui-serif, Georgia, serif; font-size: clamp(36px, 5vw, 64px);  font-weight: 600; line-height: 1.05; letter-spacing: -0.02em; }
+.hp-display-sm { font-family: 'Fraunces', ui-serif, Georgia, serif; font-size: clamp(28px, 3.5vw, 44px);font-weight: 600; line-height: 1.1; }
+.hp-h-md { font-family: 'Fraunces', ui-serif, Georgia, serif; font-size: 28px; font-weight: 600; line-height: 1.2; }
+.hp-h-sm { font-family: 'Fraunces', ui-serif, Georgia, serif; font-size: 20px; font-weight: 600; line-height: 1.25; }
+
+/* Body text scale */
+.hp-body-lg { font-size: 18px; line-height: 1.65; }
+.hp-body    { font-size: 15px; line-height: 1.7; }
+.hp-body-sm { font-size: 13px; line-height: 1.65; }
+
+/* Containers */
+.hp-container      { max-width: 1220px; margin-inline: auto; padding-inline: clamp(24px, 4vw, 48px); }
+.hp-container-wide { max-width: 1440px; margin-inline: auto; padding-inline: clamp(24px, 4vw, 48px); }
+
+/* Buttons */
+.hp-btn { display: inline-flex; align-items: center; gap: 8px; padding: 14px 22px; border: 1px solid transparent; border-radius: 2px; font-size: 14px; font-weight: 600; font-family: 'Inter', system-ui, sans-serif; cursor: pointer; text-decoration: none; transition: opacity .15s; }
+.hp-btn-primary { background: #1A2DC4; color: #fff; border-color: #1A2DC4; }
+.hp-btn-dark    { background: #0A0A0A; color: #F6F4EE; border-color: #0A0A0A; }
+.hp-btn-ghost   { background: transparent; color: #181816; border-color: rgba(10,10,10,0.25); }
+.hp-btn-lg      { padding: 18px 28px; font-size: 15px; }
+.hp-btn-sm      { padding: 10px 16px; font-size: 13px; }
+.hp-btn:hover   { opacity: 0.85; }
+
+/* ============================================================
+   7-day schedule week grid
+   ============================================================ */
+.hp-sch-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 16px;
+  border-top: 1px solid rgba(10,10,10,0.15);
+  padding-top: 24px;
+}
+.hp-sch-week-col-head {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(10,10,10,0.1);
+  margin-bottom: 12px;
+}
+.hp-sch-week-col-day {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+.hp-sch-week-col-count {
+  font-family: 'Menlo', monospace;
+  font-size: 11px;
+  color: #9A9A98;
+  margin-top: 4px;
+}
+.hp-sch-week-card {
+  padding: 14px;
+  background: #fff;
+  border: 1px solid rgba(10,10,10,0.08);
+  border-radius: 2px;
+  border-left-width: 3px;
+  margin-bottom: 12px;
+}
+.hp-sch-week-card-time {
+  font-family: 'Menlo', monospace;
+  font-size: 12px;
+  color: #0A0A0A;
+  margin-bottom: 6px;
+}
+.hp-sch-week-card-name {
+  font-family: 'Fraunces', ui-serif, Georgia, serif;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  margin-bottom: 8px;
+}
+.hp-sch-week-card-kind {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-bottom: 4px;
+}
+.hp-sch-week-card-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.hp-sch-week-card-kind-label { font-size: 11px; color: #4A4A48; font-weight: 500; }
+.hp-sch-week-card-who { font-size: 11px; color: #9A9A98; }
+.hp-sch-week-empty { padding: 12px 0; color: #9A9A98; font-size: 13px; font-style: italic; }
+
+/* Schedule week controls */
+.hp-sch-week-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 960px) { .hp-sch-week { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 640px) { .hp-sch-week { grid-template-columns: repeat(2, 1fr); } }

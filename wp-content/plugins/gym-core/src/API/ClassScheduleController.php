@@ -384,6 +384,18 @@ class ClassScheduleController extends BaseController {
 	 * @param \WP_Post $post Class post.
 	 * @return array<string, mixed>
 	 */
+	/**
+	 * Public accessor for format_class() used by non-REST callers (e.g. KioskEndpoint).
+	 *
+	 * @since 3.3.0
+	 *
+	 * @param \WP_Post $post The class post.
+	 * @return array<string, mixed>
+	 */
+	public function format_class_public( \WP_Post $post ): array {
+		return $this->format_class( $post );
+	}
+
 	private function format_class( \WP_Post $post ): array {
 		return array(
 			'id'          => $post->ID,

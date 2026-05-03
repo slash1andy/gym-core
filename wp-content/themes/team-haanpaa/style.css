@@ -68,7 +68,7 @@ Tags: block-theme, full-site-editing, one-column, custom-colors, custom-menu, ed
   background: linear-gradient(
     180deg,
     rgba(0, 0, 0, 0.4) 0%,
-    rgba(0, 50, 160, 0.2) 50%,
+    rgba(26, 45, 196, 0.15) 50%,
     rgba(0, 0, 0, 0.7) 100%
   ) !important;
 }
@@ -297,9 +297,7 @@ footer a:hover,
 .wc-block-components-button {
   background-color: var(--wp--preset--color--royal-blue) !important;
   color: var(--wp--preset--color--white) !important;
-  font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  font-family: 'Inter', system-ui, sans-serif;
   font-weight: 600;
   min-height: 44px;
 }
@@ -309,7 +307,7 @@ footer a:hover,
 .wc-block-components-text-input input:focus,
 .wc-block-components-textarea:focus {
   border-color: var(--wp--preset--color--royal-blue);
-  box-shadow: 0 0 0 3px rgba(0, 50, 160, 0.15);
+  box-shadow: 0 0 0 3px rgba(26, 45, 196, 0.15);
 }
 
 /* ---------- Logo mark ---------- */
