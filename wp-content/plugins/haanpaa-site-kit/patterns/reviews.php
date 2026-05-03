@@ -30,7 +30,6 @@ if ( empty( $reviews ) ) {
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}},"color":{"background":"#F6F4EE"}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
 <section class="wp-block-group alignfull has-background" style="background-color:#F6F4EE;padding-top:clamp(80px,10vw,140px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
   <!-- wp:html -->
-  <p class="hp-eyebrow-mono">05 / FROM STUDENTS</p>
   <h2 style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05;margin:16px 0 64px;max-width:18ch">"The hardest part is simply, getting there."</h2>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px">
     <?php foreach ( $reviews as $i => $r ) : ?>

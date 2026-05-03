@@ -86,7 +86,6 @@ if ( empty( $rows ) ) {
   <div class="wp-block-columns">
     <!-- wp:column {"width":"30%"} -->
     <div class="wp-block-column" style="flex-basis:30%">
-      <!-- wp:paragraph {"className":"hp-eyebrow-mono"} --><p class="hp-eyebrow-mono">01 / PROGRAMS</p><!-- /wp:paragraph -->
     </div>
     <!-- /wp:column -->
     <!-- wp:column {"width":"70%"} -->

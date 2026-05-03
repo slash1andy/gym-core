@@ -151,7 +151,6 @@ $kinds = [
   <div data-wp-interactive="haanpaa/schedule">
     <div style="display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:32px;margin-bottom:48px">
       <div>
-        <p class="hp-eyebrow-mono">02 / SCHEDULE</p>
         <h2 style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05;margin:16px 0 0">This week on the mats.</h2>
       </div>
       <div class="hp-seg" role="tablist" aria-label="Location">
