@@ -11,7 +11,7 @@ $values = [
     [ 'h' => 'Beginners come first.', 'p' => 'Our fundamentals track is its own program — not a side-room. New students drill with new students until the basics feel automatic.' ],
     [ 'h' => 'No ego on the mat.',    'p' => 'Every belt rolls with every belt. Black belts coach white belts. The room polices itself.' ],
     [ 'h' => 'Show up to grow up.',   'p' => 'The hardest part is getting through the door. After that, attendance and breath control do most of the work.' ],
-    [ 'h' => 'Lineage matters.',      'p' => 'Pedro Sauer / Royler Gracie. We coach the curriculum we were taught — and we credit the line that taught us.' ],
+    [ 'h' => 'Lineage matters.',      'p' => 'Jeff Curran. We coach the curriculum we were taught — and we credit the line that taught us.' ],
 ];
 ?>
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
