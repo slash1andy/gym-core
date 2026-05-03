@@ -55,25 +55,12 @@ if ( empty( $locations ) ) {
 	];
 }
 ?>
-<!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
-<section class="wp-block-group alignfull" style="padding-top:clamp(80px,10vw,140px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
+<!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(48px,6vw,80px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
+<section class="wp-block-group alignfull" style="padding-top:clamp(48px,6vw,80px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
 
-  <!-- wp:columns {"style":{"spacing":{"blockGap":{"top":"24px","left":"80px"}}}} -->
-  <div class="wp-block-columns">
-    <!-- wp:column {"width":"30%"} -->
-    <div class="wp-block-column" style="flex-basis:30%">
-      <!-- wp:paragraph {"className":"hp-eyebrow-mono"} --><p class="hp-eyebrow-mono">06 / LOCATIONS</p><!-- /wp:paragraph -->
-    </div>
-    <!-- /wp:column -->
-    <!-- wp:column {"width":"70%"} -->
-    <div class="wp-block-column" style="flex-basis:70%">
-      <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
-      <h2 class="wp-block-heading" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Two locations. Same standard.</h2>
-      <!-- /wp:heading -->
-    </div>
-    <!-- /wp:column -->
-  </div>
-  <!-- /wp:columns -->
+  <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
+  <h2 class="wp-block-heading" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Two locations. Same standard.</h2>
+  <!-- /wp:heading -->
 
   <!-- wp:html -->
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:48px;margin-top:80px">
