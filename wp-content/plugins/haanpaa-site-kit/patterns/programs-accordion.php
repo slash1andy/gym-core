@@ -73,7 +73,7 @@ if ( taxonomy_exists( 'gym_program' ) ) {
 // Fallback when no gym_program terms exist.
 if ( empty( $rows ) ) {
 	$rows = [
-		[ 'id' => 'bjj',  'num' => '01', 'name' => 'Brazilian Jiu-Jitsu',  'desc' => 'Pedro Sauer / Royler Gracie lineage. Gi &amp; no-gi.',         'long' => 'The art of submission grappling. We coach the IBJJF curriculum with a fundamentals-first ethos — drilling positions, escapes, and the small-game details that win matches. Beginners get their own dedicated track.', 'sessions' => '', 'open' => true,  'link' => '#' ],
+		[ 'id' => 'bjj',  'num' => '01', 'name' => 'Brazilian Jiu-Jitsu',  'desc' => 'Jeff Curran lineage. Gi &amp; no-gi.',         'long' => 'The art of submission grappling. We coach the IBJJF curriculum with a fundamentals-first ethos — drilling positions, escapes, and the small-game details that win matches. Beginners get their own dedicated track.', 'sessions' => '', 'open' => true,  'link' => '#' ],
 		[ 'id' => 'kick', 'num' => '02', 'name' => 'Kickboxing',           'desc' => 'Striking, conditioning, sparring on Fridays.',                   'long' => 'Stand-up striking with shins, knees, elbows, and clinch. Optional sparring twice a week. Fitness kickboxing track for students who want the work without the hits.', 'sessions' => '', 'open' => false, 'link' => '#' ],
 		[ 'id' => 'kids', 'num' => '03', 'name' => 'Kids Jiu-Jitsu',      'desc' => 'Anti-bullying curriculum, character development.',               'long' => 'Confidence, discipline, and real grappling skill — without aggression. Two age groups (5–8 and 9–13) keep classes paced and safe.', 'sessions' => '', 'open' => false, 'link' => '#' ],
 	];
@@ -82,21 +82,10 @@ if ( empty( $rows ) ) {
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}},"color":{"background":"#F6F4EE"}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
 <section class="wp-block-group alignfull has-background" style="background-color:#F6F4EE;padding-top:clamp(80px,10vw,140px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
 
-  <!-- wp:columns {"style":{"spacing":{"blockGap":{"top":"24px","left":"80px"}}}} -->
-  <div class="wp-block-columns">
-    <!-- wp:column {"width":"30%"} -->
-    <div class="wp-block-column" style="flex-basis:30%">
-    </div>
-    <!-- /wp:column -->
-    <!-- wp:column {"width":"70%"} -->
-    <div class="wp-block-column" style="flex-basis:70%">
-      <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
-      <h2 class="wp-block-heading" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Three Programs. One Mat. No Ego.</h2>
-      <!-- /wp:heading -->
-    </div>
-    <!-- /wp:column -->
-  </div>
-  <!-- /wp:columns -->
+  <!-- wp:paragraph {"className":"hp-eyebrow-mono","style":{"text":{"textAlign":"center"}}} --><p class="hp-eyebrow-mono" style="text-align:center">01 / PROGRAMS</p><!-- /wp:paragraph -->
+  <!-- wp:heading {"level":2,"textAlign":"center","style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
+  <h2 class="wp-block-heading has-text-align-center" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Three Programs. One Mat. No Ego.</h2>
+  <!-- /wp:heading -->
 
   <!-- wp:html -->
   <div data-wp-interactive="haanpaa/programs" style="margin-top:80px">

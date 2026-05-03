@@ -42,7 +42,7 @@ foreach ( $users as $user ) {
 // Fallback placeholder coaches.
 if ( empty( $coaches ) ) {
 	$coaches = [
-		[ 'name' => 'Darby Haanpaa', 'role' => 'Black Belt · Head Instructor',       'bio' => 'Founded the academy in 2003. Pedro Sauer / Royler Gracie lineage. Coaches the adult BJJ curriculum and competition team.' ],
+		[ 'name' => 'Darby Haanpaa', 'role' => 'Black Belt · Head Instructor',       'bio' => 'Founded the academy in 2003. Jeff Curran lineage. Coaches the adult BJJ curriculum and competition team.' ],
 		[ 'name' => 'Coach Lee',      'role' => 'Muay Thai · Striking Lead',          'bio' => 'Two decades on the pads. Built the kickboxing program from a Friday-night class into a six-day-a-week curriculum.' ],
 		[ 'name' => 'Coach Mara',     'role' => 'Brown Belt · Kids Program Lead',     'bio' => "Runs the kids program. Specializes in beginner pedagogy." ],
 	];
