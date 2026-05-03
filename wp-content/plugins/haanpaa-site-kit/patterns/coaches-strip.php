@@ -53,7 +53,7 @@ if ( empty( $coaches ) ) {
 
   <!-- wp:paragraph {"className":"hp-eyebrow-mono","style":{"color":{"text":"#9A9A98"}}} --><p class="hp-eyebrow-mono" style="color:#9A9A98">03 / COACHES</p><!-- /wp:paragraph -->
   <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"},"spacing":{"margin":{"top":"16px","bottom":"80px"}}}} -->
-  <h2 class="wp-block-heading" style="margin-top:16px;margin-bottom:80px;font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Black belts on the floor every class.</h2>
+  <h2 class="wp-block-heading" style="margin-top:16px;margin-bottom:80px;font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Continuously training.<br>Continuously coaching.</h2>
   <!-- /wp:heading -->
 
   <!-- wp:html -->
