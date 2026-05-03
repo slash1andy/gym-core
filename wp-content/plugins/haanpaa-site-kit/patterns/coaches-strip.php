@@ -51,7 +51,6 @@ if ( empty( $coaches ) ) {
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}},"color":{"background":"#0A0A0A"}},"textColor":"paper","layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
 <section class="wp-block-group alignfull has-paper-color has-text-color has-background" style="background-color:#0A0A0A;padding-top:clamp(80px,10vw,140px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
 
-  <!-- wp:paragraph {"className":"hp-eyebrow-mono","style":{"color":{"text":"#9A9A98"}}} --><p class="hp-eyebrow-mono" style="color:#9A9A98">03 / COACHES</p><!-- /wp:paragraph -->
   <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"},"spacing":{"margin":{"top":"16px","bottom":"80px"}}}} -->
   <h2 class="wp-block-heading" style="margin-top:16px;margin-bottom:80px;font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Black belts on the floor every class.</h2>
   <!-- /wp:heading -->

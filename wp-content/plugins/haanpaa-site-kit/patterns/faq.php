@@ -19,7 +19,6 @@ $faqs = [
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}},"color":{"background":"#0A0A0A"}},"textColor":"paper","layout":{"type":"constrained","contentSize":"880px"},"templateLock":"all"} -->
 <section class="wp-block-group alignfull has-paper-color has-text-color has-background" style="background-color:#0A0A0A;padding-top:clamp(80px,10vw,140px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
   <!-- wp:html -->
-  <p class="hp-eyebrow-mono" style="color:#9A9A98">07 / QUESTIONS</p>
   <h2 style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05;margin:16px 0 64px">Everything you're about to ask.</h2>
   <div data-wp-interactive="haanpaa/faq">
     <?php foreach ( $faqs as $i => $f ) : ?>
