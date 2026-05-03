@@ -73,7 +73,7 @@ if ( taxonomy_exists( 'gym_program' ) ) {
 // Fallback when no gym_program terms exist.
 if ( empty( $rows ) ) {
 	$rows = [
-		[ 'id' => 'bjj',  'num' => '01', 'name' => 'Brazilian Jiu-Jitsu',  'desc' => 'Pedro Sauer / Royler Gracie lineage. Gi &amp; no-gi.',         'long' => 'The art of submission grappling. We coach the IBJJF curriculum with a fundamentals-first ethos — drilling positions, escapes, and the small-game details that win matches. Beginners get their own dedicated track.', 'sessions' => '', 'open' => true,  'link' => '#' ],
+		[ 'id' => 'bjj',  'num' => '01', 'name' => 'Brazilian Jiu-Jitsu',  'desc' => 'Jeff Curran lineage. Gi &amp; no-gi.',         'long' => 'The art of submission grappling. We coach the IBJJF curriculum with a fundamentals-first ethos — drilling positions, escapes, and the small-game details that win matches. Beginners get their own dedicated track.', 'sessions' => '', 'open' => true,  'link' => '#' ],
 		[ 'id' => 'kick', 'num' => '02', 'name' => 'Kickboxing',           'desc' => 'Striking, conditioning, sparring on Fridays.',                   'long' => 'Stand-up striking with shins, knees, elbows, and clinch. Optional sparring twice a week. Fitness kickboxing track for students who want the work without the hits.', 'sessions' => '', 'open' => false, 'link' => '#' ],
 		[ 'id' => 'kids', 'num' => '03', 'name' => 'Kids Jiu-Jitsu',      'desc' => 'Anti-bullying curriculum, character development.',               'long' => 'Confidence, discipline, and real grappling skill — without aggression. Two age groups (5–8 and 9–13) keep classes paced and safe.', 'sessions' => '', 'open' => false, 'link' => '#' ],
 	];
