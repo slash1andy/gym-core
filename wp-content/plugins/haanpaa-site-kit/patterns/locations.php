@@ -58,8 +58,8 @@ if ( empty( $locations ) ) {
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(48px,6vw,80px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
 <section class="wp-block-group alignfull" style="padding-top:clamp(48px,6vw,80px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
 
-  <!-- wp:heading {"level":2,"style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
-  <h2 class="wp-block-heading" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05">Two locations. Same standard.</h2>
+  <!-- wp:heading {"level":2,"textAlign":"center","style":{"typography":{"fontSize":"clamp(40px,5vw,72px)","lineHeight":"1.05","letterSpacing":"-0.03em","fontWeight":"600"}}} -->
+  <h2 class="wp-block-heading has-text-align-center" style="font-size:clamp(40px,5vw,72px);font-weight:600;letter-spacing:-0.03em;line-height:1.05;text-align:center">Two locations. Same standard.</h2>
   <!-- /wp:heading -->
 
   <!-- wp:html -->
