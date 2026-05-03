@@ -183,8 +183,8 @@ if ( ! $has_db ) {
 	}
 }
 ?>
-<!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(80px,10vw,140px)","bottom":"clamp(80px,10vw,140px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
-<section class="wp-block-group alignfull" style="padding-top:clamp(80px,10vw,140px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(80px,10vw,140px);padding-left:clamp(24px,4vw,80px)">
+<!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(32px,4vw,48px)","bottom":"clamp(48px,6vw,80px)","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}}},"layout":{"type":"constrained","contentSize":"1280px"},"templateLock":"all"} -->
+<section class="wp-block-group alignfull" style="padding-top:clamp(32px,4vw,48px);padding-right:clamp(24px,4vw,80px);padding-bottom:clamp(48px,6vw,80px);padding-left:clamp(24px,4vw,80px)">
 
   <!-- wp:html -->
   <div data-wp-interactive="haanpaa/schedule">
