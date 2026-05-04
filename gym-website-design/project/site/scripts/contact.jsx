@@ -38,10 +38,6 @@ function ContactPage() {
       {/* Hero — cream background, matches block-pattern section 1 */}
       <section style={{ padding: 'clamp(64px,8vw,120px) clamp(24px,4vw,80px) 0', background: '#EFEBE1' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
-          <p className="hp-eyebrow-mono" style={{ color: '#1A2DC4', margin: '0 0 24px' }}>
-            <a href="index.html" style={{ color: 'inherit' }}>HMA</a>{' '}
-            <span style={{ color: '#9A9A98' }}>/ Contact</span>
-          </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 48, alignItems: 'end', paddingBottom: 'clamp(40px,5vw,72px)' }}>
             <h1 style={{ fontSize: 'clamp(40px,6vw,80px)', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.02, margin: 0 }}>
               Get in touch.<br />
