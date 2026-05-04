@@ -71,6 +71,13 @@ if ( post_type_exists( 'gym_class' ) ) {
 			$ts = strtotime( '2000-01-01 ' . $start_time );
 			$display_time = $ts ? date( 'g:i A', $ts ) : $start_time;
 		}
+		$end_time_raw = get_post_meta( $id, '_gym_class_end_time', true );
+		$display_end  = '';
+		if ( $end_time_raw ) {
+			$ts = strtotime( '2000-01-01 ' . $end_time_raw );
+			$display_end = $ts ? date( 'g:i A', $ts ) : $end_time_raw;
+		}
+		$sort_time = $start_time ?: '00:00'; // raw H:i, lexically sortable
 
 		// Resolve program kind from gym_program taxonomy.
 		$kind = 'bjj';
@@ -95,12 +102,14 @@ if ( post_type_exists( 'gym_class' ) ) {
 		}
 
 		$rows[] = [
-			'day'      => $day,
-			'time'     => $display_time,
-			'name'     => get_the_title(),
-			'kind'     => $kind,
-			'location' => $location,
-			'coach'    => $coach,
+			'day'       => $day,
+			'sort_time' => $sort_time,
+			'time'      => $display_time,
+			'end_time'  => $display_end,
+			'name'      => get_the_title(),
+			'kind'      => $kind,
+			'location'  => $location,
+			'coach'     => $coach,
 		];
 	}
 	wp_reset_postdata();
@@ -111,32 +120,32 @@ if ( post_type_exists( 'gym_class' ) ) {
 		$da = $day_order[ $a['day'] ] ?? 9;
 		$db = $day_order[ $b['day'] ] ?? 9;
 		if ( $da !== $db ) { return $da - $db; }
-		return strcmp( $a['time'], $b['time'] );
+		return strcmp( $a['sort_time'], $b['sort_time'] );
 	} );
 }
 
 // Fallback placeholder schedule.
 if ( empty( $rows ) ) {
 	$rows = [
-		[ 'day' => 'Mon', 'time' => '6:00 AM',  'name' => 'BJJ Fundamentals',    'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
-		[ 'day' => 'Mon', 'time' => '12:00 PM', 'name' => 'Open Mat',             'kind' => 'bjj',  'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Mon', 'time' => '5:00 PM',  'name' => 'Kids Jiu-Jitsu (5–8)', 'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Mon', 'time' => '6:00 PM',  'name' => 'Kids Jiu-Jitsu (9–13)','kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Mon', 'time' => '7:00 PM',  'name' => 'BJJ All Levels',       'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
-		[ 'day' => 'Tue', 'time' => '6:00 AM',  'name' => 'Muay Thai',            'kind' => 'kick', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Tue', 'time' => '7:00 PM',  'name' => 'Muay Thai',            'kind' => 'kick', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Wed', 'time' => '6:00 AM',  'name' => 'BJJ Fundamentals',    'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
-		[ 'day' => 'Wed', 'time' => '5:00 PM',  'name' => 'Kids Jiu-Jitsu (5–8)', 'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Wed', 'time' => '7:00 PM',  'name' => 'No-Gi Jiu-Jitsu',     'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
-		[ 'day' => 'Thu', 'time' => '7:00 PM',  'name' => 'Muay Thai Sparring',   'kind' => 'kick', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Fri', 'time' => '6:00 AM',  'name' => 'Open Mat',             'kind' => 'bjj',  'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Fri', 'time' => '6:00 PM',  'name' => 'BJJ All Levels',       'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
-		[ 'day' => 'Sat', 'time' => '10:00 AM', 'name' => 'Kids Open Mat',        'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
-		[ 'day' => 'Sat', 'time' => '11:30 AM', 'name' => 'Adult Open Mat',       'kind' => 'bjj',  'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Mon', 'sort_time' => '06:00', 'time' => '6:00 AM',  'end_time' => '7:00 AM',  'name' => 'BJJ Fundamentals',     'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
+		[ 'day' => 'Mon', 'sort_time' => '12:00', 'time' => '12:00 PM', 'end_time' => '',          'name' => 'Open Mat',              'kind' => 'bjj',  'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Mon', 'sort_time' => '17:00', 'time' => '5:00 PM',  'end_time' => '6:00 PM',  'name' => 'Kids Jiu-Jitsu (5–8)',  'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Mon', 'sort_time' => '18:00', 'time' => '6:00 PM',  'end_time' => '7:00 PM',  'name' => 'Kids Jiu-Jitsu (9–13)', 'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Mon', 'sort_time' => '19:00', 'time' => '7:00 PM',  'end_time' => '8:30 PM',  'name' => 'BJJ All Levels',        'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
+		[ 'day' => 'Tue', 'sort_time' => '06:00', 'time' => '6:00 AM',  'end_time' => '7:00 AM',  'name' => 'Muay Thai',             'kind' => 'kick', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Tue', 'sort_time' => '19:00', 'time' => '7:00 PM',  'end_time' => '8:00 PM',  'name' => 'Muay Thai',             'kind' => 'kick', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Wed', 'sort_time' => '06:00', 'time' => '6:00 AM',  'end_time' => '7:00 AM',  'name' => 'BJJ Fundamentals',      'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
+		[ 'day' => 'Wed', 'sort_time' => '17:00', 'time' => '5:00 PM',  'end_time' => '6:00 PM',  'name' => 'Kids Jiu-Jitsu (5–8)',  'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Wed', 'sort_time' => '19:00', 'time' => '7:00 PM',  'end_time' => '8:30 PM',  'name' => 'No-Gi Jiu-Jitsu',      'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
+		[ 'day' => 'Thu', 'sort_time' => '19:00', 'time' => '7:00 PM',  'end_time' => '8:00 PM',  'name' => 'Muay Thai Sparring',    'kind' => 'kick', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Fri', 'sort_time' => '06:00', 'time' => '6:00 AM',  'end_time' => '',          'name' => 'Open Mat',              'kind' => 'bjj',  'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Fri', 'sort_time' => '18:00', 'time' => '6:00 PM',  'end_time' => '7:30 PM',  'name' => 'BJJ All Levels',        'kind' => 'bjj',  'location' => 'rockford', 'coach' => 'Darby' ],
+		[ 'day' => 'Sat', 'sort_time' => '10:00', 'time' => '10:00 AM', 'end_time' => '11:00 AM', 'name' => 'Kids Open Mat',         'kind' => 'kids', 'location' => 'rockford', 'coach' => '' ],
+		[ 'day' => 'Sat', 'sort_time' => '11:30', 'time' => '11:30 AM', 'end_time' => '1:00 PM',  'name' => 'Adult Open Mat',        'kind' => 'bjj',  'location' => 'rockford', 'coach' => '' ],
 	];
 }
 
-$days  = [ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat' ];
+$days  = [ 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun' ];
 $kinds = [
 	'all'  => 'All',
 	'bjj'  => 'BJJ',
@@ -177,7 +186,7 @@ $kinds = [
     <div style="margin-top:24px">
       <?php foreach ( $rows as $row ) : ?>
       <div class="hp-sch-row" data-wp-context='<?php echo wp_json_encode( [ 'day' => $row['day'], 'kind' => $row['kind'], 'location' => $row['location'] ] ); ?>' data-wp-bind--hidden="!state.rowVisible"<?php echo $row['day'] !== 'Mon' ? ' hidden' : ''; ?>>
-        <span class="hp-meta" style="font-family:'Menlo',monospace;font-size:14px"><?php echo esc_html( $row['time'] ); ?></span>
+        <span class="hp-meta" style="font-family:'Menlo',monospace;font-size:14px"><?php echo esc_html( $row['time'] ); if ( $row['end_time'] ) { echo ' – ' . esc_html( $row['end_time'] ); } ?></span>
         <span style="font-size:18px;font-weight:500"><span class="hp-sch-dot kind-<?php echo esc_attr( $row['kind'] ); ?>"></span><?php echo esc_html( $row['name'] ); ?></span>
         <?php if ( $row['coach'] ) : ?>
         <span class="hp-meta"><?php echo esc_html( $row['coach'] ); ?></span>
