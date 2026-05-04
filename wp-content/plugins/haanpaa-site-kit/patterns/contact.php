@@ -12,7 +12,6 @@
 <section class="wp-block-group alignfull has-background" style="background-color:#EFEBE1;padding-top:clamp(64px,8vw,120px);padding-right:clamp(24px,4vw,80px);padding-bottom:0;padding-left:clamp(24px,4vw,80px)">
 
   <!-- wp:html -->
-  <p class="hp-eyebrow-mono" style="color:#1A2DC4;margin:0 0 24px"><a href="/" style="color:inherit">HMA</a> <span style="color:#9A9A98">/ Contact</span></p>
   <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:end;padding-bottom:clamp(40px,5vw,72px)">
     <h1 style="font-size:clamp(40px,6vw,80px);font-weight:600;letter-spacing:-0.03em;line-height:1.02;margin:0">Get in touch.<br /><em style="font-style:italic;font-weight:500;color:#1A2DC4">We respond fast.</em></h1>
     <ul style="list-style:none;padding:0;margin:0;display:grid;gap:12px;color:#181816">
