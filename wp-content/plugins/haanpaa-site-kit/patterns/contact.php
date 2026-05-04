@@ -56,8 +56,8 @@
       </div>
       <div style="padding:24px;background:#F6F4EE;border-left:3px solid rgba(10,10,10,0.18)">
         <p style="font-size:11px;letter-spacing:0.08em;text-transform:uppercase;color:#4A4A48;margin:0 0 8px">Beloit satellite</p>
-        <p style="margin:0 0 4px;font-size:15px;color:#181816">HMA Beloit, Beloit, WI</p>
-        <a href="tel:815-451-3001" style="font-family:Menlo,monospace;font-size:14px;color:#1A2DC4;font-weight:600">815-451-3001</a>
+        <p style="margin:0 0 4px;font-size:15px;color:#181816">610 4th St, Beloit, WI 53511</p>
+        <a href="tel:608-795-3608" style="font-family:Menlo,monospace;font-size:14px;color:#1A2DC4;font-weight:600">608-795-3608</a>
       </div>
     </div>
   </div>
