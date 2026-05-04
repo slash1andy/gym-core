@@ -52,7 +52,6 @@ function adaptCptClass(cls) {
   })();
   // instructor.name (real API) vs instructor.display_name (old mock) — handle both.
   const instructorFullName = cls.instructor?.name || cls.instructor?.display_name || '';
-  const coachFirst = cls.instructor?.first_name || instructorFullName.split(' ')[0] || '';
   return {
     id: cls.id,
     start,
@@ -63,7 +62,7 @@ function adaptCptClass(cls) {
     time: start.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }),
     name: cls.name,                           // format_class() uses 'name', not 'title'
     who:  (cls.description || cls.program || '').replace(/<[^>]+>/g, '').trim(), // strip wp_kses_post HTML
-    coach: coachFirst ? `Coach ${coachFirst}` : '',
+    coach: instructorFullName,
   };
 }
 

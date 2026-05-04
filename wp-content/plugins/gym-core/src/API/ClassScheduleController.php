@@ -303,8 +303,8 @@ class ClassScheduleController extends BaseController {
 		$program  = $request->get_param( 'program' );
 
 		$monday = '' !== $week_of
-			? gmdate( 'Y-m-d', strtotime( 'monday this week', strtotime( $week_of ) ) )
-			: gmdate( 'Y-m-d', strtotime( 'monday this week' ) );
+			? date( 'Y-m-d', strtotime( 'monday this week', strtotime( $week_of ) ) )
+			: date( 'Y-m-d', strtotime( 'monday this week', current_time( 'timestamp' ) ) );
 
 		$args = array(
 			'post_type'      => ClassPostType::POST_TYPE,
