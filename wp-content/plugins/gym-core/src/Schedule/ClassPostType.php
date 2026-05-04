@@ -43,6 +43,8 @@ final class ClassPostType {
 	public function register_hooks(): void {
 		add_action( 'init', array( $this, 'register_post_type' ) );
 		add_action( 'init', array( $this, 'register_program_taxonomy' ) );
+		add_action( 'admin_init', array( $this, 'sync_program_terms' ) );
+		add_action( 'admin_menu', array( $this, 'register_program_submenu' ) );
 		add_action( 'add_meta_boxes', array( $this, 'add_meta_boxes' ) );
 		add_action( 'save_post_' . self::POST_TYPE, array( $this, 'save_meta' ), 10, 2 );
 		add_filter( 'manage_' . self::POST_TYPE . '_posts_columns', array( $this, 'add_admin_columns' ) );
@@ -119,11 +121,60 @@ final class ClassPostType {
 				'labels'            => $labels,
 				'hierarchical'      => true,
 				'public'            => true,
+				'show_ui'           => true,
+				'show_in_menu'      => true,
 				'show_in_rest'      => true,
 				'show_admin_column' => true,
 				'rewrite'           => array( 'slug' => 'program' ),
 			)
 		);
+	}
+
+	/**
+	 * Adds a Programs submenu under the Gym admin menu.
+	 *
+	 * Points directly to the taxonomy edit screen so staff can manage
+	 * program terms without navigating through the Classes list.
+	 *
+	 * @since 3.3.0
+	 *
+	 * @return void
+	 */
+	public function register_program_submenu(): void {
+		$taxonomy_page = 'edit-tags.php?taxonomy=' . self::PROGRAM_TAXONOMY . '&post_type=' . self::POST_TYPE;
+
+		add_submenu_page(
+			'gym-core',
+			__( 'Programs', 'gym-core' ),
+			__( 'Programs', 'gym-core' ),
+			'gym_manage_curriculum',
+			$taxonomy_page
+		);
+	}
+
+	/**
+	 * Ensures gym_program taxonomy terms exist and have title-cased names.
+	 *
+	 * Runs on admin_init. Syncs terms against the canonical list in
+	 * RankDefinitions::get_programs() so slugs created with raw names
+	 * (e.g. "kids-bjj") are corrected to their display labels ("Kids BJJ").
+	 *
+	 * @since 3.3.0
+	 *
+	 * @return void
+	 */
+	public function sync_program_terms(): void {
+		$programs = \Gym_Core\Rank\RankDefinitions::get_programs();
+
+		foreach ( $programs as $slug => $label ) {
+			$term = get_term_by( 'slug', $slug, self::PROGRAM_TAXONOMY );
+
+			if ( ! $term ) {
+				wp_insert_term( $label, self::PROGRAM_TAXONOMY, array( 'slug' => $slug ) );
+			} elseif ( $term->name !== $label ) {
+				wp_update_term( $term->term_id, self::PROGRAM_TAXONOMY, array( 'name' => $label ) );
+			}
+		}
 	}
 
 	/**

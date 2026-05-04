@@ -294,7 +294,7 @@ final class KioskEndpoint {
 	 * @return array<int, array<string, mixed>>
 	 */
 	private function get_today_classes( string $location ): array {
-		$day_of_week = strtolower( gmdate( 'l' ) ); // 'monday', 'tuesday', etc.
+		$day_of_week = strtolower( date( 'l', current_time( 'timestamp' ) ) ); // 'monday', 'tuesday', etc.
 
 		$query = new \WP_Query(
 			array(
@@ -363,7 +363,7 @@ final class KioskEndpoint {
 		global $wpdb;
 
 		$tables = TableManager::get_table_names();
-		$today  = gmdate( 'Y-m-d' );
+		$today  = current_time( 'Y-m-d' );
 
 		if ( $location ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.InterpolatedNotPrepared
