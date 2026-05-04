@@ -64,9 +64,10 @@ store( 'haanpaa/trial', {
     get isStep2() { return store( 'haanpaa/trial' ).state.step === 2; },
     get isStep3() { return store( 'haanpaa/trial' ).state.step === 3; },
     get isStep4() { return store( 'haanpaa/trial' ).state.step === 4; },
-    get programSelected() { return getContext().id === store( 'haanpaa/trial' ).state.program; },
-    get timeSelected()    { return getContext().time === store( 'haanpaa/trial' ).state.time; },
-    get locSelected()     { return getContext().location === store( 'haanpaa/trial' ).state.location; },
+    get programSelected()   { return getContext().id === store( 'haanpaa/trial' ).state.program; },
+    get timeSelected()      { return getContext().time === store( 'haanpaa/trial' ).state.time; },
+    get locSelected()       { return getContext().location === store( 'haanpaa/trial' ).state.location; },
+    get isCurrentProgram()  { return getContext().prog === store( 'haanpaa/trial' ).state.program; },
   },
   actions: {
     pickProgram() { store( 'haanpaa/trial' ).state.program = getContext().id; },

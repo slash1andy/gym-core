@@ -262,3 +262,48 @@
 
 @media (max-width: 960px) { .hp-sch-week { grid-template-columns: repeat(4, 1fr); } }
 @media (max-width: 640px) { .hp-sch-week { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── Jetpack Contact Form — site-specific overrides ─────────────────── */
+.jetpack-contact-form__form { display: grid; gap: 20px; width: 100%; }
+.grunion-field-wrap { width: 100%; }
+.grunion-field {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(10,10,10,0.18);
+  border-radius: 2px;
+  background: #fff;
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.grunion-field:focus {
+  outline: 2px solid #1A2DC4;
+  outline-offset: 0;
+  border-color: #1A2DC4;
+}
+.contact-form__select-element-wrapper { width: 100%; }
+.contact-form__select-element-wrapper select {
+  display: block;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid rgba(10,10,10,0.18);
+  border-radius: 2px;
+  background: #fff;
+  font-size: 16px;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.pushbutton-wide {
+  background: #1A2DC4;
+  color: #fff;
+  border: 0;
+  padding: 18px 40px;
+  font-size: 15px;
+  font-weight: 600;
+  font-family: inherit;
+  border-radius: 2px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+.pushbutton-wide:hover { background: #1624a8; }
