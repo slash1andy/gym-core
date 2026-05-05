@@ -289,6 +289,15 @@ class BriefingGenerator {
 	 * For each expected student, gathers: name, rank, Foundations status,
 	 * days since last class, promotion eligibility, and medical notes.
 	 *
+	 * Batches every per-row query so the total query count is bounded
+	 * regardless of roster size:
+	 *   - cache_users() — one query for users + user_meta.
+	 *   - RankStore::get_ranks_for_users() — one query.
+	 *   - AttendanceStore::get_last_attended_for_users() — one query.
+	 *   - AttendanceStore::get_total_counts_for_users() — one query.
+	 *   - FoundationsClearance::get_status_for_users() — one query (attendance counts since enrolled_at).
+	 *   - PromotionEligibility::check_for_users() — at most two queries (rank + attendance counts since promoted_at).
+	 *
 	 * @param array<int, array{user_id: int, attendance_rate: float}> $roster  Forecasted roster.
 	 * @param string|null                                             $program Program slug.
 	 * @return array<int, array>
@@ -298,11 +307,21 @@ class BriefingGenerator {
 			return array();
 		}
 
-		// Prime user cache.
 		$user_ids = array_map( static fn( array $r ) => $r['user_id'], $roster );
+
+		// Prime WP user objects + user_meta cache so subsequent get_userdata()
+		// and get_user_meta() calls in this loop are object-cache hits.
 		cache_users( $user_ids );
 
+		// Batch every per-user lookup up front.
+		$rank_map        = $program ? $this->ranks->get_ranks_for_users( $user_ids, $program ) : array();
+		$last_attended   = $this->attendance->get_last_attended_for_users( $user_ids );
+		$total_counts    = $this->attendance->get_total_counts_for_users( $user_ids );
+		$foundations_map = $this->foundations->get_status_for_users( $user_ids );
+		$promotion_map   = $program ? $this->promotion->check_for_users( $user_ids, $program ) : array();
+
 		$enriched = array();
+		$now      = time();
 
 		foreach ( $roster as $entry ) {
 			$user_id = $entry['user_id'];
@@ -315,7 +334,7 @@ class BriefingGenerator {
 			// Rank.
 			$rank_data = null;
 			if ( $program ) {
-				$rank = $this->ranks->get_rank( $user_id, $program );
+				$rank = $rank_map[ $user_id ] ?? null;
 				if ( $rank ) {
 					$rank_data = array(
 						'belt'    => $rank->belt,
@@ -324,20 +343,33 @@ class BriefingGenerator {
 				}
 			}
 
-			// Foundations status.
-			$foundations_status = $this->foundations->get_status( $user_id );
+			// Foundations status — batched.
+			$foundations_status = $foundations_map[ $user_id ] ?? array(
+				'in_foundations'    => false,
+				'phase'             => 'not_enrolled',
+				'classes_completed' => 0,
+			);
 
-			// Days since last class.
-			$days_since_last = $this->get_days_since_last_class( $user_id );
+			// Days since last class — derived from the batched last_attended map.
+			$last_at         = $last_attended[ $user_id ] ?? null;
+			$days_since_last = null;
+			if ( null !== $last_at ) {
+				$last_ts = strtotime( $last_at );
+				if ( false !== $last_ts ) {
+					$days_since_last = (int) floor( ( $now - $last_ts ) / DAY_IN_SECONDS );
+				}
+			}
 
-			// Total attendance count (for first-timer detection).
-			$total_classes = $this->attendance->get_total_count( $user_id );
+			// Total attendance count (for first-timer detection) — batched.
+			$total_classes = $total_counts[ $user_id ] ?? 0;
 
-			// Promotion eligibility.
+			// Promotion eligibility — batched.
 			$promotion_data = null;
 			if ( $program ) {
-				$promo_check = $this->promotion->check( $user_id, $program );
-				if ( $promo_check['eligible'] || $promo_check['attendance_count'] >= ( $promo_check['attendance_required'] * 0.8 ) ) {
+				$promo_check = $promotion_map[ $user_id ] ?? null;
+				if ( $promo_check && (
+					$promo_check['eligible'] || $promo_check['attendance_count'] >= ( $promo_check['attendance_required'] * 0.8 )
+				) ) {
 					$promotion_data = array(
 						'eligible'            => $promo_check['eligible'],
 						'attendance_count'    => $promo_check['attendance_count'],
@@ -349,7 +381,7 @@ class BriefingGenerator {
 				}
 			}
 
-			// Medical notes.
+			// Medical notes — user_meta cache primed by cache_users() above.
 			$medical_notes = get_user_meta( $user_id, '_gym_medical_notes', true ) ?: '';
 
 			$enriched[] = array(
