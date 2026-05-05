@@ -141,6 +141,7 @@ final class Plugin {
 		$this->register_gamification_modules();
 		$this->register_integration_modules();
 		$this->register_member_modules();
+		$this->register_finance_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -684,6 +685,31 @@ final class Plugin {
 				$dashboard->register_hooks();
 			}
 		);
+	}
+
+	/**
+	 * Registers the Finance Copilot modules.
+	 *
+	 * Wires the AR aggregator, monthly close orchestrator, REST controller,
+	 * and admin dashboard. The dashboard registers its menu under
+	 * WooCommerce → Reports; the REST controller exposes gym/v1/finance/*
+	 * routes under the manage_woocommerce capability.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @return void
+	 */
+	private function register_finance_modules(): void {
+		$ar    = new Finance\ARAggregator();
+		$close = new Finance\MonthlyClose( $ar );
+
+		$controller = new Finance\API\FinanceController( $ar, $close );
+		$controller->register_hooks();
+
+		if ( is_admin() ) {
+			$dashboard = new Finance\DashboardController();
+			$dashboard->register_hooks();
+		}
 	}
 
 	/**

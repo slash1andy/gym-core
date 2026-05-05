@@ -1,0 +1,272 @@
+/**
+ * Finance Copilot — admin page styles.
+ *
+ * Brand-aligned per docs/brand-guide.md §6 (cards, tables, buttons). Uses
+ * the same Royal Blue / Gray 100 / Black palette the gym-core admin
+ * dashboards already lean on so Joy doesn't context-switch visually.
+ */
+
+.gym-finance-copilot {
+	--gfc-royal-blue: #0032A0;
+	--gfc-blue-hover: #0041CC;
+	--gfc-cool-gray: #75787B;
+	--gfc-gray-100: #E5E5E7;
+	--gfc-gray-light: #F5F5F7;
+	--gfc-black: #000000;
+	--gfc-white: #FFFFFF;
+	--gfc-success: #2E7D32;
+	--gfc-error: #C62828;
+	--gfc-warning: #F9A825;
+	--gfc-radius: 8px;
+	--gfc-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+	color: var(--gfc-black);
+	font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+}
+
+.gym-finance-copilot h1,
+.gym-finance-copilot h2 {
+	font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	text-transform: uppercase;
+	letter-spacing: 0.02em;
+	color: var(--gfc-black);
+}
+
+.gym-finance-copilot__lede {
+	color: var(--gfc-cool-gray);
+	max-width: 60ch;
+}
+
+.gym-finance-copilot__card {
+	background: var(--gfc-white);
+	border: 1px solid var(--gfc-gray-100);
+	border-radius: var(--gfc-radius);
+	box-shadow: var(--gfc-shadow);
+	padding: 1.5rem;
+	margin: 1.25rem 0;
+}
+
+.gym-finance-copilot__card h2 {
+	margin: 0 0 0.75rem 0;
+	font-size: 1.25rem;
+}
+
+.gym-finance-copilot__ask {
+	display: flex;
+	gap: 0.75rem;
+	align-items: stretch;
+	flex-wrap: wrap;
+}
+
+.gym-finance-copilot__ask input[type="text"] {
+	flex: 1 1 24rem;
+	border: 1px solid var(--gfc-gray-100);
+	border-radius: 4px;
+	padding: 0.5rem 0.75rem;
+	font-size: 1rem;
+}
+
+.gym-finance-copilot__ask input[type="text"]:focus {
+	border-color: var(--gfc-royal-blue);
+	box-shadow: 0 0 0 3px rgba(0, 50, 160, 0.15);
+	outline: none;
+}
+
+.gym-finance-copilot__answer {
+	margin-top: 1rem;
+}
+
+.gym-finance-copilot__answer-narrative {
+	background: var(--gfc-gray-light);
+	padding: 1rem;
+	border-radius: 4px;
+	border-left: 4px solid var(--gfc-royal-blue);
+	white-space: pre-wrap;
+}
+
+.gym-finance-copilot__chart {
+	display: flex;
+	align-items: flex-end;
+	gap: 0.5rem;
+	min-height: 8rem;
+	padding: 1rem 0;
+	border-bottom: 1px solid var(--gfc-gray-100);
+	margin-top: 1rem;
+}
+
+.gym-finance-copilot__chart-bar {
+	flex: 1;
+	background: var(--gfc-royal-blue);
+	border-radius: 2px 2px 0 0;
+	position: relative;
+	transition: background 120ms ease-in-out;
+}
+
+.gym-finance-copilot__chart-bar:hover {
+	background: var(--gfc-blue-hover);
+}
+
+.gym-finance-copilot__chart-label {
+	font-size: 0.75rem;
+	color: var(--gfc-cool-gray);
+	text-align: center;
+	margin-top: 0.25rem;
+}
+
+.gym-finance-copilot__totals {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+	gap: 0.75rem;
+	margin-bottom: 1rem;
+}
+
+.gym-finance-copilot__total {
+	background: var(--gfc-gray-light);
+	padding: 1rem;
+	border-radius: 4px;
+	border-left: 4px solid var(--gfc-royal-blue);
+}
+
+.gym-finance-copilot__total--90_plus {
+	border-left-color: var(--gfc-error);
+}
+
+.gym-finance-copilot__total--61_90 {
+	border-left-color: var(--gfc-warning);
+}
+
+.gym-finance-copilot__total-label {
+	font-size: 0.8125rem;
+	font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	font-weight: 600;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--gfc-cool-gray);
+}
+
+.gym-finance-copilot__total-value {
+	font-size: 1.5rem;
+	font-weight: 700;
+	color: var(--gfc-black);
+	margin-top: 0.25rem;
+}
+
+.gym-finance-copilot table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-top: 0.5rem;
+}
+
+.gym-finance-copilot th,
+.gym-finance-copilot td {
+	border-bottom: 1px solid var(--gfc-gray-100);
+	padding: 1rem 1.25rem;
+	text-align: left;
+	font-size: 0.9375rem;
+}
+
+.gym-finance-copilot th {
+	color: var(--gfc-royal-blue);
+	font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-size: 0.8125rem;
+}
+
+.gym-finance-copilot tbody tr:last-child td {
+	border-bottom: none;
+}
+
+.gym-finance-copilot__bucket-tag {
+	display: inline-block;
+	font-size: 0.75rem;
+	padding: 0.125rem 0.5rem;
+	border-radius: 999px;
+	background: var(--gfc-gray-light);
+	color: var(--gfc-cool-gray);
+	font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+}
+
+.gym-finance-copilot__bucket-tag--90_plus {
+	background: rgba(198, 40, 40, 0.1);
+	color: var(--gfc-error);
+}
+
+.gym-finance-copilot__bucket-tag--61_90 {
+	background: rgba(249, 168, 37, 0.15);
+	color: #8a5a00;
+}
+
+.gym-finance-copilot__draft-btn {
+	background: var(--gfc-royal-blue);
+	color: var(--gfc-white);
+	border: none;
+	border-radius: 4px;
+	padding: 0.4rem 0.9rem;
+	font-family: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	font-size: 0.8125rem;
+	cursor: pointer;
+	transition: transform 120ms ease-in-out, background 120ms ease-in-out;
+}
+
+.gym-finance-copilot__draft-btn:hover {
+	background: var(--gfc-blue-hover);
+	transform: translateY(-2px);
+}
+
+.gym-finance-copilot__draft-btn[disabled] {
+	background: var(--gfc-cool-gray);
+	cursor: not-allowed;
+	transform: none;
+}
+
+.gym-finance-copilot__close {
+	display: flex;
+	gap: 0.75rem;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+.gym-finance-copilot__close-result {
+	flex: 1 1 100%;
+	margin-top: 1rem;
+}
+
+.gym-finance-copilot__close-step {
+	background: var(--gfc-gray-light);
+	padding: 0.75rem 1rem;
+	border-radius: 4px;
+	border-left: 4px solid var(--gfc-royal-blue);
+	margin-bottom: 0.5rem;
+}
+
+.gym-finance-copilot__close-step--error {
+	border-left-color: var(--gfc-error);
+}
+
+.gym-finance-copilot__loading,
+.gym-finance-copilot__empty {
+	color: var(--gfc-cool-gray);
+	font-style: italic;
+}
+
+.gym-finance-copilot__feedback {
+	margin-top: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: 4px;
+	background: rgba(46, 125, 50, 0.1);
+	color: var(--gfc-success);
+	font-size: 0.875rem;
+}
+
+.gym-finance-copilot__feedback--error {
+	background: rgba(198, 40, 40, 0.1);
+	color: var(--gfc-error);
+}
