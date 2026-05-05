@@ -251,6 +251,14 @@ class SMSController extends BaseController {
 		$table = $wpdb->prefix . 'zbs_logs';
 
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
+		$total = (int) $wpdb->get_var(
+			$wpdb->prepare(
+				"SELECT COUNT(*) FROM {$table} WHERE zbsl_objid = %d AND zbsl_objtype = 1 AND zbsl_type IN ('sms_sent', 'sms_received')", // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				$contact_id
+			)
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
 		$results = $wpdb->get_results(
 			$wpdb->prepare(
 				"SELECT zbsl_type AS type, zbsl_shortdesc AS title, zbsl_longdesc AS body, zbsl_created AS created_at
@@ -277,7 +285,9 @@ class SMSController extends BaseController {
 			);
 		}
 
-		return $this->success_response( $messages );
+		$total_pages = $per_page > 0 ? (int) ceil( $total / $per_page ) : 1;
+
+		return $this->success_response( $messages, $this->pagination_meta( $total, $total_pages, $page, $per_page ) );
 	}
 
 	/**
