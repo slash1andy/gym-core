@@ -31,10 +31,12 @@ class Interactivity {
 		] );
 
 		wp_interactivity_state( 'haanpaa/trial', [
-			'step'     => 1,
-			'program'  => '',
-			'time'     => '',
-			'location' => 'rockford',
+			'step'         => 1,
+			'program'      => '',
+			'time'         => '',
+			'location'     => 'rockford',
+			'source'       => '',
+			'sourceOther'  => '',
 		] );
 
 		wp_interactivity_state( 'haanpaa/faq', [

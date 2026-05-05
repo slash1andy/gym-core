@@ -59,6 +59,7 @@ store( 'haanpaa/schedule', {
 store( 'haanpaa/trial', {
   state: {
     step: 1, program: '', time: '', location: 'rockford',
+    source: '', sourceOther: '',
     submitting: false, done: false, error: '',
     get isStep1() { return store( 'haanpaa/trial' ).state.step === 1; },
     get isStep2() { return store( 'haanpaa/trial' ).state.step === 2; },
@@ -68,11 +69,21 @@ store( 'haanpaa/trial', {
     get timeSelected()      { return getContext().time === store( 'haanpaa/trial' ).state.time; },
     get locSelected()       { return getContext().location === store( 'haanpaa/trial' ).state.location; },
     get isCurrentProgram()  { return getContext().prog === store( 'haanpaa/trial' ).state.program; },
+    get isSourceOther()     { return store( 'haanpaa/trial' ).state.source === 'other'; },
   },
   actions: {
     pickProgram() { store( 'haanpaa/trial' ).state.program = getContext().id; },
     pickTime()    { store( 'haanpaa/trial' ).state.time    = getContext().time; },
     pickLoc()     { store( 'haanpaa/trial' ).state.location= getContext().location; },
+    pickSource( e ) {
+      const s = store( 'haanpaa/trial' ).state;
+      const value = e && e.target ? e.target.value : '';
+      s.source = value || '';
+      if ( s.source !== 'other' ) {
+        s.sourceOther = '';
+      }
+      s.error = '';
+    },
     next() {
       const s = store( 'haanpaa/trial' ).state;
       if ( s.step === 1 && ! s.program ) return;
@@ -90,6 +101,17 @@ store( 'haanpaa/trial', {
       const data = Object.fromEntries( new FormData( form ).entries() );
       data.program = s.program; data.time = s.time; data.location = s.location;
       data.nonce = window.haanpaaTrial.nonce;
+
+      // Required: lead source. Match server validation in Jetpack_CRM::handle_trial.
+      if ( ! data.lead_source ) {
+        s.error = 'Please tell us how you heard about Haanpaa Martial Arts.';
+        return;
+      }
+      if ( data.lead_source === 'other' && ! ( data.lead_source_other && String( data.lead_source_other ).trim() ) ) {
+        s.error = 'Please add a quick note describing how you heard about us.';
+        return;
+      }
+
       s.submitting = true; s.error = '';
       try {
         const res = yield fetch( window.haanpaaTrial.endpoint, {
@@ -98,7 +120,14 @@ store( 'haanpaa/trial', {
           body: JSON.stringify( data ),
         } );
         const json = yield res.json();
-        if ( ! res.ok || ! json.ok ) throw new Error( 'Submission failed' );
+        if ( ! res.ok || ! json.ok ) {
+          // Surface server-side validation messages when present.
+          if ( json && json.message ) {
+            s.error = String( json.message );
+            return;
+          }
+          throw new Error( 'Submission failed' );
+        }
         s.step = 4; s.done = true;
       } catch ( err ) {
         s.error = 'Something went wrong. Please call us at ' + ( window.haanpaaTrial.phone || '' );

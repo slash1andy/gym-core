@@ -493,20 +493,80 @@
 
 	function getFormData() {
 		return {
-			first_name: ( document.getElementById( 'sales-first-name' ) || {} ).value || '',
-			last_name:  ( document.getElementById( 'sales-last-name' ) || {} ).value || '',
-			email:      ( document.getElementById( 'sales-email' ) || {} ).value || '',
-			phone:      ( document.getElementById( 'sales-phone' ) || {} ).value || '',
-			address_1:  ( document.getElementById( 'sales-address' ) || {} ).value || '',
-			city:       ( document.getElementById( 'sales-city' ) || {} ).value || '',
-			state:      ( document.getElementById( 'sales-state' ) || {} ).value || '',
-			postcode:   ( document.getElementById( 'sales-zip' ) || {} ).value || '',
+			first_name:        ( document.getElementById( 'sales-first-name' ) || {} ).value || '',
+			last_name:         ( document.getElementById( 'sales-last-name' ) || {} ).value || '',
+			email:             ( document.getElementById( 'sales-email' ) || {} ).value || '',
+			phone:             ( document.getElementById( 'sales-phone' ) || {} ).value || '',
+			address_1:         ( document.getElementById( 'sales-address' ) || {} ).value || '',
+			city:              ( document.getElementById( 'sales-city' ) || {} ).value || '',
+			state:             ( document.getElementById( 'sales-state' ) || {} ).value || '',
+			postcode:          ( document.getElementById( 'sales-zip' ) || {} ).value || '',
+			lead_source:       ( document.getElementById( 'sales-lead-source' ) || {} ).value || '',
+			lead_source_other: ( document.getElementById( 'sales-lead-source-other' ) || {} ).value || '',
 		};
+	}
+
+	function clearFieldError( errorId, controlId ) {
+		var err = document.getElementById( errorId );
+		if ( err ) {
+			err.hidden = true;
+			err.textContent = '';
+		}
+		if ( controlId ) {
+			var ctrl = document.getElementById( controlId );
+			if ( ctrl ) {
+				ctrl.removeAttribute( 'aria-invalid' );
+				ctrl.classList.remove( 'sales-input--invalid' );
+			}
+		}
+	}
+
+	function showFieldError( errorId, controlId, message ) {
+		var err = document.getElementById( errorId );
+		if ( err ) {
+			err.textContent = message;
+			err.hidden = false;
+		}
+		if ( controlId ) {
+			var ctrl = document.getElementById( controlId );
+			if ( ctrl ) {
+				ctrl.setAttribute( 'aria-invalid', 'true' );
+				ctrl.classList.add( 'sales-input--invalid' );
+				if ( typeof ctrl.focus === 'function' ) {
+					ctrl.focus();
+				}
+			}
+		}
+	}
+
+	function validateLeadSource( data ) {
+		clearFieldError( 'sales-lead-source-error', 'sales-lead-source' );
+		clearFieldError( 'sales-lead-source-other-error', 'sales-lead-source-other' );
+		if ( ! data.lead_source ) {
+			showFieldError(
+				'sales-lead-source-error',
+				'sales-lead-source',
+				config.strings.leadSourceRequired || 'Please tell us how you heard about Haanpaa Martial Arts.'
+			);
+			return false;
+		}
+		if ( data.lead_source === 'other' && ! data.lead_source_other ) {
+			showFieldError(
+				'sales-lead-source-other-error',
+				'sales-lead-source-other',
+				config.strings.leadSourceOtherRequired || 'Please add a quick note describing how you heard about us.'
+			);
+			return false;
+		}
+		return true;
 	}
 
 	function validateCustomerForm() {
 		var data = getFormData();
 		if ( ! data.first_name || ! data.last_name || ! data.email ) {
+			return false;
+		}
+		if ( ! validateLeadSource( data ) ) {
 			return false;
 		}
 		return true;
@@ -536,6 +596,23 @@
 		}
 		reviewPricing.innerHTML = pricingHtml;
 
+		var leadSourceLabel = '';
+		if ( customer.lead_source ) {
+			var sources = ( config.leadSources || [] );
+			for ( var i = 0; i < sources.length; i++ ) {
+				if ( sources[ i ].slug === customer.lead_source ) {
+					leadSourceLabel = sources[ i ].label;
+					break;
+				}
+			}
+			if ( ! leadSourceLabel ) {
+				leadSourceLabel = customer.lead_source;
+			}
+			if ( customer.lead_source === 'other' && customer.lead_source_other ) {
+				leadSourceLabel += ' — ' + customer.lead_source_other;
+			}
+		}
+
 		reviewCustomer.innerHTML = '<p><strong>' +
 			escapeHtml( customer.first_name + ' ' + customer.last_name ) + '</strong></p>' +
 			'<p>' + escapeHtml( customer.email ) + '</p>' +
@@ -544,7 +621,8 @@
 				( customer.city ? ', ' + escapeHtml( customer.city ) : '' ) +
 				( customer.state ? ', ' + escapeHtml( customer.state ) : '' ) +
 				( customer.postcode ? ' ' + escapeHtml( customer.postcode ) : '' ) +
-				'</p>' : '' );
+				'</p>' : '' ) +
+			( leadSourceLabel ? '<p class="review-lead-source"><span>Lead source:</span> ' + escapeHtml( leadSourceLabel ) + '</p>' : '' );
 	}
 
 	// -----------------------------------------------------------------------
@@ -592,6 +670,11 @@
 			return;
 		}
 
+		if ( ! validateLeadSource( customer ) ) {
+			// Inline error shown by validateLeadSource(); leave the screen open.
+			return;
+		}
+
 		showLoading();
 
 		// Get notes from textarea if present.
@@ -607,6 +690,8 @@
 				phone: customer.phone,
 				location: config.location,
 				notes: notes,
+				lead_source: customer.lead_source,
+				lead_source_other: customer.lead_source_other,
 			} ),
 		} )
 			.then( function ( result ) {
@@ -707,6 +792,24 @@
 				showScreen( 'pricing' );
 			}
 		} );
+		// Lead source — show/hide the "Other" detail field based on selection.
+		var leadSourceEl = document.getElementById( 'sales-lead-source' );
+		var leadOtherRow = document.getElementById( 'sales-lead-source-other-row' );
+		if ( leadSourceEl && leadOtherRow ) {
+			leadSourceEl.addEventListener( 'change', function () {
+				var isOther = leadSourceEl.value === 'other';
+				leadOtherRow.hidden = ! isOther;
+				clearFieldError( 'sales-lead-source-error', 'sales-lead-source' );
+				if ( ! isOther ) {
+					var otherInput = document.getElementById( 'sales-lead-source-other' );
+					if ( otherInput ) {
+						otherInput.value = '';
+					}
+					clearFieldError( 'sales-lead-source-other-error', 'sales-lead-source-other' );
+				}
+			} );
+		}
+
 		document.getElementById( 'customer-save-lead' ).addEventListener( 'click', saveLead );
 		document.getElementById( 'customer-continue' ).addEventListener( 'click', function () {
 			if ( ! validateCustomerForm() ) {

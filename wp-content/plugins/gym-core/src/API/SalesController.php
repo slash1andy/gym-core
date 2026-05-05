@@ -15,6 +15,7 @@ declare( strict_types=1 );
 namespace Gym_Core\API;
 
 use Gym_Core\Location\Taxonomy;
+use Gym_Core\Sales\LeadSourceField;
 use Gym_Core\Sales\OrderBuilder;
 use Gym_Core\Sales\PricingCalculator;
 use Gym_Core\Sales\ProductMetaBox;
@@ -387,6 +388,20 @@ class SalesController extends BaseController {
 			'postcode'   => sanitize_text_field( (string) $request->get_param( 'postcode' ) ),
 		);
 
+		// Validate lead source — required at intake (plan §F).
+		$lead_source = LeadSourceField::validate(
+			(string) $request->get_param( 'lead_source' ),
+			(string) $request->get_param( 'lead_source_other' )
+		);
+
+		if ( is_wp_error( $lead_source ) ) {
+			return $this->error_response(
+				(string) $lead_source->get_error_code(),
+				$lead_source->get_error_message(),
+				(int) ( $lead_source->get_error_data()['status'] ?? 422 )
+			);
+		}
+
 		// Validate pricing first.
 		$pricing = $this->calculator->calculate_for_product( $product_id, $down_payment );
 
@@ -400,7 +415,8 @@ class SalesController extends BaseController {
 			$pricing,
 			$customer,
 			$location,
-			get_current_user_id()
+			get_current_user_id(),
+			$lead_source
 		);
 
 		if ( is_wp_error( $result ) ) {
@@ -440,9 +456,32 @@ class SalesController extends BaseController {
 			);
 		}
 
+		// Validate lead source — required at intake (plan §F).
+		$lead_source = LeadSourceField::validate(
+			(string) $request->get_param( 'lead_source' ),
+			(string) $request->get_param( 'lead_source_other' )
+		);
+
+		if ( is_wp_error( $lead_source ) ) {
+			return $this->error_response(
+				(string) $lead_source->get_error_code(),
+				$lead_source->get_error_message(),
+				(int) ( $lead_source->get_error_data()['status'] ?? 422 )
+			);
+		}
+
+		// Append the lead source detail to staff notes so it lives in the CRM record.
+		$source_note = LeadSourceField::crm_note_line( $lead_source['source'], $lead_source['other'] );
+		$fields['notes'] = '' === $fields['notes']
+			? $source_note
+			: $fields['notes'] . "\n\n" . $source_note;
+
 		// Create CRM contact if Jetpack CRM is available.
 		if ( function_exists( 'zeroBS_integrations_addOrUpdateContact' ) ) {
-			$tags = array( 'lead', 'source: sales-kiosk' );
+			$tags = array_merge(
+				array( 'lead', 'source: sales-kiosk' ),
+				LeadSourceField::crm_tags_for( $lead_source['source'] )
+			);
 
 			if ( ! empty( $fields['location'] ) ) {
 				$tags[] = sanitize_title( $fields['location'] );
@@ -461,6 +500,15 @@ class SalesController extends BaseController {
 				! empty( $fields['email'] ) ? $fields['email'] : $fields['phone'],
 				$contact_data
 			);
+
+			// Persist the lead source as a CRM contact custom field so it's
+			// queryable in Jetpack CRM (Plan §F: "custom field gym_lead_source").
+			if ( $contact_id && function_exists( 'zeroBSCRM_addUpdateContactMeta' ) ) {
+				zeroBSCRM_addUpdateContactMeta( (int) $contact_id, LeadSourceField::CRM_FIELD_KEY, $lead_source['source'] );
+				if ( '' !== $lead_source['other'] ) {
+					zeroBSCRM_addUpdateContactMeta( (int) $contact_id, LeadSourceField::CRM_FIELD_OTHER, $lead_source['other'] );
+				}
+			}
 
 			// Add notes if provided.
 			if ( $contact_id && ! empty( $fields['notes'] ) && function_exists( 'zeroBS_addNote' ) ) {
@@ -579,13 +627,13 @@ class SalesController extends BaseController {
 	 */
 	private function order_args(): array {
 		return array(
-			'product_id'   => array(
+			'product_id'        => array(
 				'description'       => __( 'WooCommerce product ID.', 'gym-core' ),
 				'type'              => 'integer',
 				'required'          => true,
 				'sanitize_callback' => 'absint',
 			),
-			'down_payment' => array(
+			'down_payment'      => array(
 				'description'       => __( 'Down payment amount.', 'gym-core' ),
 				'type'              => 'number',
 				'required'          => true,
@@ -593,66 +641,79 @@ class SalesController extends BaseController {
 					return (float) $value;
 				},
 			),
-			'email'        => array(
+			'email'             => array(
 				'description'       => __( 'Customer email address.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => true,
 				'format'            => 'email',
 				'sanitize_callback' => 'sanitize_email',
 			),
-			'first_name'   => array(
+			'first_name'        => array(
 				'description'       => __( 'Customer first name.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'last_name'    => array(
+			'last_name'         => array(
 				'description'       => __( 'Customer last name.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => true,
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'phone'        => array(
+			'phone'             => array(
 				'description'       => __( 'Customer phone number.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'address_1'    => array(
+			'address_1'         => array(
 				'description'       => __( 'Billing street address.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'city'         => array(
+			'city'              => array(
 				'description'       => __( 'Billing city.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'state'        => array(
+			'state'             => array(
 				'description'       => __( 'Billing state.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'postcode'     => array(
+			'postcode'          => array(
 				'description'       => __( 'Billing postal code.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'location'     => array(
+			'location'          => array(
 				'description'       => __( 'Gym location slug.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_key',
+			),
+			'lead_source'       => array(
+				'description'       => __( 'How the prospect heard about the academy. Required at intake.', 'gym-core' ),
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'lead_source_other' => array(
+				'description'       => __( 'Free-text detail when lead_source = other.', 'gym-core' ),
+				'type'              => 'string',
+				'required'          => false,
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
 			),
 		);
 	}
@@ -664,47 +725,60 @@ class SalesController extends BaseController {
 	 */
 	private function lead_args(): array {
 		return array(
-			'first_name' => array(
+			'first_name'        => array(
 				'description'       => __( 'Lead first name.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'last_name'  => array(
+			'last_name'         => array(
 				'description'       => __( 'Lead last name.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'email'      => array(
+			'email'             => array(
 				'description'       => __( 'Lead email address.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_email',
 			),
-			'phone'      => array(
+			'phone'             => array(
 				'description'       => __( 'Lead phone number.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_text_field',
 			),
-			'location'   => array(
+			'location'          => array(
 				'description'       => __( 'Gym location slug.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_key',
 			),
-			'notes'      => array(
+			'notes'             => array(
 				'description'       => __( 'Staff notes about the lead.', 'gym-core' ),
 				'type'              => 'string',
 				'required'          => false,
 				'default'           => '',
 				'sanitize_callback' => 'sanitize_textarea_field',
+			),
+			'lead_source'       => array(
+				'description'       => __( 'How the prospect heard about the academy. Required at intake.', 'gym-core' ),
+				'type'              => 'string',
+				'required'          => true,
+				'sanitize_callback' => 'sanitize_key',
+			),
+			'lead_source_other' => array(
+				'description'       => __( 'Free-text detail when lead_source = other.', 'gym-core' ),
+				'type'              => 'string',
+				'required'          => false,
+				'default'           => '',
+				'sanitize_callback' => 'sanitize_text_field',
 			),
 		);
 	}
