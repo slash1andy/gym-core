@@ -30,15 +30,24 @@
       "defaultPalette": false,
       "text": true,
       "palette": [
-        { "slug": "ink",       "color": "#0A0A0A", "name": "Ink"       },
-        { "slug": "ink-soft",  "color": "#1F1F1D", "name": "Ink Soft"  },
-        { "slug": "ink-mute",  "color": "#4A4A48", "name": "Ink Mute"  },
-        { "slug": "paper",     "color": "#F6F4EE", "name": "Paper"     },
-        { "slug": "paper-2",   "color": "#EDEAE0", "name": "Paper Deep"},
-        { "slug": "blue",      "color": "#1A2DC4", "name": "Signal Blue" },
-        { "slug": "rust",      "color": "#B26200", "name": "Mat Rust"  },
-        { "slug": "moss",      "color": "#2B8A5F", "name": "Moss"      },
-        { "slug": "alarm",     "color": "#B00020", "name": "Alarm"     }
+        { "slug": "ink",         "color": "#0A0A0A", "name": "Ink"             },
+        { "slug": "ink-soft",    "color": "#1F1F1D", "name": "Ink Soft"        },
+        { "slug": "ink-mute",    "color": "#4A4A48", "name": "Ink Mute"        },
+        { "slug": "paper",       "color": "#F6F4EE", "name": "Paper"           },
+        { "slug": "paper-2",     "color": "#EDEAE0", "name": "Paper Deep"      },
+        { "slug": "blue",        "color": "#1A2DC4", "name": "Signal Blue"     },
+        { "slug": "rust",        "color": "#B26200", "name": "Mat Rust"        },
+        { "slug": "moss",        "color": "#2B8A5F", "name": "Moss"            },
+        { "slug": "alarm",       "color": "#B00020", "name": "Alarm"           },
+        { "slug": "royal-blue",  "color": "#0032A0", "name": "Royal Blue"      },
+        { "slug": "blue-hover",  "color": "#0041CC", "name": "Royal Blue Hover"},
+        { "slug": "cool-gray",   "color": "#75787B", "name": "Cool Gray"       },
+        { "slug": "black",       "color": "#000000", "name": "Black"           },
+        { "slug": "white",       "color": "#FFFFFF", "name": "White"           },
+        { "slug": "gray-light",  "color": "#F5F5F7", "name": "Light Gray"      },
+        { "slug": "gray-100",    "color": "#E5E5E7", "name": "Gray 100"        },
+        { "slug": "gray-800",    "color": "#2A2A2A", "name": "Gray 800"        },
+        { "slug": "gray-900",    "color": "#1A1A1A", "name": "Gray 900"        }
       ]
     },
     "typography": {
@@ -117,12 +126,14 @@
     }
   },
   "templateParts": [
-    { "name": "header", "title": "Header", "area": "header" },
-    { "name": "footer", "title": "Footer", "area": "footer" }
+    { "name": "header",     "title": "Header",     "area": "header" },
+    { "name": "footer",     "title": "Footer",     "area": "footer" },
+    { "name": "sticky-cta", "title": "Sticky CTA", "area": "uncategorized" }
   ],
   "customTemplates": [
-    { "name": "page-wide",     "title": "Wide page",        "postTypes": [ "page" ] },
-    { "name": "free-trial",    "title": "Free Trial",       "postTypes": [ "page" ] },
-    { "name": "page-schedule", "title": "Schedule Page",    "postTypes": [ "page" ] }
+    { "name": "page-wide",     "title": "Wide page",         "postTypes": [ "page" ] },
+    { "name": "free-trial",    "title": "Free Trial",        "postTypes": [ "page" ] },
+    { "name": "page-schedule", "title": "Schedule Page",     "postTypes": [ "page" ] },
+    { "name": "page-visit",    "title": "Visit / Locations", "postTypes": [ "page" ] }
   ]
 }

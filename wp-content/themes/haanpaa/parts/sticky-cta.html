@@ -1,0 +1,77 @@
+<!-- wp:html -->
+<aside class="hp-sticky-cta" aria-label="Quick contact" data-hp-sticky-cta>
+  <a class="hp-sticky-cta__call" href="tel:8154513001" aria-label="Call Haanpaa Martial Arts">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    <span>Call</span>
+  </a>
+  <a class="hp-sticky-cta__book" href="/free-trial/">
+    Book free trial
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+  </a>
+</aside>
+
+<style>
+.hp-sticky-cta{
+	position:fixed;
+	left:0;right:0;bottom:0;
+	z-index:40;
+	display:none;
+	gap:1px;
+	padding:0;
+	background:rgba(0,0,0,0.92);
+	backdrop-filter:blur(10px);
+	-webkit-backdrop-filter:blur(10px);
+	border-top:1px solid rgba(255,255,255,0.08);
+	transform:translateY(100%);
+	transition:transform .25s ease;
+}
+.hp-sticky-cta[data-visible="true"]{transform:translateY(0)}
+.hp-sticky-cta a{
+	flex:1;
+	display:flex;
+	align-items:center;
+	justify-content:center;
+	gap:.5rem;
+	min-height:56px;
+	font-family:'Barlow Condensed','Arial Narrow',sans-serif;
+	font-weight:700;
+	letter-spacing:.06em;
+	text-transform:uppercase;
+	font-size:.875rem;
+	text-decoration:none;
+}
+.hp-sticky-cta__call{
+	background:#1a1a1a;
+	color:#ffffff;
+	flex:0 0 40%;
+}
+.hp-sticky-cta__book{
+	background:#0032A0;
+	color:#ffffff;
+}
+.hp-sticky-cta__call:hover,.hp-sticky-cta__call:focus-visible{background:#2A2A2A}
+.hp-sticky-cta__book:hover,.hp-sticky-cta__book:focus-visible{background:#0041CC}
+.hp-sticky-cta a:focus-visible{outline:2px solid #ffffff;outline-offset:-4px}
+@media (max-width: 768px){.hp-sticky-cta{display:flex}}
+@media (prefers-reduced-motion: reduce){.hp-sticky-cta{transition:none}}
+</style>
+
+<script>
+(function(){
+	var el = document.querySelector('[data-hp-sticky-cta]');
+	if(!el) return;
+	var threshold = 480;
+	var ticking = false;
+	function update(){
+		var y = window.pageYOffset || document.documentElement.scrollTop;
+		el.setAttribute('data-visible', y > threshold ? 'true' : 'false');
+		ticking = false;
+	}
+	function onScroll(){
+		if(!ticking){ window.requestAnimationFrame(update); ticking = true; }
+	}
+	window.addEventListener('scroll', onScroll, { passive: true });
+	update();
+})();
+</script>
+<!-- /wp:html -->

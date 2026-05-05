@@ -1,0 +1,40 @@
+name: Lighthouse CI
+
+on:
+  pull_request:
+    paths:
+      - 'wp-content/themes/haanpaa/**'
+      - 'wp-content/plugins/haanpaa-site-kit/**'
+      - 'wp-content/plugins/gym-core/assets/**'
+      - 'wp-content/plugins/gym-core/src/Funnel/**'
+      - 'ci/lighthouse/**'
+  workflow_dispatch:
+
+# Phase 2 §J Core Web Vitals budget gate.
+# Runs against staging.teamhaanpaa.com and blocks merge on regression beyond:
+#   LCP < 2.0s, CLS < 0.05, TBT < 200ms (INP proxy in Lighthouse).
+#
+# NOTE: this assumes the staging URL is reachable from GitHub-hosted runners.
+# If the staging environment is behind auth or VPN, we'll need a self-hosted
+# runner or to ship a Pressable preview URL builder before this becomes a
+# real merge gate. Tracked as a follow-up.
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.13.x
+
+      - name: Run Lighthouse CI
+        run: lhci autorun --config=ci/lighthouse/lighthouserc.json
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
