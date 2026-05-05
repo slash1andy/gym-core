@@ -113,6 +113,10 @@ class ToolRegistry {
 		'get_sms_history',
 		// Class rosters (new).
 		'get_class_roster',
+		// Finance Copilot (new).
+		'get_ar_aging',
+		'draft_dunning_message',
+		'run_monthly_close',
 	);
 
 	/**
@@ -861,22 +865,38 @@ class ToolRegistry {
 			// -----------------------------------------------------------------
 			array(
 				'name'         => 'get_revenue_summary',
-				'description'  => 'Get a revenue summary from WooCommerce, including total sales, refunds, and net revenue for a date range.',
+				'description'  => 'Get a revenue summary from WooCommerce, including total sales, refunds, and net revenue for a date range. Optional filters narrow the result to a single location (rockford / beloit) or a single program category (e.g. "kids", "bjj", "kickboxing") so Pippin can answer questions like "how did Rockford kids\' membership revenue change month over month".',
 				'input_schema' => array(
 					'type'       => 'object',
 					'properties' => array(
-						'period'   => array(
+						'period'       => array(
 							'type'        => 'string',
-							'description' => 'Reporting period: "week", "month", "quarter", "year", or "custom".',
+							'description' => 'Reporting period: "week", "month", "quarter", "year", or "custom". When "custom", supply period_start + period_end.',
 							'enum'        => array( 'week', 'month', 'quarter', 'year', 'custom' ),
 						),
-						'date_min' => array(
+						'period_start' => array(
 							'type'        => 'string',
-							'description' => 'Start date for custom period (Y-m-d).',
+							'description' => 'Start date for custom period (Y-m-d). Alias of date_min.',
 						),
-						'date_max' => array(
+						'period_end'   => array(
 							'type'        => 'string',
-							'description' => 'End date for custom period (Y-m-d).',
+							'description' => 'End date for custom period (Y-m-d). Alias of date_max.',
+						),
+						'date_min'     => array(
+							'type'        => 'string',
+							'description' => 'Start date for custom period (Y-m-d). Legacy alias for period_start.',
+						),
+						'date_max'     => array(
+							'type'        => 'string',
+							'description' => 'End date for custom period (Y-m-d). Legacy alias for period_end.',
+						),
+						'location'     => array(
+							'type'        => 'string',
+							'description' => 'Optional location slug (e.g. "rockford", "beloit").',
+						),
+						'program'      => array(
+							'type'        => 'string',
+							'description' => 'Optional program slug (e.g. "kids", "bjj", "kickboxing"). Filters by product category.',
 						),
 					),
 					'required'   => array( 'period' ),
@@ -1627,6 +1647,67 @@ class ToolRegistry {
 				'method'       => 'GET',
 				'auth_cap'     => 'gym_view_attendance',
 				'write'        => false,
+			),
+
+			// -----------------------------------------------------------------
+			// Finance Copilot tools (new)
+			// -----------------------------------------------------------------
+			array(
+				'name'         => 'get_ar_aging',
+				'description'  => 'Accounts-receivable aging snapshot. Returns outstanding (failed / on-hold / pending) orders grouped into 0-30, 31-60, 61-90, and 90+ day buckets, with totals and per-row customer detail. Source of truth for "who owes us money" — always call this rather than counting failed orders manually.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => new \stdClass(),
+				),
+				'endpoint'     => '/finance/ar-aging',
+				'method'       => 'GET',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => false,
+			),
+			array(
+				'name'         => 'draft_dunning_message',
+				'description'  => 'Draft an outreach message for a member with an overdue invoice. Returns the proposed subject + body and queues the draft on the staff approval queue — never sends. Pippin must always tell the user the draft is queued for Joy\'s review.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'order_id' => array(
+							'type'        => 'integer',
+							'description' => 'WooCommerce order ID for the unpaid renewal.',
+						),
+						'tone'     => array(
+							'type'        => 'string',
+							'description' => 'Tone of the draft: "gentle" (default) or "firm".',
+							'enum'        => array( 'gentle', 'firm' ),
+						),
+					),
+					'required'   => array( 'order_id' ),
+				),
+				'endpoint'     => '/finance/dunning/draft',
+				'method'       => 'POST',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => true,
+			),
+			array(
+				'name'         => 'run_monthly_close',
+				'description'  => 'Run the monthly close checklist for a given month: reconcile WooPayments payouts vs paid orders, flag refunded subscriptions, export coach payroll attendance CSV, and queue Darby\'s sign-off. Idempotent — re-running for the same month returns the cached result and never double-files the sign-off prompt.',
+				'input_schema' => array(
+					'type'       => 'object',
+					'properties' => array(
+						'month' => array(
+							'type'        => 'string',
+							'description' => 'Month to close in YYYY-MM form (e.g. "2026-04").',
+						),
+						'force' => array(
+							'type'        => 'boolean',
+							'description' => 'Bypass the cache and re-run every step. Default false.',
+						),
+					),
+					'required'   => array( 'month' ),
+				),
+				'endpoint'     => '/finance/close/{month}/run',
+				'method'       => 'POST',
+				'auth_cap'     => 'manage_woocommerce',
+				'write'        => true,
 			),
 		);
 	}
