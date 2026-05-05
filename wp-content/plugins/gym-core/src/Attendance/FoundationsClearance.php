@@ -164,6 +164,129 @@ class FoundationsClearance {
 	}
 
 	/**
+	 * Returns Foundations status for many users with batched attendance counts.
+	 *
+	 * One batched attendance query covers every "classes_completed since
+	 * enrolled_at" calculation that `get_status()` would do per-user. User-meta
+	 * reads still happen per-user but hit the object cache when callers prime
+	 * it with `cache_users()` upstream.
+	 *
+	 * @since 2.5.0
+	 *
+	 * @param int[] $user_ids List of user IDs.
+	 * @return array<int, array<string, mixed>> Map of user_id => status array
+	 *                                          (same shape as `get_status()`).
+	 */
+	public function get_status_for_users( array $user_ids ): array {
+		$user_ids = array_values( array_unique( array_filter( array_map( 'intval', $user_ids ) ) ) );
+		if ( empty( $user_ids ) ) {
+			return array();
+		}
+
+		$enabled = self::is_enabled();
+		$reqs    = self::get_requirements();
+
+		// Pass 1: read meta to figure out who needs an attendance count and
+		// short-circuit not-enrolled / cleared users entirely.
+		$pending = array();
+		$results = array();
+
+		foreach ( $user_ids as $uid ) {
+			$meta = get_user_meta( $uid, self::META_KEY, true );
+
+			if ( empty( $meta ) || ! is_array( $meta ) ) {
+				$results[ $uid ] = array(
+					'in_foundations'          => false,
+					'cleared'                 => false,
+					'phase'                   => 'not_enrolled',
+					'classes_completed'       => 0,
+					'classes_phase1_required' => 0,
+					'classes_total_required'  => 0,
+					'coach_rolls_completed'   => 0,
+					'coach_rolls_required'    => 0,
+					'cleared_at'              => null,
+					'live_training_allowed'   => ! $enabled,
+				);
+				continue;
+			}
+
+			if ( ! empty( $meta['cleared_at'] ) ) {
+				$results[ $uid ] = array(
+					'in_foundations'          => false,
+					'cleared'                 => true,
+					'phase'                   => 'cleared',
+					'classes_completed'       => (int) ( $meta['classes_at_clearance'] ?? 0 ),
+					'classes_phase1_required' => 0,
+					'classes_total_required'  => 0,
+					'coach_rolls_completed'   => (int) ( $meta['coach_rolls_at_clearance'] ?? 0 ),
+					'coach_rolls_required'    => 0,
+					'cleared_at'              => $meta['cleared_at'],
+					'live_training_allowed'   => true,
+				);
+				continue;
+			}
+
+			$enrolled_at = (string) ( $meta['enrolled_at'] ?? '' );
+			if ( '' === $enrolled_at ) {
+				// In Foundations but missing enrollment timestamp — fall back to a
+				// zero count so we still return a sensible status.
+				$pending[ $uid ] = '';
+			} else {
+				$pending[ $uid ] = $enrolled_at;
+			}
+		}
+
+		// Pass 2: one batched attendance query for everyone still pending.
+		$counts = array();
+		if ( ! empty( $pending ) ) {
+			$with_dates = array_filter( $pending, static fn( string $since ): bool => '' !== $since );
+			if ( ! empty( $with_dates ) ) {
+				$counts = $this->attendance->get_counts_since_for_users( $with_dates );
+			}
+		}
+
+		// Pass 3: assemble.
+		foreach ( $pending as $uid => $enrolled_at ) {
+			$class_count = $counts[ $uid ] ?? 0;
+			$rolls       = $this->get_coach_rolls( $uid );
+			$rolls_done  = count( $rolls );
+
+			if ( $class_count < $reqs['phase1_classes'] ) {
+				$phase = 'phase1';
+			} elseif ( $rolls_done < $reqs['coach_rolls_required'] ) {
+				$phase = 'phase2_coach_rolls';
+			} elseif ( $class_count < $reqs['total_classes'] ) {
+				$phase = 'phase3';
+			} else {
+				$phase = 'ready_to_clear';
+			}
+
+			$results[ $uid ] = array(
+				'in_foundations'          => true,
+				'cleared'                 => false,
+				'phase'                   => $phase,
+				'classes_completed'       => $class_count,
+				'classes_phase1_required' => $reqs['phase1_classes'],
+				'classes_total_required'  => $reqs['total_classes'],
+				'coach_rolls_completed'   => $rolls_done,
+				'coach_rolls_required'    => $reqs['coach_rolls_required'],
+				'cleared_at'              => null,
+				'live_training_allowed'   => false,
+			);
+		}
+
+		// Preserve input order.
+		$ordered = array();
+		foreach ( $user_ids as $uid ) {
+			if ( isset( $results[ $uid ] ) ) {
+				$ordered[ $uid ] = $results[ $uid ];
+			}
+		}
+
+		return $ordered;
+	}
+
+	/**
 	 * Enrolls a new student in the Foundations program.
 	 *
 	 * @param int $user_id User ID.

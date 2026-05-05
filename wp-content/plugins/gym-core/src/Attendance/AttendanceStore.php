@@ -152,6 +152,144 @@ class AttendanceStore {
 	}
 
 	/**
+	 * Returns total attendance counts for many users in a single query.
+	 *
+	 * One grouped query — replaces a per-user `get_total_count()` fan-out in
+	 * roster-enrichment loops. Each returned count is also stored in the
+	 * per-user object cache used by `get_total_count()` so subsequent
+	 * single-user lookups are free for the rest of the request.
+	 *
+	 * Users with zero check-ins are returned with a count of 0 so callers
+	 * can detect first-timers (`count === 0`) without re-querying.
+	 *
+	 * @since 2.5.0
+	 *
+	 * @param int[] $user_ids List of user IDs to count.
+	 * @return array<int, int> Map of user_id => total attendance count.
+	 */
+	public function get_total_counts_for_users( array $user_ids ): array {
+		$user_ids = array_values( array_unique( array_filter( array_map( 'intval', $user_ids ) ) ) );
+		if ( empty( $user_ids ) ) {
+			return array();
+		}
+
+		$counts = array_fill_keys( $user_ids, 0 );
+
+		// Honor cached per-user totals — they may already be primed by
+		// member-dashboard reads earlier in the request.
+		$missing = array();
+		foreach ( $user_ids as $uid ) {
+			$cached = wp_cache_get( self::total_count_cache_key( $uid ), self::COUNT_CACHE_GROUP );
+			if ( false !== $cached ) {
+				$counts[ $uid ] = (int) $cached;
+				continue;
+			}
+			$missing[] = $uid;
+		}
+
+		if ( empty( $missing ) ) {
+			return $counts;
+		}
+
+		global $wpdb;
+		$tables = TableManager::get_table_names();
+
+		$placeholders = implode( ',', array_fill( 0, count( $missing ), '%d' ) );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- placeholders built from %d count above; values prepared.
+		$sql = $wpdb->prepare(
+			"SELECT user_id, COUNT(*) AS cnt
+			FROM {$tables['attendance']}
+			WHERE user_id IN ({$placeholders})
+			GROUP BY user_id",
+			$missing
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $sql ) ?: array();
+
+		foreach ( $rows as $row ) {
+			$uid = (int) $row->user_id;
+			$cnt = (int) $row->cnt;
+			$counts[ $uid ] = $cnt;
+		}
+
+		// Prime the per-user cache so subsequent get_total_count() calls
+		// short-circuit. Includes zero-count users so first-timer detection
+		// stays a cache hit.
+		foreach ( $missing as $uid ) {
+			wp_cache_set(
+				self::total_count_cache_key( $uid ),
+				$counts[ $uid ],
+				self::COUNT_CACHE_GROUP
+			);
+		}
+
+		return $counts;
+	}
+
+	/**
+	 * Returns per-user attendance counts since per-user "since" timestamps.
+	 *
+	 * Replaces a per-user `get_count_since()` fan-out in promotion-eligibility
+	 * loops where each user has a different cut-off (e.g., `promoted_at`).
+	 *
+	 * @since 2.5.0
+	 *
+	 * @param array<int, string> $user_to_since Map of user_id => since (mysql datetime).
+	 * @return array<int, int> Map of user_id => count since their cut-off.
+	 *                          Users with zero qualifying check-ins return 0.
+	 */
+	public function get_counts_since_for_users( array $user_to_since ): array {
+		$normalized = array();
+		foreach ( $user_to_since as $uid => $since ) {
+			$uid   = (int) $uid;
+			$since = (string) $since;
+			if ( $uid <= 0 || '' === $since ) {
+				continue;
+			}
+			$normalized[ $uid ] = $since;
+		}
+
+		if ( empty( $normalized ) ) {
+			return array();
+		}
+
+		$counts = array_fill_keys( array_keys( $normalized ), 0 );
+
+		global $wpdb;
+		$tables = TableManager::get_table_names();
+
+		$clauses = array();
+		$values  = array();
+		foreach ( $normalized as $uid => $since ) {
+			$clauses[] = '(user_id = %d AND checked_in_at >= %s)';
+			$values[]  = $uid;
+			$values[]  = $since;
+		}
+
+		$where = implode( ' OR ', $clauses );
+
+		// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared -- $where is built from internal %d/%s placeholders only; values are prepared.
+		$sql = $wpdb->prepare(
+			"SELECT user_id, COUNT(*) AS cnt
+			FROM {$tables['attendance']}
+			WHERE {$where}
+			GROUP BY user_id",
+			$values
+		);
+
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery, WordPress.DB.PreparedSQL.NotPrepared
+		$rows = $wpdb->get_results( $sql ) ?: array();
+
+		foreach ( $rows as $row ) {
+			$counts[ (int) $row->user_id ] = (int) $row->cnt;
+		}
+
+		return $counts;
+	}
+
+	/**
 	 * Returns attendance history for a user.
 	 *
 	 * @since 1.2.0
