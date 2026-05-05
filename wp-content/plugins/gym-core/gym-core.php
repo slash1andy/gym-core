@@ -3,7 +3,7 @@
  * Plugin Name:       Gym Core
  * Plugin URI:        https://www.teamhaanpaa.com/
  * Description:       Core functionality for Haanpaa Martial Arts — multi-location support, membership integration, class scheduling, belt rank tracking, attendance/check-in, gamification (badges & streaks), Twilio SMS, and REST API endpoints for AI agents.
- * Version:           1.0.0
+ * Version:           1.1.0
  * Requires at least: 7.0
  * Requires PHP:      8.0
  * Requires Plugins:  woocommerce
@@ -27,7 +27,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 // Plugin constants.
-define( 'GYM_CORE_VERSION', '1.0.0' );
+define( 'GYM_CORE_VERSION', '1.1.0' );
 define( 'GYM_CORE_FILE', __FILE__ );
 define( 'GYM_CORE_PATH', plugin_dir_path( __FILE__ ) );
 define( 'GYM_CORE_URL', plugin_dir_url( __FILE__ ) );

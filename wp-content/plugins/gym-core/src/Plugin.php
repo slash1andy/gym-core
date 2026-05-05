@@ -125,6 +125,9 @@ final class Plugin {
 	 */
 	public function init(): void {
 		$this->load_textdomain();
+		// Idempotent schema upgrade. maybe_create_tables() short-circuits when
+		// gym_core_db_version is already current; bumps run dbDelta safely.
+		Data\TableManager::maybe_create_tables();
 		$this->register_capabilities();
 		$this->register_top_level_menu();
 		$this->register_admin_modules();

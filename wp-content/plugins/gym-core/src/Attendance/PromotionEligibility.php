@@ -147,6 +147,112 @@ class PromotionEligibility {
 	}
 
 	/**
+	 * Runs `check()` for many users in a program with batched queries.
+	 *
+	 * Replaces a per-user `check()` fan-out in roster-enrichment loops with:
+	 *   - one rank lookup via `RankStore::get_ranks_for_users()`
+	 *   - one attendance-count query via `AttendanceStore::get_counts_since_for_users()`
+	 *   - one batched Foundations status read via `FoundationsClearance::get_status_for_users()`
+	 *
+	 * Coach-recommendation user-meta is read per-user but hits the cache when
+	 * callers prime via `cache_users()` upstream.
+	 *
+	 * @since 2.5.0
+	 *
+	 * @param int[]  $user_ids List of user IDs.
+	 * @param string $program  Program slug.
+	 * @return array<int, array<string, mixed>> Map of user_id => check result
+	 *                                          (same shape as `check()`).
+	 */
+	public function check_for_users( array $user_ids, string $program ): array {
+		$user_ids = array_values( array_unique( array_filter( array_map( 'intval', $user_ids ) ) ) );
+		if ( empty( $user_ids ) || '' === $program ) {
+			return array();
+		}
+
+		$ranks = $this->ranks->get_ranks_for_users( $user_ids, $program );
+
+		$foundations_map = array();
+		if ( null !== $this->foundations ) {
+			$foundations_map = $this->foundations->get_status_for_users( $user_ids );
+		}
+
+		$require_recommendation = 'yes' === get_option( 'gym_core_require_coach_recommendation', 'yes' );
+
+		$user_to_since = array();
+		foreach ( $user_ids as $uid ) {
+			$rank = $ranks[ $uid ] ?? null;
+			if ( $rank && ! empty( $rank->promoted_at ) ) {
+				$user_to_since[ $uid ] = (string) $rank->promoted_at;
+			}
+		}
+
+		$attendance_counts = empty( $user_to_since )
+			? array()
+			: $this->attendance->get_counts_since_for_users( $user_to_since );
+
+		$results = array();
+
+		foreach ( $user_ids as $uid ) {
+			$rank      = $ranks[ $uid ] ?? null;
+			$threshold = $rank
+				? RankDefinitions::get_promotion_threshold( $program, $rank->belt )
+				: array(
+					'min_days'    => 0,
+					'min_classes' => 0,
+				);
+
+			$result = array(
+				'eligible'            => false,
+				'in_foundations'      => false,
+				'attendance_count'    => 0,
+				'attendance_required' => $threshold['min_classes'],
+				'days_at_rank'        => 0,
+				'days_required'       => $threshold['min_days'],
+				'has_recommendation'  => false,
+				'next_belt'           => null,
+			);
+
+			$status = $foundations_map[ $uid ] ?? null;
+			if ( $status && $status['in_foundations'] && ! $status['cleared'] ) {
+				$result['in_foundations'] = true;
+				$results[ $uid ]          = $result;
+				continue;
+			}
+
+			if ( ! $rank ) {
+				$results[ $uid ] = $result;
+				continue;
+			}
+
+			$next_belt = RankDefinitions::get_next_belt( $program, $rank->belt );
+			if ( null === $next_belt && (int) $rank->stripes >= $this->get_max_stripes( $program, $rank->belt ) ) {
+				$results[ $uid ] = $result;
+				continue;
+			}
+
+			$result['next_belt']        = $next_belt['slug'] ?? $rank->belt . ' (next stripe)';
+			$result['attendance_count'] = $attendance_counts[ $uid ] ?? 0;
+
+			$promoted_time          = strtotime( (string) $rank->promoted_at );
+			$result['days_at_rank'] = $promoted_time ? (int) floor( ( time() - $promoted_time ) / DAY_IN_SECONDS ) : 0;
+
+			$recommendation               = get_user_meta( $uid, '_gym_coach_recommendation_' . $program, true );
+			$result['has_recommendation'] = ! empty( $recommendation );
+
+			$meets_attendance     = $result['attendance_count'] >= $result['attendance_required'];
+			$meets_time           = $result['days_at_rank'] >= $result['days_required'];
+			$meets_recommendation = ! $require_recommendation || $result['has_recommendation'];
+
+			$result['eligible'] = $meets_attendance && $meets_time && $meets_recommendation;
+
+			$results[ $uid ] = $result;
+		}
+
+		return $results;
+	}
+
+	/**
 	 * Returns all members who are eligible or approaching eligibility for a program.
 	 *
 	 * @since 1.2.0

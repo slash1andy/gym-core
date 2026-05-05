@@ -332,14 +332,15 @@ final class StaffDashboard {
 		echo '<h2 class="gym-widget-heading">' . esc_html__( 'Overview', 'gym-core' ) . '</h2>';
 		echo '<div class="gym-stat-cards">';
 
-		// Today's attendance.
+		// Today's attendance — single batched query covers every location.
 		$locations       = \Gym_Core\Location\Taxonomy::get_location_labels();
+		$grouped         = $this->attendance->get_today_all_locations( array_keys( $locations ) );
 		$total           = 0;
 		$location_counts = array();
 		foreach ( $locations as $slug => $label ) {
-			$records                   = $this->attendance->get_today_by_location( $slug );
-			$location_counts[ $label ] = count( $records );
-			$total                    += count( $records );
+			$count                     = isset( $grouped[ $slug ] ) ? count( $grouped[ $slug ] ) : 0;
+			$location_counts[ $label ] = $count;
+			$total                    += $count;
 		}
 		$this->render_stat_card( (string) $total, __( 'Check-ins Today', 'gym-core' ) );
 
@@ -376,11 +377,12 @@ final class StaffDashboard {
 		echo '<h2 class="gym-widget-heading">' . esc_html__( 'Coaching', 'gym-core' ) . '</h2>';
 		echo '<div class="gym-stat-cards">';
 
-		// Attendance by location.
+		// Attendance by location — single batched query.
 		$locations = \Gym_Core\Location\Taxonomy::get_location_labels();
+		$grouped   = $this->attendance->get_today_all_locations( array_keys( $locations ) );
 		foreach ( $locations as $slug => $label ) {
-			$records = $this->attendance->get_today_by_location( $slug );
-			$this->render_stat_card( (string) count( $records ), $label . ' ' . __( 'Today', 'gym-core' ) );
+			$count = isset( $grouped[ $slug ] ) ? count( $grouped[ $slug ] ) : 0;
+			$this->render_stat_card( (string) $count, $label . ' ' . __( 'Today', 'gym-core' ) );
 		}
 
 		// Promotion candidates.
@@ -443,12 +445,12 @@ final class StaffDashboard {
 		$new = $this->get_orders_count_this_month( 'processing' );
 		$this->render_stat_card( (string) $new, __( 'New Orders (Month)', 'gym-core' ) );
 
-		// Today's attendance (sales context: foot traffic).
+		// Today's attendance (sales context: foot traffic) — single batched query.
 		$locations = \Gym_Core\Location\Taxonomy::get_location_labels();
+		$grouped   = $this->attendance->get_today_all_locations( array_keys( $locations ) );
 		$total     = 0;
-		foreach ( $locations as $slug => $label ) {
-			$records = $this->attendance->get_today_by_location( $slug );
-			$total  += count( $records );
+		foreach ( $grouped as $records ) {
+			$total += count( $records );
 		}
 		$this->render_stat_card( (string) $total, __( 'Visits Today', 'gym-core' ) );
 
