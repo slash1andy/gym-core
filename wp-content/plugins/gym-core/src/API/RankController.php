@@ -107,7 +107,7 @@ class RankController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'promote' ),
-				'permission_callback' => array( $this, 'permissions_promote' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_promote' ) ),
 				'args'                => array(
 					'user_id' => array(
 						'type'              => 'integer',

@@ -123,7 +123,7 @@ class LocationController extends BaseController {
 				array(
 					'methods'             => \WP_REST_Server::EDITABLE,
 					'callback'            => array( $this, 'set_user_location' ),
-					'permission_callback' => array( $this, 'permissions_authenticated' ),
+					'permission_callback' => $this->with_nonce( array( $this, 'permissions_authenticated' ) ),
 					'args'                => $this->user_location_args(),
 				),
 				'schema' => array( $this, 'get_public_item_schema' ),

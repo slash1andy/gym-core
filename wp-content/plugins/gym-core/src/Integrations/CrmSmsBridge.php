@@ -17,6 +17,7 @@ namespace Gym_Core\Integrations;
 use Gym_Core\SMS\TwilioClient;
 use Gym_Core\SMS\MessageTemplates;
 use Gym_Core\SMS\SmsOptOut;
+use Gym_Core\SMS\PiiRedactor;
 
 /**
  * CRM SMS bridge — logs SMS activity and enables contact-based sending.
@@ -108,6 +109,9 @@ final class CrmSmsBridge {
 			return;
 		}
 
+		// Redact PII before persisting. The actual SMS Twilio delivered is
+		// unchanged — only the audit row written to the CRM activity table
+		// has names, phones, and emails stripped. Per security P0 sweep §A.7.
 		$this->add_activity(
 			$contact_id,
 			self::ACTIVITY_TYPE_SENT,
@@ -116,7 +120,7 @@ final class CrmSmsBridge {
 				__( 'SMS sent (SID: %s)', 'gym-core' ),
 				$sid
 			),
-			$body
+			PiiRedactor::redact( $body )
 		);
 	}
 
@@ -137,12 +141,16 @@ final class CrmSmsBridge {
 		$contact_id = $this->find_contact_by_phone( $from );
 
 		if ( null === $contact_id ) {
+			// Drop the phone from the warning row too. The SID is enough
+			// to find the message in Twilio's console if we need to
+			// triage; the raw E.164 has no business in our log files.
 			$this->log_warning(
-				sprintf( 'Inbound SMS from unmatched phone: %s (SID: %s)', $from, $sms_sid )
+				sprintf( 'Inbound SMS from unmatched phone (SID: %s)', $sms_sid )
 			);
 			return;
 		}
 
+		// Redact PII before persisting. See log_outbound_sms() for rationale.
 		$this->add_activity(
 			$contact_id,
 			self::ACTIVITY_TYPE_RECEIVED,
@@ -151,7 +159,7 @@ final class CrmSmsBridge {
 				__( 'SMS received (SID: %s)', 'gym-core' ),
 				$sms_sid
 			),
-			$body
+			PiiRedactor::redact( $body )
 		);
 	}
 

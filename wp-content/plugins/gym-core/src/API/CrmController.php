@@ -147,7 +147,7 @@ class CrmController extends BaseController {
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'add_contact_note' ),
-					'permission_callback' => array( $this, 'permissions_crm' ),
+					'permission_callback' => $this->with_nonce( array( $this, 'permissions_crm' ) ),
 					'args'                => array(
 						'contact_id' => array(
 							'type'              => 'integer',

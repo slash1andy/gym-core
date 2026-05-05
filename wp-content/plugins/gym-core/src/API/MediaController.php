@@ -56,7 +56,7 @@ class MediaController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'generate_image' ),
-				'permission_callback' => array( $this, 'permissions_manage' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_manage' ) ),
 				'args'                => array(
 					'prompt' => array(
 						'type'              => 'string',

@@ -114,7 +114,7 @@ class BriefingController extends BaseController {
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_announcement' ),
-					'permission_callback' => array( $this, 'permissions_manage_announcements' ),
+					'permission_callback' => $this->with_nonce( array( $this, 'permissions_manage_announcements' ) ),
 					'args'                => array(
 						'title'           => array(
 							'type'              => 'string',

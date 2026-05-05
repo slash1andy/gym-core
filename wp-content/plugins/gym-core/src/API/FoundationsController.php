@@ -69,7 +69,7 @@ class FoundationsController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'enroll' ),
-				'permission_callback' => array( $this, 'permissions_coach' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_coach' ) ),
 				'args'                => array(
 					'user_id' => array(
 						'type'              => 'integer',
@@ -87,7 +87,7 @@ class FoundationsController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'record_coach_roll' ),
-				'permission_callback' => array( $this, 'permissions_coach' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_coach' ) ),
 				'args'                => array(
 					'user_id' => array(
 						'type'              => 'integer',
@@ -111,7 +111,7 @@ class FoundationsController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'clear' ),
-				'permission_callback' => array( $this, 'permissions_coach' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_coach' ) ),
 				'args'                => array(
 					'user_id' => array(
 						'type'              => 'integer',

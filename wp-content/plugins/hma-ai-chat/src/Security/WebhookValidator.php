@@ -220,10 +220,16 @@ class WebhookValidator {
 	/**
 	 * Validate request IP address against allowlist.
 	 *
-	 * Behavior depends on the enforcement toggle:
-	 * - Enforcement on + empty allowlist => deny (fail closed).
+	 * Per security P0 sweep §A.4 the allowlist is now opt-in by default —
+	 * an empty allowlist always denies, regardless of the enforcement toggle.
+	 * The toggle is retained so an operator can EXPLICITLY opt out for a
+	 * staging/testing window; in that mode an empty allowlist falls open
+	 * but emits a `hma_ai_chat_webhook_no_ip_allowlist` action for monitoring.
+	 *
+	 * Behavior matrix:
+	 * - Enforcement on (default) + empty allowlist => deny.
 	 * - Enforcement on + populated allowlist => deny unless IP matches.
-	 * - Enforcement off + empty allowlist => allow (legacy behavior; warned in admin).
+	 * - Enforcement off + empty allowlist => allow (explicit opt-out only).
 	 * - Enforcement off + populated allowlist => deny unless IP matches.
 	 *
 	 * @since 0.1.0
@@ -236,11 +242,11 @@ class WebhookValidator {
 
 		if ( empty( $allowlist ) ) {
 			if ( $enforce ) {
-				// Fail closed when the operator has opted in to enforcement.
+				// Fail closed — the secure default per security P0 sweep §A.4.
 				do_action( 'hma_ai_chat_webhook_ip_denied_empty_allowlist' );
 				return false;
 			}
-			// Legacy behavior: empty allowlist falls open. Logged for monitoring.
+			// Operator has explicitly opted out of enforcement.
 			do_action( 'hma_ai_chat_webhook_no_ip_allowlist' );
 			return true;
 		}
@@ -252,15 +258,17 @@ class WebhookValidator {
 	/**
 	 * Whether the IP allowlist is enforced (fails closed when empty).
 	 *
-	 * Defaults true on fresh installs; existing installs without the option
-	 * read as false to preserve behavior until the operator opts in.
+	 * Defaults true everywhere per security P0 sweep §A.4. Operators who
+	 * need a temporary opt-out (staging, an outage with no time to update
+	 * the allowlist) can flip this off explicitly from the admin settings
+	 * page; otherwise an empty allowlist denies all webhook traffic.
 	 *
 	 * @since 0.4.1
 	 *
 	 * @return bool
 	 */
 	public function is_ip_allowlist_enforced() {
-		return (bool) get_option( self::IP_ALLOWLIST_ENFORCE_KEY, false );
+		return (bool) get_option( self::IP_ALLOWLIST_ENFORCE_KEY, true );
 	}
 
 	/**

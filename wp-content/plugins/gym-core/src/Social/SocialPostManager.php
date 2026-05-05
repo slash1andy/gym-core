@@ -79,7 +79,7 @@ class SocialPostManager extends BaseController {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'handle_draft' ),
-				'permission_callback' => array( $this, 'permissions_manage_announcements' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_manage_announcements' ) ),
 				'args'                => array(
 					'title'    => array(
 						'description'       => __( 'Social post title.', 'gym-core' ),
@@ -122,7 +122,7 @@ class SocialPostManager extends BaseController {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'handle_approve' ),
-				'permission_callback' => array( $this, 'permissions_manage_announcements' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_manage_announcements' ) ),
 				'args'                => array(
 					'post_id' => array(
 						'description'       => __( 'Post ID to approve.', 'gym-core' ),

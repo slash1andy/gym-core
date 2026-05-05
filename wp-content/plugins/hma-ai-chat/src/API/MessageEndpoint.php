@@ -39,7 +39,7 @@ class MessageEndpoint {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'handle_message' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => \HMA_AI_Chat\Security\RestNonceMiddleware::wrap( array( $this, 'check_permission' ) ),
 				'args'                => $this->get_args_schema(),
 			)
 		);
@@ -60,6 +60,19 @@ class MessageEndpoint {
 				esc_html__( 'You do not have permission to use the AI Chat.', 'hma-ai-chat' ),
 				array( 'status' => 403 )
 			);
+		}
+
+		// When the request targets an existing conversation, verify ownership
+		// at the permission_callback layer so a non-owner is rejected before
+		// the handler does any work (and before any rate-limit transient is
+		// touched).
+		$conversation_id = absint( $request->get_param( 'conversation_id' ) ?? 0 );
+		if ( $conversation_id > 0 ) {
+			$ownership = new \HMA_AI_Chat\Security\ConversationOwnership();
+			$check     = $ownership->check( $conversation_id );
+			if ( is_wp_error( $check ) ) {
+				return $check;
+			}
 		}
 
 		return true;

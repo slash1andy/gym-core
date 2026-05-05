@@ -164,6 +164,21 @@ abstract class BaseController extends \WP_REST_Controller {
 		return new \WP_Error( 'rest_forbidden', __( 'You do not have permission to access this data.', 'gym-core' ), array( 'status' => 403 ) );
 	}
 
+	/**
+	 * Wrap a permission callback with REST nonce verification.
+	 *
+	 * Use for state-changing routes (POST/PUT/PATCH/DELETE). Read-only
+	 * verbs are exempt at the middleware layer.
+	 *
+	 * @since 1.1.0
+	 *
+	 * @param callable $callback The underlying permission callback.
+	 * @return callable
+	 */
+	protected function with_nonce( callable $callback ): callable {
+		return \Gym_Core\Security\RestNonceMiddleware::wrap( $callback );
+	}
+
 	// -------------------------------------------------------------------------
 	// Response formatting
 	// -------------------------------------------------------------------------
