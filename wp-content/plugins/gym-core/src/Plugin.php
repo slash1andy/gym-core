@@ -99,6 +99,22 @@ final class Plugin {
 	private ?SMS\SmsOptOut $sms_opt_out = null;
 
 	/**
+	 * Briefing generator — shared instance injected into the REST controller,
+	 * admin dashboard, magic-link page, and kiosk coach mode.
+	 *
+	 * @var Briefing\BriefingGenerator|null
+	 */
+	private ?Briefing\BriefingGenerator $briefing_generator = null;
+
+	/**
+	 * Briefing renderer — shared instance so all surfaces (admin, kiosk,
+	 * magic-link, SMS) produce identical HTML from the same object.
+	 *
+	 * @var Briefing\BriefingRenderer|null
+	 */
+	private ?Briefing\BriefingRenderer $briefing_renderer = null;
+
+	/**
 	 * Private constructor — prevents direct instantiation.
 	 */
 	private function __construct() {}
@@ -179,6 +195,18 @@ final class Plugin {
 			$meta_box = new Sales\ProductMetaBox();
 			$meta_box->register_hooks();
 		}
+
+		// KioskCoachMode intercepts /sales/?coach_mode=1 for gym_coach roles.
+		// Deferred to gym_core_loaded so shared generator/renderer are available.
+		add_action(
+			'gym_core_loaded',
+			function (): void {
+				if ( 'yes' === get_option( 'gym_core_briefing_enabled', 'yes' ) ) {
+					$coach_mode = new Sales\KioskCoachMode( $this->get_briefing_generator(), $this->get_briefing_renderer() );
+					$coach_mode->register_hooks();
+				}
+			}
+		);
 	}
 
 	/**
@@ -203,6 +231,14 @@ final class Plugin {
 			// Targeted content meta box on posts and pages.
 			$targeted_meta_box = new Admin\TargetedContentMetaBox();
 			$targeted_meta_box->register_hooks();
+
+			// Curriculum-of-the-day meta box on gym_class CPT — no service deps.
+			$curriculum_meta_box = new Admin\CurriculumMetaBox();
+			$curriculum_meta_box->register_hooks();
+
+			// Medical / injury notes field on user-edit screen — no service deps.
+			$medical_notes_field = new Admin\MedicalNotesField();
+			$medical_notes_field->register_hooks();
 
 			// Admin dashboards need attendance/rank stores — defer to gym_core_loaded
 			// when stores have been instantiated by register_attendance_modules().
@@ -231,6 +267,12 @@ final class Plugin {
 						$this->promotion_eligibility
 					);
 					$staff_dashboard->register_hooks();
+
+					// Coach Briefings admin page (Today / This Week views).
+					if ( 'yes' === get_option( 'gym_core_briefing_enabled', 'yes' ) ) {
+						$briefings_page = new Admin\CoachBriefingsPage( $this->get_briefing_generator(), $this->get_briefing_renderer() );
+						$briefings_page->register_hooks();
+					}
 				}
 			);
 		}
@@ -334,14 +376,7 @@ final class Plugin {
 
 				// Briefing controller.
 				if ( 'yes' === get_option( 'gym_core_briefing_enabled', 'yes' ) ) {
-					$briefing_generator = new Briefing\BriefingGenerator(
-						$this->attendance_store,
-						$this->rank_store,
-						$this->foundations_clearance,
-						$this->promotion_eligibility
-					);
-
-					$briefing_controller = new API\BriefingController( $briefing_generator );
+					$briefing_controller = new API\BriefingController( $this->get_briefing_generator() );
 					$briefing_controller->register_hooks();
 				}
 
@@ -432,6 +467,45 @@ final class Plugin {
 	}
 
 	/**
+	 * Returns the shared BriefingGenerator instance, creating it on first call.
+	 *
+	 * Requires attendance/rank stores and eligibility objects to already be
+	 * set (i.e. called after register_attendance_modules() runs, so always
+	 * inside a gym_core_loaded closure or later).
+	 *
+	 * @since 2.2.0
+	 *
+	 * @return Briefing\BriefingGenerator
+	 */
+	private function get_briefing_generator(): Briefing\BriefingGenerator {
+		if ( null === $this->briefing_generator ) {
+			$this->briefing_generator = new Briefing\BriefingGenerator(
+				$this->attendance_store,
+				$this->rank_store,
+				$this->foundations_clearance,
+				$this->promotion_eligibility
+			);
+		}
+
+		return $this->briefing_generator;
+	}
+
+	/**
+	 * Returns the shared BriefingRenderer instance, creating it on first call.
+	 *
+	 * @since 2.2.0
+	 *
+	 * @return Briefing\BriefingRenderer
+	 */
+	private function get_briefing_renderer(): Briefing\BriefingRenderer {
+		if ( null === $this->briefing_renderer ) {
+			$this->briefing_renderer = new Briefing\BriefingRenderer();
+		}
+
+		return $this->briefing_renderer;
+	}
+
+	/**
 	 * Registers the attendance and promotion eligibility modules.
 	 *
 	 * Makes store instances available for dependency injection into
@@ -469,6 +543,19 @@ final class Plugin {
 	private function register_briefing_modules(): void {
 		$announcement_cpt = new Briefing\AnnouncementPostType();
 		$announcement_cpt->register_hooks();
+
+		// MagicLinkPage registers the /coach-briefing/ rewrite rule on init and
+		// intercepts template_redirect. Deferred to gym_core_loaded so the
+		// shared generator/renderer are available.
+		add_action(
+			'gym_core_loaded',
+			function (): void {
+				if ( 'yes' === get_option( 'gym_core_briefing_enabled', 'yes' ) ) {
+					$magic_link_page = new Briefing\MagicLinkPage( $this->get_briefing_generator(), $this->get_briefing_renderer() );
+					$magic_link_page->register_hooks();
+				}
+			}
+		);
 	}
 
 	/**
@@ -495,6 +582,24 @@ final class Plugin {
 
 		$promotion_notifier = new Notifications\PromotionNotifier( $this->get_twilio_client(), $this->get_sms_opt_out() );
 		$promotion_notifier->register_hooks();
+
+		// BriefingNotifier sends a pre-class SMS 30 min before each class.
+		// Requires briefing_enabled as well as sms_enabled (already checked above).
+		// Deferred to gym_core_loaded so the shared generator/renderer are available.
+		if ( 'yes' === get_option( 'gym_core_briefing_enabled', 'yes' ) && 'yes' === get_option( 'gym_core_briefing_sms_enabled', 'yes' ) ) {
+			add_action(
+				'gym_core_loaded',
+				function (): void {
+					$briefing_notifier = new Briefing\BriefingNotifier(
+						$this->get_briefing_generator(),
+						$this->get_briefing_renderer(),
+						$this->get_twilio_client(),
+						$this->get_sms_opt_out()
+					);
+					$briefing_notifier->register_hooks();
+				}
+			);
+		}
 	}
 
 	/**
