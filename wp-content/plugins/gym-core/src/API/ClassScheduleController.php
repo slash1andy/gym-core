@@ -128,7 +128,7 @@ class ClassScheduleController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'assign_program' ),
-				'permission_callback' => array( $this, 'permissions_assign_program' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_assign_program' ) ),
 				'args'                => array(
 					'id'      => array(
 						'type'              => 'integer',

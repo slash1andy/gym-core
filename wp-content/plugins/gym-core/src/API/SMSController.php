@@ -62,7 +62,7 @@ class SMSController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'send_sms' ),
-				'permission_callback' => array( $this, 'permissions_send_sms' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_send_sms' ) ),
 				'args'                => array(
 					'phone'         => array(
 						'type'              => 'string',

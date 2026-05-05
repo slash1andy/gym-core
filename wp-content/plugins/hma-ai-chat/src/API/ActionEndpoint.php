@@ -75,12 +75,18 @@ class ActionEndpoint {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'approve_action' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => \HMA_AI_Chat\Security\RestNonceMiddleware::wrap( array( $this, 'check_permission' ) ),
 				'args'                => array(
-					'id' => array(
+					'id'           => array(
 						'type'              => 'integer',
 						'required'          => true,
 						'sanitize_callback' => 'absint',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'action_token' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
@@ -94,7 +100,7 @@ class ActionEndpoint {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'approve_with_changes' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => \HMA_AI_Chat\Security\RestNonceMiddleware::wrap( array( $this, 'check_permission' ) ),
 				'args'                => array(
 					'id'           => array(
 						'type'              => 'integer',
@@ -108,6 +114,12 @@ class ActionEndpoint {
 						'sanitize_callback' => 'sanitize_textarea_field',
 						'validate_callback' => 'rest_validate_request_arg',
 					),
+					'action_token' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
 				),
 			)
 		);
@@ -119,18 +131,24 @@ class ActionEndpoint {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'reject_action' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => \HMA_AI_Chat\Security\RestNonceMiddleware::wrap( array( $this, 'check_permission' ) ),
 				'args'                => array(
-					'id'     => array(
+					'id'           => array(
 						'type'              => 'integer',
 						'required'          => true,
 						'sanitize_callback' => 'absint',
 						'validate_callback' => 'rest_validate_request_arg',
 					),
-					'reason' => array(
+					'reason'       => array(
 						'type'              => 'string',
 						'required'          => false,
 						'sanitize_callback' => 'sanitize_textarea_field',
+						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'action_token' => array(
+						'type'              => 'string',
+						'required'          => true,
+						'sanitize_callback' => 'sanitize_text_field',
 						'validate_callback' => 'rest_validate_request_arg',
 					),
 				),
@@ -144,7 +162,7 @@ class ActionEndpoint {
 			array(
 				'methods'             => WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'bulk_action' ),
-				'permission_callback' => array( $this, 'check_permission' ),
+				'permission_callback' => \HMA_AI_Chat\Security\RestNonceMiddleware::wrap( array( $this, 'check_permission' ) ),
 				'args'                => array(
 					'action_ids' => array(
 						'type'              => 'array',
@@ -166,6 +184,11 @@ class ActionEndpoint {
 						'required'          => false,
 						'sanitize_callback' => 'sanitize_textarea_field',
 						'validate_callback' => 'rest_validate_request_arg',
+					),
+					'action_tokens' => array(
+						'type'        => 'object',
+						'required'    => true,
+						'description' => 'Map of action_id => action_token, one per row in action_ids.',
 					),
 				),
 			)
@@ -292,6 +315,12 @@ class ActionEndpoint {
 	/**
 	 * Get all pending actions.
 	 *
+	 * Each row is enriched with an `action_token` — an HMAC of
+	 * (action_id + current_user_id + per-action nonce). The dashboard must
+	 * include this token when calling approve/approve-with-changes/reject.
+	 * It re-pins which action the user is acting on so a swap-on-double-click
+	 * cannot succeed against a different row.
+	 *
 	 * @since 0.1.0
 	 *
 	 * @param WP_REST_Request $request The request object.
@@ -300,8 +329,66 @@ class ActionEndpoint {
 	public function get_pending_actions( WP_REST_Request $request ) {
 		$store   = $this->pending_store;
 		$actions = $store->get_pending_actions();
+		$user_id = get_current_user_id();
+
+		foreach ( $actions as &$action ) {
+			$action_id = isset( $action['id'] ) ? (int) $action['id'] : 0;
+			$nonce     = $this->action_nonce( $action );
+			if ( $action_id > 0 ) {
+				$action['action_token'] = \HMA_AI_Chat\Security\ActionTokens::issue( $action_id, $user_id, $nonce );
+			}
+		}
+		unset( $action );
 
 		return rest_ensure_response( $actions );
+	}
+
+	/**
+	 * Per-action nonce used as the HMAC salt.
+	 *
+	 * Stable for the lifetime of the action: the run_id (when present) is
+	 * the strongest disambiguator; we fall back to created_at + id so a
+	 * row without a run_id still gets a row-unique nonce.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param array $action The decoded action row.
+	 * @return string
+	 */
+	private function action_nonce( array $action ): string {
+		$run_id     = isset( $action['run_id'] ) ? (string) $action['run_id'] : '';
+		$created_at = isset( $action['created_at'] ) ? (string) $action['created_at'] : '';
+		$id         = isset( $action['id'] ) ? (int) $action['id'] : 0;
+		if ( '' !== $run_id ) {
+			return $run_id;
+		}
+		return sprintf( 'created=%s|id=%d', $created_at, $id );
+	}
+
+	/**
+	 * Verify the action_token from the request against the loaded action.
+	 *
+	 * @since 0.4.0
+	 *
+	 * @param WP_REST_Request $request The incoming request.
+	 * @param array           $action  The action row from PendingActionStore::get_action().
+	 * @return true|WP_Error
+	 */
+	private function verify_action_token( WP_REST_Request $request, array $action ) {
+		$token     = (string) ( $request->get_param( 'action_token' ) ?? '' );
+		$action_id = isset( $action['id'] ) ? (int) $action['id'] : 0;
+		$user_id   = get_current_user_id();
+		$nonce     = $this->action_nonce( $action );
+
+		if ( ! \HMA_AI_Chat\Security\ActionTokens::verify( $token, $action_id, $user_id, $nonce ) ) {
+			return new WP_Error(
+				'invalid_action_token',
+				esc_html__( 'The action token does not match this action. Refresh the dashboard and try again.', 'hma-ai-chat' ),
+				array( 'status' => 403 )
+			);
+		}
+
+		return true;
 	}
 
 	/**
@@ -326,6 +413,15 @@ class ActionEndpoint {
 				esc_html__( 'Action not found.', 'hma-ai-chat' ),
 				array( 'status' => 404 )
 			);
+		}
+
+		// Re-pin action identity: the action_token is HMAC of
+		// (action_id + user_id + per-action nonce). A stale DOM node that
+		// thinks it's approving Action A cannot succeed if the request
+		// reaches us with Action B's id — the token will not match.
+		$token_check = $this->verify_action_token( $request, $action );
+		if ( is_wp_error( $token_check ) ) {
+			return $token_check;
 		}
 
 		if ( 'pending' !== $action['status'] ) {
@@ -449,6 +545,11 @@ class ActionEndpoint {
 			);
 		}
 
+		$token_check = $this->verify_action_token( $request, $action );
+		if ( is_wp_error( $token_check ) ) {
+			return $token_check;
+		}
+
 		if ( 'pending' !== $action['status'] ) {
 			return new WP_Error(
 				'invalid_status',
@@ -501,6 +602,11 @@ class ActionEndpoint {
 				esc_html__( 'Action not found.', 'hma-ai-chat' ),
 				array( 'status' => 404 )
 			);
+		}
+
+		$token_check = $this->verify_action_token( $request, $action );
+		if ( is_wp_error( $token_check ) ) {
+			return $token_check;
 		}
 
 		if ( 'pending' !== $action['status'] ) {
@@ -587,11 +693,12 @@ class ActionEndpoint {
 	 * @return WP_REST_Response|WP_Error
 	 */
 	public function bulk_action( WP_REST_Request $request ) {
-		$action_ids = $request->get_param( 'action_ids' );
-		$operation  = $request->get_param( 'operation' );
-		$reason     = $request->get_param( 'reason' ) ?? '';
-		$store      = $this->pending_store;
-		$user_id    = get_current_user_id();
+		$action_ids    = $request->get_param( 'action_ids' );
+		$operation     = $request->get_param( 'operation' );
+		$reason        = $request->get_param( 'reason' ) ?? '';
+		$action_tokens = $request->get_param( 'action_tokens' );
+		$store         = $this->pending_store;
+		$user_id       = get_current_user_id();
 
 		if ( empty( $action_ids ) ) {
 			return new WP_Error(
@@ -599,6 +706,49 @@ class ActionEndpoint {
 				esc_html__( 'No action IDs provided.', 'hma-ai-chat' ),
 				array( 'status' => 400 )
 			);
+		}
+
+		// Bulk operations must carry a token per action — same re-pin rule
+		// as the single-row endpoints. A request missing tokens for any
+		// row is rejected wholesale; partial bulk auth is too easy to
+		// reason about wrong.
+		if ( ! is_array( $action_tokens ) || empty( $action_tokens ) ) {
+			return new WP_Error(
+				'missing_action_tokens',
+				esc_html__( 'A token map (action_tokens) is required for bulk operations.', 'hma-ai-chat' ),
+				array( 'status' => 400 )
+			);
+		}
+		foreach ( $action_ids as $aid ) {
+			$aid    = (int) $aid;
+			$action = $store->get_action( $aid );
+			if ( ! $action ) {
+				return new WP_Error(
+					'not_found',
+					sprintf(
+						/* translators: %d: action id */
+						esc_html__( 'Action %d not found.', 'hma-ai-chat' ),
+						$aid
+					),
+					array( 'status' => 404 )
+				);
+			}
+			$token = isset( $action_tokens[ (string) $aid ] ) ? (string) $action_tokens[ (string) $aid ] : '';
+			if ( '' === $token ) {
+				$token = isset( $action_tokens[ $aid ] ) ? (string) $action_tokens[ $aid ] : '';
+			}
+			$nonce = $this->action_nonce( $action );
+			if ( ! \HMA_AI_Chat\Security\ActionTokens::verify( $token, $aid, $user_id, $nonce ) ) {
+				return new WP_Error(
+					'invalid_action_token',
+					sprintf(
+						/* translators: %d: action id */
+						esc_html__( 'Action token mismatch for action %d. Refresh the dashboard and try again.', 'hma-ai-chat' ),
+						$aid
+					),
+					array( 'status' => 403 )
+				);
+			}
 		}
 
 		if ( 'approve' === $operation ) {
@@ -690,11 +840,16 @@ class ActionEndpoint {
 			cache_users( $reviewer_ids );
 		}
 
-		// Enrich items with approver display names.
+		// Enrich items with approver display names and pending-action tokens.
+		$current_user_id = get_current_user_id();
 		foreach ( $result['items'] as &$item ) {
 			if ( ! empty( $item['approved_by'] ) ) {
 				$user = get_userdata( (int) $item['approved_by'] );
 				$item['approved_by_name'] = $user ? $user->display_name : __( 'Unknown', 'hma-ai-chat' );
+			}
+			if ( isset( $item['status'] ) && 'pending' === $item['status'] && ! empty( $item['id'] ) ) {
+				$nonce               = $this->action_nonce( $item );
+				$item['action_token'] = \HMA_AI_Chat\Security\ActionTokens::issue( (int) $item['id'], $current_user_id, $nonce );
 			}
 		}
 		unset( $item );

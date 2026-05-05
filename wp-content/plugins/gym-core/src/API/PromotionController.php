@@ -69,7 +69,7 @@ class PromotionController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'recommend' ),
-				'permission_callback' => array( $this, 'permissions_coach' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_coach' ) ),
 				'args'                => array(
 					'user_id' => array(
 						'type'              => 'integer',

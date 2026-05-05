@@ -66,7 +66,7 @@ class AttendanceController extends BaseController {
 			array(
 				'methods'             => \WP_REST_Server::CREATABLE,
 				'callback'            => array( $this, 'check_in' ),
-				'permission_callback' => array( $this, 'permissions_check_in' ),
+				'permission_callback' => $this->with_nonce( array( $this, 'permissions_check_in' ) ),
 				'args'                => array(
 					'user_id'  => array(
 						'type'              => 'integer',

@@ -99,7 +99,7 @@ class SalesController extends BaseController {
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'calculate_pricing' ),
-					'permission_callback' => array( $this, 'permissions_sales' ),
+					'permission_callback' => $this->with_nonce( array( $this, 'permissions_sales' ) ),
 					'args'                => array(
 						'product_id'   => array(
 							'description'       => __( 'WooCommerce product ID.', 'gym-core' ),
@@ -149,7 +149,7 @@ class SalesController extends BaseController {
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'create_order' ),
-					'permission_callback' => array( $this, 'permissions_sales' ),
+					'permission_callback' => $this->with_nonce( array( $this, 'permissions_sales' ) ),
 					'args'                => $this->order_args(),
 				),
 			)
@@ -163,7 +163,7 @@ class SalesController extends BaseController {
 				array(
 					'methods'             => \WP_REST_Server::CREATABLE,
 					'callback'            => array( $this, 'save_lead' ),
-					'permission_callback' => array( $this, 'permissions_sales' ),
+					'permission_callback' => $this->with_nonce( array( $this, 'permissions_sales' ) ),
 					'args'                => $this->lead_args(),
 				),
 			)

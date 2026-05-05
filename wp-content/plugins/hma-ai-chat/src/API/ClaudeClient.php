@@ -93,7 +93,7 @@ class ClaudeClient {
 		if ( '' === $api_key ) {
 			return new \WP_Error(
 				'missing_api_key',
-				__( 'Anthropic API key is not configured. Set it in Settings > Connectors (WordPress 7.0 AI Connectors), in Gym > Settings, or via the HMA_AI_CHAT_ANTHROPIC_API_KEY constant.', 'hma-ai-chat' ),
+				__( 'Anthropic API key is not configured. Set it via the HMA_AI_CHAT_ANTHROPIC_KEY constant in wp-config.php, in Settings > Connectors (WordPress 7.0 AI Connectors), or — deprecated — in Gym > Settings.', 'hma-ai-chat' ),
 				array( 'status' => 500 )
 			);
 		}
@@ -312,13 +312,17 @@ class ClaudeClient {
 	 * Resolve the Anthropic API key from any configured source.
 	 *
 	 * Sources, in order of precedence:
-	 *   1. HMA_AI_CHAT_ANTHROPIC_API_KEY constant (plugin-specific override).
-	 *   2. WordPress 7.0 Connectors API option `connectors_ai_anthropic_api_key`
+	 *   1. HMA_AI_CHAT_ANTHROPIC_KEY constant (preferred — wp-config.php).
+	 *   2. HMA_AI_CHAT_ANTHROPIC_API_KEY constant (legacy alias, kept for
+	 *      backwards compatibility).
+	 *   3. WordPress 7.0 Connectors API option `connectors_ai_anthropic_api_key`
 	 *      (the canonical site-wide AI provider key — what most users will
 	 *      configure via Settings > Connectors).
-	 *   3. Legacy plugin option (`hma_ai_chat_anthropic_api_key`) for sites
-	 *      configured before WP 7.0 / for non-Anthropic-provider installs.
-	 *   4. ANTHROPIC_API_KEY environment variable (matches the AI Provider
+	 *   4. Legacy plugin option (`hma_ai_chat_anthropic_api_key`) — DEPRECATED.
+	 *      Reading from this triggers _doing_it_wrong(); the value is still
+	 *      used so existing installs do not break, but admins should migrate
+	 *      to the constant or the Connectors API.
+	 *   5. ANTHROPIC_API_KEY environment variable (matches the AI Provider
 	 *      for Anthropic plugin's documented fallback).
 	 *
 	 * Public so MessageEndpoint can reuse the same lookup for its
@@ -327,6 +331,12 @@ class ClaudeClient {
 	 * @return string The configured API key, or '' when none is set.
 	 */
 	public static function resolve_api_key(): string {
+		// Preferred: HMA_AI_CHAT_ANTHROPIC_KEY constant (per security plan §A.1).
+		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_KEY ) {
+			return (string) HMA_AI_CHAT_ANTHROPIC_KEY;
+		}
+
+		// Legacy alias kept so existing wp-config.php deployments do not break.
 		if ( defined( 'HMA_AI_CHAT_ANTHROPIC_API_KEY' ) && '' !== HMA_AI_CHAT_ANTHROPIC_API_KEY ) {
 			return (string) HMA_AI_CHAT_ANTHROPIC_API_KEY;
 		}
@@ -338,6 +348,17 @@ class ClaudeClient {
 
 		$plugin_key = (string) get_option( self::API_KEY_OPTION, '' );
 		if ( '' !== $plugin_key ) {
+			// Deprecated path: the API key should not live in wp_options. Warn
+			// developers/site admins (PHP debug log) but keep returning the value
+			// so production sites do not break the day this lands.
+			_doing_it_wrong(
+				__METHOD__,
+				esc_html__(
+					'The Anthropic API key is being read from wp_options (hma_ai_chat_anthropic_api_key). This is insecure and deprecated. Move the key to the HMA_AI_CHAT_ANTHROPIC_KEY constant in wp-config.php, or configure it via Settings > Connectors (WordPress 7.0 AI Connectors).',
+					'hma-ai-chat'
+				),
+				'0.4.0'
+			);
 			return $plugin_key;
 		}
 
