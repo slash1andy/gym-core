@@ -126,6 +126,13 @@ final class Plugin {
 	public function init(): void {
 		$this->load_textdomain();
 		$this->register_capabilities();
+
+		// Twilio credential transparent encryption: register before anything
+		// reads the option so admin save AND frontend reads both go through
+		// the encrypt/decrypt filters.
+		$twilio_credential_store = new SMS\CredentialStore();
+		$twilio_credential_store->register_hooks();
+
 		$this->register_top_level_menu();
 		$this->register_admin_modules();
 		$this->register_location_modules();
@@ -192,6 +199,10 @@ final class Plugin {
 		if ( is_admin() ) {
 			$settings = new Admin\Settings();
 			$settings->register_hooks();
+
+			// Asset enqueue + REST nonce localisation for the SMS settings tab.
+			$twilio_settings_page = new SMS\SettingsPage();
+			$twilio_settings_page->register_hooks();
 
 			// CRM white-labeling and menu simplification.
 			$crm_whitelabel = new Admin\CrmWhiteLabel();
@@ -311,6 +322,11 @@ final class Plugin {
 					$inbound_handler = new SMS\InboundHandler( $this->get_twilio_client() );
 					$inbound_handler->register_hooks();
 				}
+
+				// Twilio settings test-message endpoint — always registered
+				// so admins can verify credentials before enabling SMS.
+				$twilio_controller = new API\TwilioController( $this->get_twilio_client() );
+				$twilio_controller->register_hooks();
 
 				// CRM controller (Jetpack CRM contacts, pipeline).
 				$crm_controller = new API\CrmController();

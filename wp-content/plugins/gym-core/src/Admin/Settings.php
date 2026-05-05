@@ -38,6 +38,87 @@ final class Settings {
 		add_action( 'woocommerce_settings_' . self::TAB_ID, array( $this, 'render_settings' ) );
 		add_action( 'woocommerce_update_options_' . self::TAB_ID, array( $this, 'save_settings' ) );
 		add_action( 'woocommerce_sections_' . self::TAB_ID, array( $this, 'render_sections' ) );
+
+		// Custom WC settings field types for the SMS section.
+		add_action( 'woocommerce_admin_field_gym_masked_password', array( $this, 'render_masked_password_field' ) );
+		add_action( 'woocommerce_admin_field_gym_twilio_test_button', array( $this, 'render_twilio_test_button' ) );
+	}
+
+	/**
+	 * Renders the masked password field for the Twilio Auth Token.
+	 *
+	 * Shows `********XXXX` (last 4 of the saved token) when a value is stored
+	 * so the real token never leaves the database. CredentialStore short-circuits
+	 * the update when this placeholder is posted back unchanged.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param array<string, mixed> $value WC settings field config.
+	 * @return void
+	 */
+	public function render_masked_password_field( array $value ): void {
+		$option_value = get_option( $value['id'], (string) ( $value['default'] ?? '' ) );
+		$option_value = is_string( $option_value ) ? $option_value : '';
+		$display      = '' === $option_value ? '' : \Gym_Core\SMS\CredentialStore::mask( $option_value );
+
+		$tooltip_html  = ! empty( $value['desc_tip'] ) ? wc_help_tip( (string) $value['desc_tip'] ) : '';
+		$description   = ! empty( $value['desc'] ) ? '<p class="description">' . wp_kses_post( (string) $value['desc'] ) . '</p>' : '';
+		$placeholder   = isset( $value['placeholder'] ) ? (string) $value['placeholder'] : '';
+		$autocomplete  = 'new-password';
+
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label for="<?php echo esc_attr( (string) $value['id'] ); ?>">
+					<?php echo esc_html( (string) $value['title'] ); ?>
+				</label>
+				<?php echo $tooltip_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</th>
+			<td class="forminp forminp-password">
+				<input
+					name="<?php echo esc_attr( (string) $value['id'] ); ?>"
+					id="<?php echo esc_attr( (string) $value['id'] ); ?>"
+					type="password"
+					class="regular-text gym-core-masked-input"
+					placeholder="<?php echo esc_attr( $placeholder ); ?>"
+					value="<?php echo esc_attr( $display ); ?>"
+					autocomplete="<?php echo esc_attr( $autocomplete ); ?>"
+					spellcheck="false"
+				/>
+				<?php echo $description; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</td>
+		</tr>
+		<?php
+	}
+
+	/**
+	 * Renders the "Send test SMS" button row inside the SMS settings section.
+	 *
+	 * The actual fetch is wired up by `assets/js/twilio-settings.js`, which
+	 * is enqueued by `\Gym_Core\SMS\SettingsPage` only on this section.
+	 *
+	 * @since 4.2.0
+	 *
+	 * @param array<string, mixed> $value WC settings field config.
+	 * @return void
+	 */
+	public function render_twilio_test_button( array $value ): void {
+		$description = ! empty( $value['desc'] ) ? '<p class="description">' . wp_kses_post( (string) $value['desc'] ) . '</p>' : '';
+
+		?>
+		<tr valign="top">
+			<th scope="row" class="titledesc">
+				<label><?php echo esc_html( (string) $value['title'] ); ?></label>
+			</th>
+			<td class="forminp">
+				<button type="button" class="button button-secondary" id="gym-core-twilio-test-button">
+					<?php esc_html_e( 'Send test SMS to me', 'gym-core' ); ?>
+				</button>
+				<span class="gym-core-twilio-test-status" role="status" aria-live="polite" style="margin-left:10px;"></span>
+				<?php echo $description; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
+			</td>
+		</tr>
+		<?php
 	}
 
 	/**
@@ -691,16 +772,31 @@ final class Settings {
 				'title'       => __( 'Twilio auth token', 'gym-core' ),
 				'id'          => 'gym_core_twilio_auth_token',
 				'default'     => '',
-				'type'        => 'password',
+				'type'        => 'gym_masked_password',
+				'desc'        => __( 'Stored encrypted at rest. Re-enter to replace; leave the masked value to keep the existing token.', 'gym-core' ),
 				'placeholder' => __( 'Auth token (hidden after save)', 'gym-core' ),
 			),
 			array(
+				'title'       => __( 'Twilio messaging service SID', 'gym-core' ),
+				'desc'        => __( 'Optional. Use a Twilio Messaging Service (MGxxxx) for sender pool, sticky sender, and copilot. Takes precedence over the phone number when set.', 'gym-core' ),
+				'id'          => 'gym_core_twilio_messaging_service_sid',
+				'default'     => '',
+				'type'        => 'text',
+				'placeholder' => 'MGXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX',
+			),
+			array(
 				'title'       => __( 'Twilio phone number', 'gym-core' ),
-				'desc'        => __( 'The Twilio phone number to send SMS from (E.164 format)', 'gym-core' ),
+				'desc'        => __( 'The Twilio phone number to send SMS from (E.164 format). Used when no Messaging Service SID is set.', 'gym-core' ),
 				'id'          => 'gym_core_twilio_phone_number',
 				'default'     => '',
 				'type'        => 'text',
 				'placeholder' => '+1XXXXXXXXXX',
+			),
+			array(
+				'title' => __( 'Send test SMS', 'gym-core' ),
+				'desc'  => __( 'Send a one-line "Twilio test" message to your billing phone using the credentials above.', 'gym-core' ),
+				'id'    => 'gym_core_twilio_test_button',
+				'type'  => 'gym_twilio_test_button',
 			),
 			array(
 				'title'             => __( 'Rate limit', 'gym-core' ),
