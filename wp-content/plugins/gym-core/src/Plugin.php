@@ -141,6 +141,7 @@ final class Plugin {
 		$this->register_gamification_modules();
 		$this->register_integration_modules();
 		$this->register_member_modules();
+		$this->register_funnel_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -684,6 +685,23 @@ final class Plugin {
 				$dashboard->register_hooks();
 			}
 		);
+	}
+
+	/**
+	 * Registers the CRO funnel logger.
+	 *
+	 * Records funnel events (page-view, form-start, form-submit, confirmation)
+	 * into {prefix}gym_funnel_log so we can attribute leads back to their first
+	 * touch and source. Hooks into haanpaa/trial_submitted to record server-side
+	 * confirmations as a backstop to the browser beacon.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @return void
+	 */
+	private function register_funnel_modules(): void {
+		$logger = new Funnel\FunnelLogger();
+		$logger->register_hooks();
 	}
 
 	/**

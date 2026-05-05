@@ -1,0 +1,35 @@
+{
+	"_comment": "Lighthouse-CI budget for Haanpaa public site. Phase 2 §J targets: LCP < 2.0s, CLS < 0.05, INP < 200ms. INP isn't directly available in Lighthouse — TBT is the established proxy.",
+	"ci": {
+		"collect": {
+			"url": [
+				"https://staging.teamhaanpaa.com/",
+				"https://staging.teamhaanpaa.com/free-trial/",
+				"https://staging.teamhaanpaa.com/schedule/",
+				"https://staging.teamhaanpaa.com/locations/",
+				"https://staging.teamhaanpaa.com/programs/bjj/"
+			],
+			"numberOfRuns": 3,
+			"settings": {
+				"preset": "desktop",
+				"throttlingMethod": "simulate"
+			}
+		},
+		"assert": {
+			"assertions": {
+				"largest-contentful-paint":  [ "error", { "maxNumericValue": 2000 } ],
+				"cumulative-layout-shift":   [ "error", { "maxNumericValue": 0.05 } ],
+				"total-blocking-time":       [ "error", { "maxNumericValue": 200  } ],
+				"first-contentful-paint":    [ "warn",  { "maxNumericValue": 1500 } ],
+				"speed-index":               [ "warn",  { "maxNumericValue": 2500 } ],
+				"categories:performance":    [ "error", { "minScore": 0.9 } ],
+				"categories:accessibility":  [ "error", { "minScore": 0.95 } ],
+				"categories:best-practices": [ "warn",  { "minScore": 0.9 } ],
+				"categories:seo":            [ "error", { "minScore": 0.95 } ]
+			}
+		},
+		"upload": {
+			"target": "temporary-public-storage"
+		}
+	}
+}

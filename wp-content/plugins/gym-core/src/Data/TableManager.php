@@ -21,9 +21,11 @@ final class TableManager {
 	/**
 	 * Current schema version. Bump this when adding or altering tables.
 	 *
+	 * V2 — adds gym_funnel_log table for CRO instrumentation.
+	 *
 	 * @var int
 	 */
-	private const SCHEMA_VERSION = 1;
+	private const SCHEMA_VERSION = 2;
 
 	/**
 	 * Option key for tracking the installed schema version.
@@ -79,6 +81,9 @@ final class TableManager {
 
 		$sql = self::get_achievements_table_sql( $wpdb->prefix, $charset_collate );
 		dbDelta( $sql );
+
+		$sql = self::get_funnel_log_table_sql( $wpdb->prefix, $charset_collate );
+		dbDelta( $sql );
 	}
 
 	/**
@@ -92,6 +97,7 @@ final class TableManager {
 		global $wpdb;
 
 		// phpcs:disable WordPress.DB.DirectDatabaseQuery
+		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}gym_funnel_log" );
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}gym_achievements" );
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}gym_rank_history" );
 		$wpdb->query( "DROP TABLE IF EXISTS {$wpdb->prefix}gym_ranks" );
@@ -116,6 +122,7 @@ final class TableManager {
 			'rank_history' => $wpdb->prefix . 'gym_rank_history',
 			'attendance'   => $wpdb->prefix . 'gym_attendance',
 			'achievements' => $wpdb->prefix . 'gym_achievements',
+			'funnel_log'   => $wpdb->prefix . 'gym_funnel_log',
 		);
 	}
 
@@ -210,6 +217,32 @@ final class TableManager {
 			UNIQUE KEY user_badge (user_id, badge_slug),
 			KEY badge_slug (badge_slug),
 			KEY earned_at (earned_at)
+		) $charset_collate;";
+	}
+
+	/**
+	 * CRO funnel-event log — page-view, form-start, form-submit, confirmation.
+	 * Used by FunnelLogger for site-side attribution (Jetpack Stats parity).
+	 *
+	 * @param string $prefix          Database table prefix.
+	 * @param string $charset_collate Character set and collation.
+	 * @return string SQL statement.
+	 */
+	private static function get_funnel_log_table_sql( string $prefix, string $charset_collate ): string {
+		return "CREATE TABLE {$prefix}gym_funnel_log (
+			id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+			event varchar(64) NOT NULL,
+			session_id varchar(191) NOT NULL,
+			page_url varchar(2000) DEFAULT NULL,
+			lead_source varchar(191) DEFAULT NULL,
+			user_id bigint(20) unsigned DEFAULT NULL,
+			metadata longtext DEFAULT NULL,
+			created_at datetime NOT NULL,
+			PRIMARY KEY  (id),
+			KEY event (event),
+			KEY session_id (session_id),
+			KEY lead_source (lead_source),
+			KEY created_at (created_at)
 		) $charset_collate;";
 	}
 }
