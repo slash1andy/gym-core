@@ -1,0 +1,26 @@
+{
+  "name": "Haanpaa Martial Arts",
+  "short_name": "Haanpaa MA",
+  "description": "Your martial arts journey with Haanpaa",
+  "start_url": "/my-account/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#0032A0",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/wp-content/themes/haanpaa/assets/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/wp-content/themes/haanpaa/assets/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["health", "fitness", "sports"]
+}

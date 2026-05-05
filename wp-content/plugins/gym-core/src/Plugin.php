@@ -141,6 +141,7 @@ final class Plugin {
 		$this->register_gamification_modules();
 		$this->register_integration_modules();
 		$this->register_member_modules();
+		$this->register_pwa_modules();
 
 		/**
 		 * Fires after Gym Core has finished loading.
@@ -649,6 +650,25 @@ final class Plugin {
 	private function register_integration_modules(): void {
 		$form_to_crm = new Integrations\FormToCrm();
 		$form_to_crm->register_hooks();
+	}
+
+	/**
+	 * Registers the PWA modules (manifest, service worker, install prompt, push subscription stub).
+	 *
+	 * PWAController runs on every front-end request to inject head tags and
+	 * serve /sw.js, /manifest.json, and /offline. PushSubscriptionEndpoint
+	 * is a REST controller registered via rest_api_init.
+	 *
+	 * @since 5.0.0
+	 *
+	 * @return void
+	 */
+	private function register_pwa_modules(): void {
+		$pwa_controller = new PWA\PWAController();
+		$pwa_controller->register_hooks();
+
+		$push_endpoint = new PWA\PushSubscriptionEndpoint();
+		$push_endpoint->register_hooks();
 	}
 
 	/**
