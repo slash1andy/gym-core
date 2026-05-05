@@ -303,8 +303,8 @@ class ClassScheduleController extends BaseController {
 		$program  = $request->get_param( 'program' );
 
 		$monday = '' !== $week_of
-			? date( 'Y-m-d', strtotime( 'monday this week', strtotime( $week_of ) ) )
-			: date( 'Y-m-d', strtotime( 'monday this week', current_time( 'timestamp' ) ) );
+			? gmdate( 'Y-m-d', (int) strtotime( 'monday this week', (int) strtotime( $week_of ) ) )
+			: gmdate( 'Y-m-d', (int) strtotime( 'monday this week', time() ) );
 
 		$args = array(
 			'post_type'      => ClassPostType::POST_TYPE,
@@ -379,12 +379,6 @@ class ClassScheduleController extends BaseController {
 	}
 
 	/**
-	 * Formats a class post into API response shape.
-	 *
-	 * @param \WP_Post $post Class post.
-	 * @return array<string, mixed>
-	 */
-	/**
 	 * Public accessor for format_class() used by non-REST callers (e.g. KioskEndpoint).
 	 *
 	 * @since 3.3.0
@@ -396,6 +390,12 @@ class ClassScheduleController extends BaseController {
 		return $this->format_class( $post );
 	}
 
+	/**
+	 * Formats a class post into API response shape.
+	 *
+	 * @param \WP_Post $post Class post.
+	 * @return array<string, mixed>
+	 */
 	private function format_class( \WP_Post $post ): array {
 		return array(
 			'id'          => $post->ID,
