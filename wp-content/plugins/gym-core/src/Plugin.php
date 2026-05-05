@@ -178,6 +178,10 @@ final class Plugin {
 		if ( is_admin() ) {
 			$meta_box = new Sales\ProductMetaBox();
 			$meta_box->register_hooks();
+
+			// Lead Sources admin report (Plan §F).
+			$lead_report = new Reports\LeadSourceReport();
+			$lead_report->register_hooks();
 		}
 	}
 

@@ -47,12 +47,15 @@ final class OrderBuilder {
 	/**
 	 * Creates a pending order with subscription for a membership product.
 	 *
-	 * @param int                   $product_id   WooCommerce product ID.
-	 * @param float                 $down_payment Down payment amount.
-	 * @param array<string, mixed>  $pricing      Validated pricing from PricingCalculator.
-	 * @param array<string, string> $customer     Customer details.
-	 * @param string                $location     Gym location slug.
-	 * @param int                   $staff_id     Staff user ID who processed the sale.
+	 * @param int                                  $product_id   WooCommerce product ID.
+	 * @param float                                $down_payment Down payment amount.
+	 * @param array<string, mixed>                 $pricing      Validated pricing from PricingCalculator.
+	 * @param array<string, string>                $customer     Customer details.
+	 * @param string                               $location     Gym location slug.
+	 * @param int                                  $staff_id     Staff user ID who processed the sale.
+	 * @param array{source: string, other: string} $lead_source Validated lead source pair from
+	 *                                            {@see LeadSourceField::validate()}. Stored on
+	 *                                            order meta `_gym_lead_source` (+ `_other`).
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public function create(
@@ -61,7 +64,11 @@ final class OrderBuilder {
 		array $pricing,
 		array $customer,
 		string $location,
-		int $staff_id
+		int $staff_id,
+		array $lead_source = array(
+			'source' => '',
+			'other'  => '',
+		)
 	): array|\WP_Error {
 		$product = wc_get_product( $product_id );
 
@@ -91,7 +98,7 @@ final class OrderBuilder {
 
 		// Create the order.
 		try {
-			$order = $this->build_order( $product, $user_id, $down_payment, $pricing, $customer, $location, $staff_id );
+			$order = $this->build_order( $product, $user_id, $down_payment, $pricing, $customer, $location, $staff_id, $lead_source );
 		} catch ( \Exception $e ) {
 			return new \WP_Error(
 				'gym_order_creation_failed',
@@ -211,13 +218,15 @@ final class OrderBuilder {
 	/**
 	 * Builds the WC_Order with the subscription product and custom pricing.
 	 *
-	 * @param \WC_Product           $product      The subscription product.
-	 * @param int                   $user_id      Customer user ID.
-	 * @param float                 $down_payment Down payment amount.
-	 * @param array<string, mixed>  $pricing      Pricing breakdown.
-	 * @param array<string, string> $customer     Customer details.
-	 * @param string                $location     Gym location slug.
-	 * @param int                   $staff_id     Staff user ID.
+	 * @param \WC_Product                          $product      The subscription product.
+	 * @param int                                  $user_id      Customer user ID.
+	 * @param float                                $down_payment Down payment amount.
+	 * @param array<string, mixed>                 $pricing      Pricing breakdown.
+	 * @param array<string, string>                $customer     Customer details.
+	 * @param string                               $location     Gym location slug.
+	 * @param int                                  $staff_id     Staff user ID.
+	 * @param array{source: string, other: string} $lead_source  Validated lead source pair from
+	 *                                                           {@see LeadSourceField::validate()}.
 	 * @return \WC_Order
 	 *
 	 * @throws \Exception On order creation failure.
@@ -229,7 +238,11 @@ final class OrderBuilder {
 		array $pricing,
 		array $customer,
 		string $location,
-		int $staff_id
+		int $staff_id,
+		array $lead_source = array(
+			'source' => '',
+			'other'  => '',
+		)
 	): \WC_Order {
 		$order = wc_create_order(
 			array(
@@ -280,6 +293,16 @@ final class OrderBuilder {
 		// Store pricing breakdown for reference.
 		$order->update_meta_data( '_gym_effective_total', (string) $pricing['effective_total'] );
 		$order->update_meta_data( '_gym_discount', (string) $pricing['discount'] );
+
+		// Persist the captured lead source onto the order (HPOS-safe) and carry
+		// it over to the eventual member's user profile so it survives the
+		// trial → member conversion (plan §F).
+		$ls_source = isset( $lead_source['source'] ) ? (string) $lead_source['source'] : '';
+		$ls_other  = isset( $lead_source['other'] ) ? (string) $lead_source['other'] : '';
+		if ( '' !== $ls_source ) {
+			LeadSourceField::persist_to_order( $order, $ls_source, $ls_other );
+			LeadSourceField::persist_to_user( $user_id, $ls_source, $ls_other );
+		}
 
 		// Add order note for staff context.
 		$order->add_order_note(

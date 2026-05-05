@@ -28,6 +28,16 @@ $trial_times = [
 	'kids'   => [ 'Mon 4:30p · Tigers (5–8)', 'Mon 5:30p · Juniors (9–12)', 'Wed 4:30p · Tigers (5–8)', 'Sat 9:00a · Family Open Mat' ],
 	'unsure' => [ 'Mon 6:30p · BJJ Fundamentals', 'Wed 12:00p · Fitness Kickboxing', 'Sat 10:30a · BJJ Fundamentals' ],
 ];
+
+// Lead-source options — kept in sync with Gym_Core\Sales\LeadSourceField::OPTIONS.
+$lead_sources = [
+	[ 'slug' => 'google',    'label' => 'Google' ],
+	[ 'slug' => 'walk_in',   'label' => 'Walk-in' ],
+	[ 'slug' => 'referral',  'label' => 'Referral' ],
+	[ 'slug' => 'facebook',  'label' => 'Facebook' ],
+	[ 'slug' => 'instagram', 'label' => 'Instagram' ],
+	[ 'slug' => 'other',     'label' => 'Other' ],
+];
 ?>
 <!-- wp:group {"tagName":"section","align":"full","style":{"spacing":{"padding":{"top":"clamp(64px,8vw,120px)","bottom":"0","left":"clamp(24px,4vw,80px)","right":"clamp(24px,4vw,80px)"}},"color":{"background":"#EFEBE1"}},"layout":{"type":"constrained","contentSize":"1200px"},"templateLock":"all"} -->
 <section class="wp-block-group alignfull has-background" style="background-color:#EFEBE1;padding-top:clamp(64px,8vw,120px);padding-right:clamp(24px,4vw,80px);padding-bottom:0;padding-left:clamp(24px,4vw,80px)">
@@ -134,7 +144,22 @@ $trial_times = [
           <textarea name="notes" rows="4" placeholder="Optional. We'll keep it private." style="padding:16px;border:1px solid rgba(10,10,10,0.18);font-size:16px;border-radius:2px;background:#fff;font-family:inherit;resize:vertical;width:100%;box-sizing:border-box"></textarea>
         </label>
 
-        <div data-wp-bind--hidden="!state.error" style="color:#B00020;font-size:14px" data-wp-text="state.error"></div>
+        <label style="display:grid;gap:8px">
+          <span style="font-size:13px;letter-spacing:0.06em;text-transform:uppercase;color:#4A4A48">How did you hear about us? <span style="color:#C62828" aria-hidden="true">*</span></span>
+          <select name="lead_source" required aria-required="true" data-wp-on--change="actions.pickSource" style="padding:16px;border:1px solid rgba(10,10,10,0.18);font-size:16px;border-radius:2px;background:#fff;width:100%;box-sizing:border-box;font-family:inherit">
+            <option value="">Choose one…</option>
+            <?php foreach ( $lead_sources as $src ) : ?>
+              <option value="<?php echo esc_attr( $src['slug'] ); ?>"><?php echo esc_html( $src['label'] ); ?></option>
+            <?php endforeach; ?>
+          </select>
+        </label>
+
+        <label data-wp-bind--hidden="!state.isSourceOther" style="display:grid;gap:8px">
+          <span style="font-size:13px;letter-spacing:0.06em;text-transform:uppercase;color:#4A4A48">Tell us more <span style="color:#C62828" aria-hidden="true">*</span></span>
+          <input name="lead_source_other" type="text" maxlength="200" placeholder="A specific person, podcast, billboard…" style="padding:16px;border:1px solid rgba(10,10,10,0.18);font-size:16px;border-radius:2px;background:#fff;width:100%;box-sizing:border-box" />
+        </label>
+
+        <div data-wp-bind--hidden="!state.error" role="alert" style="color:#C62828;font-size:14px;font-weight:500" data-wp-text="state.error"></div>
 
         <div style="margin-top:16px;display:flex;justify-content:space-between;align-items:center">
           <button type="button" data-wp-on--click="actions.back" style="background:transparent;color:#0A0A0A;border:1px solid rgba(10,10,10,0.18);padding:18px 32px;font-size:15px;cursor:pointer;border-radius:2px;font-family:inherit">← Back</button>

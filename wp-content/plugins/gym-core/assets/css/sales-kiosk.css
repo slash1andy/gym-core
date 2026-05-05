@@ -763,3 +763,47 @@
 	.sales-accordion-group .sales-accordion-body { max-height: 0; }
 	.sales-accordion-group.open .sales-accordion-body { max-height: none; }
 }
+
+/* ---------------------------------------------------------------------------
+ * Lead-source field
+ * --------------------------------------------------------------------------- */
+
+.sales-required {
+	color: #C62828;
+	font-weight: 700;
+	margin-left: 2px;
+}
+
+.sales-form-error {
+	color: #C62828;
+	font-size: 0.875rem;
+	margin: 8px 0 0;
+	font-weight: 500;
+}
+
+.sales-form-error[hidden] {
+	display: none;
+}
+
+.sales-input--invalid,
+.sales-input--invalid:focus {
+	border-color: #C62828;
+	box-shadow: 0 0 0 3px rgba(198, 40, 40, 0.15);
+}
+
+.sales-form-row--lead-other[hidden] {
+	display: none;
+}
+
+.review-lead-source {
+	margin-top: 8px;
+	color: #0032A0;
+	font-size: 0.9375rem;
+	font-weight: 500;
+}
+
+.review-lead-source span {
+	color: #75787B;
+	font-weight: 400;
+	margin-right: 4px;
+}

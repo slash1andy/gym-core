@@ -118,44 +118,50 @@ final class KioskEndpoint {
 				'location'    => $location,
 				'checkoutUrl' => esc_url_raw( $checkout_url ),
 				'kioskUrl'    => esc_url_raw( home_url( '/' . self::SLUG . '/' ) ),
+				'leadSources' => LeadSourceField::get_options(),
 				'timeout'     => (int) get_option( 'gym_core_kiosk_timeout', 10 ),
 				'strings'     => array(
-					'title'              => \Gym_Core\Utilities\Brand::name(),
-					'subtitle'           => __( 'Membership Sales', 'gym-core' ),
-					'selectMembership'   => __( 'Select a Membership', 'gym-core' ),
-					'downPayment'        => __( 'Down Payment', 'gym-core' ),
-					'monthly'            => __( 'Monthly', 'gym-core' ),
-					'biweekly'           => __( 'Every 2 Weeks', 'gym-core' ),
-					'total'              => __( 'Total Contract', 'gym-core' ),
-					'savings'            => __( 'Savings', 'gym-core' ),
-					'customerInfo'       => __( 'Customer Information', 'gym-core' ),
-					'searchCustomer'     => __( 'Search by name or email...', 'gym-core' ),
-					'newCustomer'        => __( 'New Customer', 'gym-core' ),
-					'reviewSale'         => __( 'Review Sale', 'gym-core' ),
-					'processPayment'     => __( 'Process Payment', 'gym-core' ),
-					'saveAsLead'         => __( 'Save as Lead', 'gym-core' ),
-					'back'               => __( 'Back', 'gym-core' ),
-					'continue'           => __( 'Continue', 'gym-core' ),
-					'success'            => __( 'Sale Complete!', 'gym-core' ),
-					'leadSaved'          => __( 'Lead Saved', 'gym-core' ),
-					'error'              => __( 'Something went wrong', 'gym-core' ),
-					'tryAgain'           => __( 'Tap to try again', 'gym-core' ),
-					'noProducts'         => __( 'No membership products found.', 'gym-core' ),
-					'noResults'          => __( 'No matching customers found.', 'gym-core' ),
-					'loading'            => __( 'Loading...', 'gym-core' ),
-					'firstName'          => __( 'First Name', 'gym-core' ),
-					'lastName'           => __( 'Last Name', 'gym-core' ),
-					'email'              => __( 'Email', 'gym-core' ),
-					'phone'              => __( 'Phone', 'gym-core' ),
-					'address'            => __( 'Street Address', 'gym-core' ),
-					'city'               => __( 'City', 'gym-core' ),
-					'state'              => __( 'State', 'gym-core' ),
-					'zip'                => __( 'ZIP Code', 'gym-core' ),
-					'notes'              => __( 'Notes', 'gym-core' ),
-					'perMonth'           => __( '/mo', 'gym-core' ),
-					'perTwoWeeks'        => __( '/2wk', 'gym-core' ),
-					'enrolledIn'         => __( 'is now enrolled in', 'gym-core' ),
-					'redirectingPayment' => __( 'Redirecting to payment...', 'gym-core' ),
+					'title'                   => \Gym_Core\Utilities\Brand::name(),
+					'subtitle'                => __( 'Membership Sales', 'gym-core' ),
+					'selectMembership'        => __( 'Select a Membership', 'gym-core' ),
+					'downPayment'             => __( 'Down Payment', 'gym-core' ),
+					'monthly'                 => __( 'Monthly', 'gym-core' ),
+					'biweekly'                => __( 'Every 2 Weeks', 'gym-core' ),
+					'total'                   => __( 'Total Contract', 'gym-core' ),
+					'savings'                 => __( 'Savings', 'gym-core' ),
+					'customerInfo'            => __( 'Customer Information', 'gym-core' ),
+					'searchCustomer'          => __( 'Search by name or email...', 'gym-core' ),
+					'newCustomer'             => __( 'New Customer', 'gym-core' ),
+					'reviewSale'              => __( 'Review Sale', 'gym-core' ),
+					'processPayment'          => __( 'Process Payment', 'gym-core' ),
+					'saveAsLead'              => __( 'Save as Lead', 'gym-core' ),
+					'back'                    => __( 'Back', 'gym-core' ),
+					'continue'                => __( 'Continue', 'gym-core' ),
+					'success'                 => __( 'Sale Complete!', 'gym-core' ),
+					'leadSaved'               => __( 'Lead Saved', 'gym-core' ),
+					'error'                   => __( 'Something went wrong', 'gym-core' ),
+					'tryAgain'                => __( 'Tap to try again', 'gym-core' ),
+					'noProducts'              => __( 'No membership products found.', 'gym-core' ),
+					'noResults'               => __( 'No matching customers found.', 'gym-core' ),
+					'loading'                 => __( 'Loading...', 'gym-core' ),
+					'firstName'               => __( 'First Name', 'gym-core' ),
+					'lastName'                => __( 'Last Name', 'gym-core' ),
+					'email'                   => __( 'Email', 'gym-core' ),
+					'phone'                   => __( 'Phone', 'gym-core' ),
+					'address'                 => __( 'Street Address', 'gym-core' ),
+					'city'                    => __( 'City', 'gym-core' ),
+					'state'                   => __( 'State', 'gym-core' ),
+					'zip'                     => __( 'ZIP Code', 'gym-core' ),
+					'notes'                   => __( 'Notes', 'gym-core' ),
+					'perMonth'                => __( '/mo', 'gym-core' ),
+					'perTwoWeeks'             => __( '/2wk', 'gym-core' ),
+					'enrolledIn'              => __( 'is now enrolled in', 'gym-core' ),
+					'redirectingPayment'      => __( 'Redirecting to payment...', 'gym-core' ),
+					'leadSourceLabel'         => __( 'How did you hear about us?', 'gym-core' ),
+					'leadSourcePlaceholder'   => __( 'Choose one…', 'gym-core' ),
+					'leadSourceOtherLabel'    => __( 'Tell us more', 'gym-core' ),
+					'leadSourceRequired'      => __( 'Please tell us how you heard about Haanpaa Martial Arts.', 'gym-core' ),
+					'leadSourceOtherRequired' => __( 'Please add a quick note describing how you heard about us.', 'gym-core' ),
 				),
 			)
 		);
@@ -540,6 +546,25 @@ final class KioskEndpoint {
 					<div class="sales-form-field sales-form-field--small">
 						<label for="sales-zip"><?php esc_html_e( 'ZIP', 'gym-core' ); ?></label>
 						<input type="text" id="sales-zip" name="postcode" class="sales-input" maxlength="10">
+					</div>
+				</div>
+				<div class="sales-form-row">
+					<div class="sales-form-field sales-form-field--wide">
+						<label for="sales-lead-source"><?php esc_html_e( 'How did you hear about us?', 'gym-core' ); ?> <span class="sales-required" aria-hidden="true">*</span></label>
+						<select id="sales-lead-source" name="lead_source" class="sales-input" required aria-required="true">
+							<option value=""><?php esc_html_e( 'Choose one…', 'gym-core' ); ?></option>
+							<?php foreach ( LeadSourceField::get_options() as $option ) : ?>
+								<option value="<?php echo esc_attr( $option['slug'] ); ?>"><?php echo esc_html( $option['label'] ); ?></option>
+							<?php endforeach; ?>
+						</select>
+						<p class="sales-form-error" id="sales-lead-source-error" role="alert" hidden></p>
+					</div>
+				</div>
+				<div class="sales-form-row sales-form-row--lead-other" id="sales-lead-source-other-row" hidden>
+					<div class="sales-form-field sales-form-field--wide">
+						<label for="sales-lead-source-other"><?php esc_html_e( 'Tell us more', 'gym-core' ); ?> <span class="sales-required" aria-hidden="true">*</span></label>
+						<input type="text" id="sales-lead-source-other" name="lead_source_other" class="sales-input" maxlength="200" autocomplete="off">
+						<p class="sales-form-error" id="sales-lead-source-other-error" role="alert" hidden></p>
 					</div>
 				</div>
 			</form>
