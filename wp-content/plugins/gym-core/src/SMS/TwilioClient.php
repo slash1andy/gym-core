@@ -59,11 +59,15 @@ class TwilioClient {
 	 * @return array{success: bool, sid: string|null, error: string|null}
 	 */
 	public function send( string $to, string $body, string $from = '' ): array {
-		$account_sid = $this->get_account_sid();
-		$auth_token  = $this->get_auth_token();
-		$from_number = '' !== $from ? $from : $this->get_from_number();
+		$account_sid           = $this->get_account_sid();
+		$auth_token            = $this->get_auth_token();
+		$messaging_service_sid = $this->get_messaging_service_sid();
+		$from_number           = '' !== $from ? $from : $this->get_from_number();
 
-		if ( '' === $account_sid || '' === $auth_token || '' === $from_number ) {
+		// Either a Messaging Service SID OR a From number is required (Twilio rule).
+		$has_sender = '' !== $messaging_service_sid || '' !== $from_number;
+
+		if ( '' === $account_sid || '' === $auth_token || ! $has_sender ) {
 			return array(
 				'success' => false,
 				'sid'     => null,
@@ -88,15 +92,24 @@ class TwilioClient {
 			$account_sid
 		);
 
+		// Prefer Messaging Service SID over plain From number when both are set
+		// (Twilio's API treats MessagingServiceSid as authoritative).
+		$body_args = array(
+			'To'   => $to,
+			'Body' => $body,
+		);
+
+		if ( '' !== $messaging_service_sid ) {
+			$body_args['MessagingServiceSid'] = $messaging_service_sid;
+		} else {
+			$body_args['From'] = $from_number;
+		}
+
 		$request_args = array(
 			'headers' => array(
 				'Authorization' => 'Basic ' . base64_encode( $account_sid . ':' . $auth_token ), // phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.obfuscation_base64_encode
 			),
-			'body'    => array(
-				'To'   => $to,
-				'From' => $from_number,
-				'Body' => $body,
-			),
+			'body'    => $body_args,
 			'timeout' => self::HTTP_TIMEOUT,
 		);
 
@@ -252,43 +265,76 @@ class TwilioClient {
 	/**
 	 * Returns the configured Account SID.
 	 *
+	 * Read order: settings option first, `wp-config.php` constant as
+	 * emergency override fallback. Inverted from earlier behaviour so the
+	 * admin UI is the primary source of truth (constants stay as a break-glass
+	 * mechanism for incident response).
+	 *
 	 * @return string
 	 */
 	private function get_account_sid(): string {
+		$value = (string) get_option( 'gym_core_twilio_account_sid', '' );
+
+		if ( '' !== $value ) {
+			return $value;
+		}
+
 		if ( defined( 'GYM_CORE_TWILIO_ACCOUNT_SID' ) && '' !== GYM_CORE_TWILIO_ACCOUNT_SID ) {
 			return (string) GYM_CORE_TWILIO_ACCOUNT_SID;
 		}
 
-		return (string) get_option( 'gym_core_twilio_account_sid', '' );
+		return '';
 	}
 
 	/**
-	 * Returns the configured Auth Token.
+	 * Returns the configured Auth Token (decrypted).
 	 *
-	 * Prefers wp-config.php constant over database option for security.
+	 * Routes through `CredentialStore::get()` which handles transparent
+	 * decryption + the constant fallback.
 	 *
 	 * @return string
 	 */
-	private function get_auth_token(): string {
-		if ( defined( 'GYM_CORE_TWILIO_AUTH_TOKEN' ) && '' !== GYM_CORE_TWILIO_AUTH_TOKEN ) {
-			return (string) GYM_CORE_TWILIO_AUTH_TOKEN;
+	public function get_auth_token(): string {
+		return CredentialStore::get();
+	}
+
+	/**
+	 * Returns the configured Messaging Service SID.
+	 *
+	 * @return string
+	 */
+	private function get_messaging_service_sid(): string {
+		$value = (string) get_option( 'gym_core_twilio_messaging_service_sid', '' );
+
+		if ( '' !== $value ) {
+			return $value;
 		}
 
-		return (string) get_option( 'gym_core_twilio_auth_token', '' );
+		if ( defined( 'GYM_CORE_TWILIO_MESSAGING_SERVICE_SID' ) && '' !== GYM_CORE_TWILIO_MESSAGING_SERVICE_SID ) {
+			return (string) GYM_CORE_TWILIO_MESSAGING_SERVICE_SID;
+		}
+
+		return '';
 	}
 
 	/**
 	 * Returns the configured From number.
 	 *
-	 * Prefers wp-config.php constant over database option for security.
+	 * Read order: settings option first, `wp-config.php` constant fallback.
 	 *
 	 * @return string
 	 */
 	private function get_from_number(): string {
+		$value = (string) get_option( 'gym_core_twilio_phone_number', '' );
+
+		if ( '' !== $value ) {
+			return $value;
+		}
+
 		if ( defined( 'GYM_CORE_TWILIO_PHONE_NUMBER' ) && '' !== GYM_CORE_TWILIO_PHONE_NUMBER ) {
 			return (string) GYM_CORE_TWILIO_PHONE_NUMBER;
 		}
 
-		return (string) get_option( 'gym_core_twilio_phone_number', '' );
+		return '';
 	}
 }
