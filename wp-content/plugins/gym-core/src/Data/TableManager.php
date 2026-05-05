@@ -21,9 +21,16 @@ final class TableManager {
 	/**
 	 * Current schema version. Bump this when adding or altering tables.
 	 *
+	 * v2 (2026-05): added `location_date` composite index on gym_attendance
+	 * to support get_today_all_locations() — `WHERE location IN (...) AND
+	 * DATE(checked_in_at) = ...` was hitting the single-column `location`
+	 * index and re-filtering. EXPLAIN now shows ref=const,const on the
+	 * composite. Existing single-column `location` and `checked_in_at` keys
+	 * are kept; dbDelta won't drop them.
+	 *
 	 * @var int
 	 */
-	private const SCHEMA_VERSION = 1;
+	private const SCHEMA_VERSION = 2;
 
 	/**
 	 * Option key for tracking the installed schema version.
@@ -188,7 +195,8 @@ final class TableManager {
 			KEY class_id (class_id),
 			KEY location (location),
 			KEY checked_in_at (checked_in_at),
-			KEY user_date (user_id, checked_in_at)
+			KEY user_date (user_id, checked_in_at),
+			KEY location_date (location, checked_in_at)
 		) $charset_collate;";
 	}
 
