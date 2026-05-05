@@ -452,12 +452,10 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	private function render_today_tab( string $location ): void {
-		// "All" mode: merge attendance from every location.
+		// "All" mode: single batched query covers every location.
 		if ( 'all' === $location || '' === $location ) {
-			$records = array();
-			foreach ( self::get_locations() as $slug => $label ) {
-				$records = array_merge( $records, $this->store->get_today_by_location( $slug ) );
-			}
+			$grouped = $this->store->get_today_all_locations( array_keys( self::get_locations() ) );
+			$records = array_merge( ...array_values( $grouped ) );
 		} else {
 			$records = $this->store->get_today_by_location( $location );
 		}
@@ -509,6 +507,13 @@ final class AttendanceDashboard {
 		}
 
 		// Render any check-ins for classes not in today's schedule (edge case).
+		// Prime post + meta caches in bulk so the loop below stays cache-resident.
+		if ( ! empty( $by_class ) ) {
+			$orphan_ids = array_map( 'intval', array_keys( $by_class ) );
+			_prime_post_caches( $orphan_ids, false, false );
+			update_meta_cache( 'post', $orphan_ids );
+		}
+
 		foreach ( $by_class as $class_id => $checkins ) {
 			$class_post = get_post( $class_id );
 			if ( $class_post ) {
@@ -621,9 +626,28 @@ final class AttendanceDashboard {
 	 * @return void
 	 */
 	private function render_checkin_table( array $checkins ): void {
-		$foundations = null;
-		if ( FoundationsClearance::is_enabled() ) {
-			$foundations = new FoundationsClearance( $this->store );
+		// Batch the Foundations lookups up front so the loop below makes zero
+		// additional queries per row. cache_users() primes user_meta in one
+		// query; get_status_for_users() folds every per-user attendance count
+		// into a single grouped query.
+		$foundations_map = array();
+		if ( FoundationsClearance::is_enabled() && ! empty( $checkins ) ) {
+			$user_ids = array_values(
+				array_unique(
+					array_filter(
+						array_map(
+							static fn( $record ): int => (int) ( $record->user_id ?? 0 ),
+							$checkins
+						)
+					)
+				)
+			);
+
+			if ( ! empty( $user_ids ) ) {
+				cache_users( $user_ids );
+				$foundations    = new FoundationsClearance( $this->store );
+				$foundations_map = $foundations->get_status_for_users( $user_ids );
+			}
 		}
 
 		echo '<table class="gym-checkin-table">';
@@ -644,15 +668,13 @@ final class AttendanceDashboard {
 
 			// Name + Foundations badge.
 			echo '<td>' . esc_html( $name );
-			if ( $foundations ) {
-				$status = $foundations->get_status( $user_id );
-				if ( $status['in_foundations'] ) {
-					$phase = str_replace( array( 'phase', '_coach_rolls' ), array( 'Phase ', '' ), $status['phase'] );
-					$done  = $status['classes_completed'];
-					$total = $status['classes_total_required'];
-					$badge = sprintf( 'Foundations: %s (%d/%d)', ucfirst( $phase ), $done, $total );
-					echo '<span class="gym-badge-foundations">' . esc_html( $badge ) . '</span>';
-				}
+			$status = $foundations_map[ $user_id ] ?? null;
+			if ( $status && ! empty( $status['in_foundations'] ) ) {
+				$phase = str_replace( array( 'phase', '_coach_rolls' ), array( 'Phase ', '' ), $status['phase'] );
+				$done  = $status['classes_completed'];
+				$total = $status['classes_total_required'];
+				$badge = sprintf( 'Foundations: %s (%d/%d)', ucfirst( $phase ), $done, $total );
+				echo '<span class="gym-badge-foundations">' . esc_html( $badge ) . '</span>';
 			}
 			echo '</td>';
 
@@ -984,6 +1006,10 @@ final class AttendanceDashboard {
 	/**
 	 * Queries active gym_class posts for a given day of the week and location.
 	 *
+	 * Primes post-meta + term + instructor-user caches via ScheduleCachePrimer
+	 * so subsequent get_post_meta() / get_the_terms() / get_userdata() calls
+	 * in the render loop are object-cache hits instead of per-row DB queries.
+	 *
 	 * @param string $day_of_week Lowercase day name (monday, tuesday, etc.).
 	 * @param string $location    Location slug.
 	 * @return array<int, \WP_Post>
@@ -1020,7 +1046,16 @@ final class AttendanceDashboard {
 			);
 		}
 
-		return get_posts( $args );
+		$query = new \WP_Query( $args );
+		\Gym_Core\Schedule\ScheduleCachePrimer::prime( $query );
+
+		// Filter to WP_Post instances to keep the existing return contract.
+		return array_values(
+			array_filter(
+				$query->posts,
+				static fn( $p ) => $p instanceof \WP_Post
+			)
+		);
 	}
 }
 
