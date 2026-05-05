@@ -687,7 +687,7 @@ ACCEPTANCE:
     4. Notification fires (SMS + email congratulations)
     5. Rank updated on member dashboard
   - Bulk promotion support (for belt testing events)
-  - REST API: GET /promotions/eligible, POST /promotions/promote
+  - REST API: GET /promotions/eligible, POST /promotions/recommend (sets coach flag)
 ```
 
 #### 4.10 — Rank REST API Controller (gym-core)
@@ -814,7 +814,7 @@ ACCEPTANCE:
     | Method | Route                        | Description                                         | Auth                |
     |--------|------------------------------|-----------------------------------------------------|---------------------|
     | GET    | /gym/v1/promotions/eligible   | List all members currently eligible for promotion   | gym_promote_student |
-    | POST   | /gym/v1/promotions/promote    | Execute a belt promotion for a member               | gym_promote_student |
+    | POST   | /gym/v1/promotions/recommend  | Set coach recommendation flag for a member          | gym_promote_student |
   - GET /promotions/eligible query parameters:
     - location (string, optional) — filter by gym_location slug
     - program (string, optional) — filter by program (bjj, kids-bjj, kickboxing)
@@ -825,33 +825,27 @@ ACCEPTANCE:
       meets_attendance_threshold (bool), meets_time_threshold (bool),
       coach_recommended (bool), next_belt, next_stripes }
     - Sorted by readiness (all three criteria met first, then two, then one)
-  - POST /promotions/promote request body:
+  - POST /promotions/recommend request body:
     - user_id (int, required)
     - program (string, required)
-    - to_belt (string, optional — defaults to next in sequence)
-    - to_stripes (int, optional — defaults to next in sequence)
     - notes (string, optional)
-    - bulk (bool, optional, default false) — if true, accepts user_ids[] array
-  - POST /promotions/promote:
-    - Delegates to RankController POST /ranks/promote internally
-    - Fires gym_core_rank_changed action hook
-    - Triggers notification (SMS + email congratulations via M2.4)
-    - Supports bulk: accepts user_ids[] for belt testing events
-    - Returns array of updated rank objects
+  - POST /promotions/recommend:
+    - Sets coach_recommended flag on the member's promotion eligibility record
+    - Does NOT execute a belt change (that requires POST /ranks/promote from RankController)
+    - Fires gym_core_promotion_recommended action hook
+    - Returns updated eligibility record
   - All endpoints require gym_promote_student capability (coaches + admins)
   - Schema defined per WP REST API spec
-  - Unit tests for eligibility calculation and promotion execution
-  - Integration test: attendance threshold met → appears in eligible → promote → rank updated
+  - Unit tests for eligibility calculation and recommend flow
+  - Integration test: attendance threshold met → appears in eligible → recommend → coach_recommended=true
 SCHEMA_NOTES:
   Eligible member: { user, program, current_belt, current_stripes,
     attendance_since_promotion, time_at_current_rank, meets_attendance_threshold,
     meets_time_threshold, coach_recommended, next_belt, next_stripes }
-  Promote request: { user_id, program, to_belt?, to_stripes?, notes?, bulk? }
-  Bulk promote request: { user_ids[], program, to_belt?, to_stripes?, notes?, bulk: true }
-NOTE: POST /promotions/promote and POST /ranks/promote (4.10) share the same
-      underlying RankStore logic. PromotionController adds the eligibility check
-      and bulk support layer on top. The AI Coaching agent uses /promotions/eligible
-      to flag ready students and /ranks/promote (via approval gate) to execute.
+  Recommend request: { user_id, program, notes? }
+NOTE: M6 AI Coaching agent uses /promotions/eligible to surface ready students,
+      /promotions/recommend to flag them (pending staff review), and /ranks/promote
+      (RankController, 4.10) via the approval gate to execute the actual belt change.
 ```
 
 ---
@@ -1274,7 +1268,7 @@ All endpoints use the `gym/v1` namespace. Controllers extend `Gym_Core\API\BaseC
 | | | `/attendance/{user_id}` | GET | Logged-in (own) / gym_view_attendance |
 | | | `/attendance/today` | GET | gym_view_attendance |
 | **PromotionController** | 4.12 | `/promotions/eligible` | GET | gym_promote_student |
-| | | `/promotions/promote` | POST | gym_promote_student |
+| | | `/promotions/recommend` | POST | gym_promote_student |
 | **GamificationController** | 5.10 | `/badges` | GET | Public / Logged-in |
 | | | `/members/{id}/badges` | GET | Logged-in (own) / gym_view_achievements |
 | | | `/members/{id}/streak` | GET | Logged-in (own) / gym_view_achievements |
